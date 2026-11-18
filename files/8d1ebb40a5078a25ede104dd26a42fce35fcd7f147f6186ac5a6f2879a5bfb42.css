@@ -1,0 +1,77 @@
+/* Psarema: Plan a trip and the daily brief (js/planner.js), on the panel kit of css/catchlog.css (.pn-*) and the shared .ui-* (css/app.css).
+   Tokens: css/tokens.css. The choices: chips, a segmented control, one grouped list; then the trips as cards, best first. */
+.pl-form { display: flex; flex-direction: column; gap: 10px; min-width: 0 }
+.pl-form .ui-seg { max-width: 420px }
+.pl-opts .ui-row { cursor: pointer }
+.pl-opts div.ui-row { cursor: default }
+.pl-opts .ui-row-main small { white-space: normal } /* a hint, whole */
+.pn .pl-sel { flex: none; width: 54%; min-width: 0; max-width: 260px; min-height: 40px; padding: 0 30px 0 10px; border-radius: var(--r-sm); border: 1px solid var(--line-2); text-overflow: ellipsis;
+  background: var(--raise) no-repeat right 9px center / 14px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  -webkit-appearance: none; appearance: none; color: var(--ink); font: 550 13px var(--sans); cursor: pointer }
+.pn .pl-sel:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px }
+.pn .pl-sel option { background: var(--panel); color: var(--ink) }
+.pl-brief-on { margin-top: 4px }
+.pl-brief-on .ui-row-main b { white-space: normal }
+/* while it plans: the trips' shape */
+.pl-prog { margin: 0; font-variant-numeric: tabular-nums }
+.pl-skel { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line) }
+.pl-skel .ui-skel.round { width: 52px; height: 52px; flex: none }
+.pl-skel > span:last-child { flex: 1; min-width: 0 }
+.pl-skel i { display: block }
+
+/* Results: each trip a card; its head row (the trip score as a large dial, when, the fish, where, its cut-out) opens its spot */
+.pl-res { display: flex; flex-direction: column; gap: 10px; min-height: 120px; padding-top: 4px }
+.pl-res .pn-list { gap: 10px; background: none; border: 0; box-shadow: none; overflow: visible }
+.pl-trip { overflow: hidden; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); box-shadow: var(--edge) }
+.pl-res .pl-trip + .pl-trip { border-top: 1px solid var(--line) }
+.pl-trip.best { border-color: rgb(255 255 255 / .32) } /* the best trip: a lit edge, no colour */
+.pl-line { gap: 14px; padding: 12px 12px 12px 14px }
+.pl-line .lbl { color: var(--muted) }
+.pl-trip .pl-line b { font-size: 15.5px }
+.pl-cut { width: 76px; height: 46px; display: grid; place-items: center }
+.pl-cut:empty { display: none }
+.pl-trip .pn-body { padding-left: 80px } /* under the row's words, clear of its dial */
+.pl-fish { display: flex; flex-wrap: wrap; align-items: center; gap: 6px }
+.pl-fish .i { color: var(--muted) }
+.pl-fish small { flex-basis: 100%; color: var(--muted); font-size: 12px }
+.pl-safe, .pl-sea { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 1.4 }
+.pl-safe { color: var(--muted) }
+.pl-safe b, .pl-sea b { color: var(--ink); font-weight: 600 }
+.pl-sea small { display: block; color: var(--muted); font-size: 12px }
+:is(.pl-safe, .pl-sea) .pill { flex: none }
+.pl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--line) }
+.pl-foot .hint { min-width: 0 }
+.pl-foot .pn-acts { margin-left: auto; flex-wrap: nowrap }
+.pl-hint { justify-content: center }
+.pl-stats { text-align: center }
+
+/* The daily brief: a card under the top bar on wide screens (the map stays in reach), the bottom sheet's content on phones */
+.pl-brief-card { position: absolute; z-index: 815; top: 58px; right: max(10px, env(safe-area-inset-right, 0px)); width: min(380px, calc(100% - 20px)); max-height: calc(100% - 68px);
+  overflow-y: auto; padding: 14px; animation: pl-in .22s var(--ease) }
+.stage.has-drawer .pl-brief-card { display: none } /* a spot's details take that side */
+@keyframes pl-in { from { opacity: 0; transform: translateY(-6px) } }
+@media (prefers-reduced-motion: reduce) { .pl-brief-card { animation: none } }
+[data-pn="brief"] { gap: 12px }
+.pl-brief-card .pn-head { padding-bottom: 12px }
+.pl-brief-card .pn-x { margin-right: -4px }
+[data-pn="brief"] .pl-sea { padding: 10px 12px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); box-shadow: var(--edge) }
+[data-pn="brief"] .pl-cut { width: 56px; height: 36px }
+.pl-bfoot { justify-content: space-between }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) { /* phones: the kit's 44 px targets; the results keep room, as the sheet fits what it is first given */
+  #m-spot .pl .pl-res { min-height: 45vh }
+  .pl-form .ui-seg { max-width: none }
+  .pl-line { gap: 12px; padding: 12px }
+  .pl-cut { width: 64px; height: 40px }
+  .pl-trip .pn-body { padding-left: 14px }
+  .pl-foot .pn-acts { flex: 1 1 100% } .pl-foot .pn-acts .btn.primary { flex: 1 }
+}
+/* bait chips with a picture (js/planner.js) */
+.sc-baits { margin-top: 2px; font-size: var(--fs-sm) }
+.sc-baits > b { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.sc-baits > span { display: flex; flex-wrap: wrap; gap: 4px }
+.sc-baits > span > span { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 2px; border-radius: var(--r-sm); background: rgb(255 255 255 / .04); border: 1px solid var(--line) }
+.sc-baits .art { display: grid; place-items: center; width: 34px; height: 22px; overflow: hidden; border-radius: 3px; background: #202020 }
+.sc-baits .art :is(img, svg) { display: block; width: 100%; height: 100%; object-fit: contain }
+.sc-baits .dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgb(255 255 255 / .35) }
+.sc-baits > b::after { content: ""; flex: 1 1 12px; height: 1px; background: var(--line) }

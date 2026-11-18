@@ -1,0 +1,261 @@
+/* Psarema on phones: ≤760 px wide, or a phone on its side (≤500 px tall) — the same query as isPhone() in js/core.js.
+   The whole phone layout lives here; js/mobile.js moves the shared panels into the top bar, the bottom sheet and the tab bar.
+   "Night instrument panel": the map full screen; floating --glass pieces over it (the fish; how you fish and the menu; the search with
+   Layers beside it; the legend under them); one bottom sheet (its four tabs, readings, timeline; the tab or the spot you tapped) over the
+   app's tab bar pinned to the screen's foot (Map · Forecast · + · Feed · Me: css/nav.css, with the pages it opens); modals as full-height
+   sheets. No blur (every pan would re-blur the map); shadows only on still pieces.
+   Safe areas: env() or the --safe-* values the Android app sets on :root, whichever is larger. */
+:root {
+  --st: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)); --sb: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
+  --sl: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)); --sr: max(env(safe-area-inset-right, 0px), var(--safe-right, 0px));
+  --m-bar: calc(var(--st) + 100px); /* just under the top bar: the search row (44 px, 8 px from the top) and the chips (40 px) */
+}
+.m-sheet, .m-nav { display: none }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  :root { --m-nav: calc(50px + var(--sb)) } /* the tab bar, with the gesture bar under it */
+  .glass { backdrop-filter: none; -webkit-backdrop-filter: none }
+  .dive :is(.dive-top, .dive-panel, .dive-compass) { background: rgb(22 30 38 / .94); backdrop-filter: none; -webkit-backdrop-filter: none } /* the 3D dive (css/dive3d.css): three blurs over a canvas redrawn each frame it turns cost a phone's GPU every frame */
+  .app { grid-template-rows: minmax(0, 1fr) }
+  .app > .timeline { display: none } /* until js/mobile.js moves it into the sheet: left in the page, it made the map 87 px short for its first fit, then resized it */
+  .stage { overflow: clip } /* the lowered sheet overflows it; "hidden" would still let focus scroll the whole stage */
+  .rail, .leaflet-control-zoom { display: none } /* pinch to zoom */
+  .icon-btn { width: 44px; height: 44px }
+  .seg button, .chips button, .btn { min-height: 44px }
+  .chips button { min-width: 44px; justify-content: center }
+  .ps-weather .ps-wx-chip { border-radius: var(--r-sm) } /* less rounded than pills, as everywhere else */
+  .layers-btn [data-i18n] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap } /* icon buttons keep their names for screen readers */
+  .hint, .t-meta, .rank, .status, .fc-sub, .facts span, .chips button, .best-time small, .legend-words,
+  .fish-card small, .fish-card .flag, .gear small, .swatches span, .sheet-foot, .pill, .tag-best, .fold p, .kv-list, .factors { font-size: 12px }
+
+  /* Top: the search pill and the ⋯ menu (44 px), then one row of filter chips (40 px) that scrolls sideways, edge to edge: the fish (its
+     cut-out, its best chance as a dial: opens the picker), Boat / Shore / Spear (#mode) (round 17 G: the map layers are
+     Layers' main list). Under it, on the right edge, a column of floating buttons: Layers, then Locate (.hud). The rest is map. */
+  .mobile-bar { display: grid; grid-template-columns: minmax(0, 1fr) 44px; grid-template-areas: "search tools" "chips chips"; position: absolute; z-index: 850;
+    top: calc(var(--st) + 8px); left: calc(var(--sl) + 8px); right: calc(var(--sr) + 8px); gap: 8px; pointer-events: none }
+  .mobile-bar > * { pointer-events: auto }
+  .mobile-bar > .m-search { grid-area: search; position: relative; height: 44px; padding: 0 }
+  .m-search .srch-ph { padding: 0 14px; border-radius: 12px }
+  .m-search .pss-field { height: 44px; gap: 10px; padding: 0 14px; border-radius: 12px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--line-2), var(--edge), var(--shadow-sm); color: var(--muted); cursor: pointer }
+  .m-search .pss-field input { font: 500 14.5px var(--sans); pointer-events: none } /* a tap anywhere on the pill opens the full-screen search (js/search.js) */
+  .m-search .pss-field .pss-lens { width: 19px; height: 19px }
+  .m-search .pss-x { display: none }
+  .mb-tools { grid-area: tools; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 12px }
+  #mb-more { width: 44px; height: 44px; color: var(--ink); border-radius: 12px }
+  #mb-more[aria-expanded="true"] { background: var(--raise-2) }
+  .mb-chips { grid-area: chips; display: flex; gap: 6px; margin: 0 calc(-8px - var(--sr)) 0 calc(-8px - var(--sl)); padding: 0 calc(8px + var(--sr)) 0 calc(8px + var(--sl));
+    overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; pointer-events: none }
+  .mb-chips::-webkit-scrollbar { display: none }
+  .mb-chips { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent) } /* round 10d: the row fades out at the edge (it scrolls on), no chip cut off hard */
+  .mb-chips > * { flex: none; pointer-events: auto }
+  .mb-chips .seg { display: flex; gap: 6px; padding: 0; background: none; box-shadow: none; border: 0 }
+  .mb-chips .seg button, .mb-fish { height: 40px; min-height: 0; display: inline-flex; flex-direction: row; align-items: center; gap: 6px; padding: 0 12px 0 10px; border: 0; border-radius: var(--r-lg);
+    background: var(--glass); box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm); font: 600 13px var(--sans); letter-spacing: -.005em; color: var(--ink); white-space: nowrap }
+  .mb-chips .seg button .i { width: 17px; height: 17px; color: var(--muted) }
+  .mb-chips .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 0 rgb(255 255 255 / .6) inset, var(--shadow-sm) }
+  .mb-chips .seg button[aria-pressed="true"] .i { color: inherit }
+  .mb-chips .seg button:active, .mb-fish:active { background: var(--raise-2) }
+  /* the fish chip: its cut-out with its best chance as a dial on the corner, the name, a chevron (it opens the picker) */
+  .mb-fish { gap: 4px; max-width: 64vw; padding: 0 8px 0 2px }
+  .mb-art { position: relative; flex: none; width: 50px; height: 38px; display: grid; place-items: center start; color: var(--muted) }
+  .mb-art img { width: 38px; height: 26px; object-fit: contain; filter: drop-shadow(0 2px 3px rgb(0 0 0 / .6)) }
+  .mb-art > .i { margin-left: 8px }
+  .mb-art .ring { position: absolute; right: 0; bottom: 3px; --sz: 22px; font-size: 10px; background: var(--panel); box-shadow: 0 0 0 2px var(--panel) }
+  .mb-fish b { min-width: 0; font: 650 13px/1.1 var(--sans); overflow: hidden; text-overflow: ellipsis }
+  .mb-fish > .i { flex: none; width: 15px; height: 15px; color: var(--muted) }
+  .mb-art.all img { position: absolute; left: 4px; top: 12px; width: 34px; height: 22px } /* All fish (js/ui.js): the best bet in front, the next two behind it */
+  .mb-art.all :is(.f1, .f2) { top: 2px; width: 26px; height: 17px; opacity: .75 }
+  .mb-art.all .f1 { left: 0; rotate: -10deg }
+  .mb-art.all .f2 { left: 18px; rotate: 10deg }
+  .mb-txt { min-width: 0; display: flex; flex-direction: column }
+  .mb-txt small { display: none } /* the chip names the choice; the picker lists the fish */
+  /* The ⋯ menu (round 17 G): the map's three tools, a hairline, then help and the credits */
+  .mb-menu { position: absolute; top: 52px; right: 0; width: 272px; max-height: calc(100dvh - var(--st) - 76px); overflow-y: auto; overscroll-behavior: contain; background: var(--panel);
+    padding: 6px; display: flex; flex-direction: column; animation: pop-in var(--dur) var(--ease); transform-origin: top right }
+  .mb-menu > button { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 10px; border-radius: var(--r-sm); font: 500 14px var(--sans); text-align: left }
+  .mb-menu > button:active { background: var(--raise-2) }
+  .mb-menu > button .i { width: 19px; height: 19px; color: var(--dim) }
+  .mb-menu > .mb-sep { position: relative; margin-top: 11px }
+  .mb-menu > .mb-sep::before { content: ""; position: absolute; left: 10px; right: 10px; top: -6px; border-top: 1px solid var(--line) }
+
+  /* The right-hand column under the chips: Layers (the full panel), then Locate (js/mobile.js moves map.js's control in). The fishing
+     legend sits low on the left, just above the sheet; the ban note under the chips. */
+  .hud { top: calc(var(--st) + 108px); left: auto; right: calc(var(--sr) + 8px); flex-direction: column; align-items: flex-end; gap: 8px }
+  .stage.m-full .hud { visibility: hidden } /* the open sheet covers the map */
+  .layers-btn, .hud .locate a { width: 44px !important; height: 44px !important; padding: 0; justify-content: center; border-radius: 12px; color: var(--ink) }
+  .hud .leaflet-bar.locate { margin: 0; border-radius: 12px !important; box-shadow: var(--shadow-sm) !important }
+  .hud .locate a { line-height: 44px !important; border: 0 !important }
+  .layers-btn { box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm) }
+  .layers-btn[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink) }
+  .layers-btn .i, .hud .locate .i { width: 20px; height: 20px }
+  .map-legend, .rail:not(.collapsed) ~ .map-legend { top: auto; bottom: calc(var(--m-peek, 190px) + 8px); left: calc(var(--sl) + 8px); width: auto; min-height: 26px; padding: 0 9px;
+    display: grid; grid-template-columns: auto 40px auto; align-items: center; gap: 0 7px; border-radius: var(--r-lg) }
+  .map-legend .legend-bar { grid-area: 1 / 2; height: 4px; border-radius: 2px }
+  .legend-words { display: contents; font: 650 var(--fs-label)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) } /* the two ends, as micro labels */
+  .legend-words span:first-child { grid-area: 1 / 1 }
+  .legend-words span:last-child { grid-area: 1 / 3 }
+  .legend-words span:nth-child(2), .legend-words span:nth-child(3), .readout, .map-legend .ps-wx-note { display: none } /* only the two ends */
+  .wx-fold { grid-column: 1 / -1; grid-row: 1 } /* above the scale: the legend grows up from the sheet */
+  .wx-fold > summary { min-height: 30px; padding-top: 0; font-size: 11px; max-width: 160px } /* one short line: the layer names cut off */
+  .wx-fold[open] ~ * { grid-row: 2 }
+  #wx-names { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+  #weather-legend { width: 205px }
+  .map-legend { max-height: calc(100% - var(--st) - 120px - var(--m-peek, 190px)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; pointer-events: auto } /* several weather legends on a short screen scroll instead of running under the sheet */
+  .map-legend .ps-weather .ps-wx-cells small { font-family: var(--sans) } /* "0,3–0,6" fits its cell */
+  .map-legend .ps-weather :is(.ps-wx-ltitle, .ps-wx-ticks, .ps-wx-cells b, .ps-wx-cells small) { font-size: 12px }
+  .banner, .stage.has-drawer .banner { top: calc(var(--st) + 108px); left: calc(var(--sl) + 8px); right: calc(var(--sr) + 60px); width: auto; max-width: none; margin: 0 }
+
+  /* Layers: a bottom sheet over a dimmed map; tapping the dim closes it (ui.js) */
+  .stage.has-layers::after { content: ""; position: absolute; inset: 0; z-index: 828; background: rgb(0 0 0 / .45) }
+  .layers-pop { position: fixed; z-index: 2100; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: min(80%, calc(100% - var(--st) - 76px));
+    padding: 0 calc(var(--sr) + 16px) calc(var(--sb) + 10px) calc(var(--sl) + 16px); border-width: 1px 0 0; border-radius: var(--r-lg) var(--r-lg) 0 0; overscroll-behavior: contain;
+    background: var(--panel); box-shadow: var(--edge), 0 -12px 32px rgb(0 0 0 / .45); animation: m-rise .22s var(--ease) } /* the same surface as the bottom sheet and the modals */
+  .lp-head { margin-right: -8px; padding: 4px 0 2px }
+  .lp-head h3 { font-size: 16px }
+  .lp-more > summary { min-height: 48px; font-size: 12px }
+  .lp-n { font-size: 12px }
+  .layers-pop label, .layers-pop .slider { min-height: 44px; font-size: 14px }
+  .layers-pop label .num, .slider output { font-size: 12px }
+  .layers-pop input[type=checkbox] { width: 20px; height: 20px }
+  .layers-pop input[type=range] { height: 44px; margin: 0 }
+  .slider { grid-template-columns: minmax(0, 120px) 1fr 32px; padding-left: 29px; font-size: 13px }
+
+  /* Map controls: the scale just above the sheet, on the right */
+  .leaflet-bottom { bottom: calc(var(--m-peek, 190px) + 2px) }
+  .leaflet-right { right: var(--sr) } .leaflet-right .leaflet-control { margin-right: 8px }
+  .leaflet-control-attribution { display: none } /* the credits are in the menu (js/mobile.js) */
+  .credits span { line-height: 1.5 }
+  .stage.has-drawer .leaflet-right { right: 0 }
+  .toast { bottom: min(calc(var(--m-vis, var(--m-peek, 84px)) + 14px), calc(100% - var(--st) - 160px)); max-width: calc(100% - 32px); white-space: normal; text-align: center }
+
+  /* The bottom sheet. js/mobile.js sizes it and moves it with transform only (its pace set per snap); the body's height follows each snap.
+     will-change only while it moves (.drag, .anim): a resting sheet holds no extra layer. Its foot lies under the tab bar: inside it --sb
+     is the tab bar's height (with the gesture bar) and the raised +'s reach above it, so the body's padding keeps every page above the bar
+     and js/mobile.js's peek counts it. */
+  .m-sheet { --sb: calc(var(--m-nav) + 6px); display: flex; flex-direction: column; position: absolute; z-index: 825; left: 0; right: 0; bottom: 0; height: 75%;
+    background: var(--panel); border-top: 1px solid var(--line-2); border-radius: var(--r-lg) var(--r-lg) 0 0; box-shadow: var(--edge), 0 -12px 32px rgb(0 0 0 / .4);
+    transform: translateY(calc(100% - 190px)) }
+  .m-sheet.drag, .m-sheet.anim { will-change: transform } /* .anim: gliding to a level (its transition is inline, js/mobile.js glide) */
+  .m-head { flex: none; position: relative; padding: 14px calc(var(--sr) + 12px) 4px calc(var(--sl) + 12px); touch-action: none }
+  .m-grab { position: absolute; z-index: 1; top: 0; left: 50%; width: 120px; height: 40px; margin-left: -60px } /* over the readings, clear of the buttons below (the tabs' strip lies over it) */
+  /* round 11: the grab lies under the tabs and the timeline (z 2): Spots and Near me, Now and ★ take their own taps (they hit the grab: the sheet dropped) */
+  .m-grab::before { content: ""; position: absolute; top: 7px; left: 44px; width: 32px; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .24) }
+  /* The peek (round 11): the head's top, the timeline (js/mobile.js measure: the peek ends under it): the hour, Now and ★, the days and the
+     fish's chance through the day; dragging the chart scrubs the hours. Up, the readings and the tabs follow under it. The status line
+     (loading, an error with Retry, a saved forecast offline) sits over the timeline; live, it is hidden. */
+  .m-head > .status { padding: 2px 2px 6px; font-size: 12px }
+  .m-head > .status.live:not(.offline) { display: none }
+  .m-head > .status.error span { white-space: normal }
+  .m-head > .status .btn { flex: none; min-height: 32px; padding: 0 14px; font-size: 13px }
+  .m-head > .status.offline { color: var(--warn) }
+  .m-head .timeline { position: relative; z-index: 2 }
+  /* round 16 P: the hour's own text (and the timeline's empty room) lets a tap through to the grab under it: a tap on the handle opens the
+     sheet again; play, the chart, the days, Now and ★ keep theirs */
+  .m-head .timeline, .m-head .tl-now { pointer-events: none }
+  .m-head .timeline > :not(.tl-now), .m-head .tl-btns { pointer-events: auto }
+  .m-sheet.peek .m-head > .m-read { visibility: hidden } /* under the peek's edge: not a sliver of them (visibility only: nothing moves when a drag lifts the sheet) */ /* over the grab, as the tabs: Now and ★ take their own taps */
+  /* Pull to refresh: the sheet pulled down past its peek shows this sign over its top edge; it turns as it fills (opacity and rotation set
+     by js/mobile.js while dragging), white once letting go refreshes. Fades out after. */
+  .m-ptr { position: absolute; top: -50px; left: 50%; width: 36px; height: 36px; margin-left: -18px; display: grid; place-items: center; border-radius: 50%;
+    background: var(--panel); box-shadow: var(--edge), inset 0 0 0 1px var(--line-2), var(--shadow); color: var(--muted); opacity: 0; pointer-events: none; transition: opacity .2s }
+  .m-ptr .i { width: 18px; height: 18px }
+  .m-ptr.on { background: var(--accent); color: var(--accent-ink) }
+  .m-sheet.drag .m-ptr { transition: none }
+  .m-sheet[data-spot=card] .m-spot { touch-action: pan-y } /* sideways: the card's own swipe to the next spot (js/mobile.js); below full (the body pan-x) neither, the sheet drags */
+  /* Readings: where they apply as a micro label, then wind | waves | sea like instruments (value bold, unit small, icon dim) */
+  .m-read { min-height: 24px; display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; padding: 4px 0 6px; border-bottom: 1px solid var(--line) } /* round 16 P: 4 px under the chart's hours, so the place line is not glued to them */
+  .m-read:has(.strip:empty) { min-height: 55px } /* loading: the readings' room (16 + 4 + 24, the paddings and the hairline), so the head does not grow when they come */
+  .m-read .strip { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, max-content) max-content max-content; justify-content: start; gap: 4px 0;
+    padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; overflow: hidden }
+  .m-read .chip, .m-read .chip:hover { height: 24px; padding: 0; gap: 5px; font: 650 15px var(--sans); letter-spacing: -.01em; background: none; border-radius: 0 }
+  .m-read .chip:nth-child(n+3) { margin-left: min(12px, calc((100vw - 300px) / 7)); padding-left: min(12px, calc((100vw - 300px) / 7)); border-left: 1px solid var(--line-2) } /* 360 px: 8.5 px, so the wind keeps its km/h */
+  .m-read .chip small { font: 500 11.5px var(--sans); letter-spacing: 0; color: var(--muted) }
+  .m-read .chip .i { width: 16px; height: 16px; color: var(--dim) }
+  .m-read .chip svg:not(.i) { color: var(--muted) } /* the wind's arrow */
+  .m-read .chip:nth-child(n+5) { display: none } /* map.js draws place, wind, waves, sea, sun, moon: the sheet keeps the place, wind, waves and sea */
+  .m-read .chip:nth-child(2) { flex: 0 1 auto; min-width: 0; overflow: hidden } /* short of room (large system text), the gusts give way first */
+  .m-read .chip:nth-child(2) small { min-width: 0; overflow: hidden; text-overflow: ellipsis }
+  .m-read .chip.where { grid-area: 1 / 1 / 2 / -1; min-width: 0; max-width: none; height: 16px; gap: 5px; font: 650 var(--fs-label) var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) } /* one line with an ellipsis */
+  .m-read .chip.where .i { width: 12px; height: 12px }
+  .m-sheet.spot .m-read .chip.where { display: none } /* the open card names its place */
+  .m-read .chip.where { contain: inline-size } /* round 14: a long place line (Greek) no longer widens the columns under it and cuts the gusts mid-number */
+
+  /* Timeline (time, buttons, chart, day strip): css/timeline.css */
+  /* The app's tab bar (#ps-tabs moves in; its look: css/nav.css): pinned to the screen's foot, over the sheet's (see .m-sheet) and every page's */
+  .m-nav { display: block; position: absolute; z-index: 870; left: 0; right: 0; bottom: 0; height: var(--m-nav); padding: 0 var(--sr) var(--sb) var(--sl); background: var(--panel); border-top: 1px solid var(--line) }
+  /* A spot open: the day buttons step aside (the bars keep the chosen day; Now, ★ and the card's Go still jump), so the card covers 50 px
+     less map. A page (trip plan, calendar, catches, a place) has no use for the hours at all: the readings stay, as the handle. */
+  .m-sheet:is([data-spot=card], [data-spot=detail]) .m-head .tl-dtabs { display: none }
+  .m-sheet:is([data-spot=card], [data-spot=detail]) .m-head .tl-main:has(.one-day) #hour { top: 0 }
+  .m-sheet[data-spot=html] .m-head .timeline { display: none }
+
+  /* Below full the body does not scroll: an up or down drag on it moves the sheet (js/mobile.js), a sideways one still scrolls its chip rows.
+     Full, it scrolls; from the top of its scroll a pull down moves the sheet again (js/mobile.js sets pan-down there). */
+  .m-body { flex: none; overflow-y: hidden; touch-action: pan-x; overscroll-behavior: contain; padding: 10px calc(var(--sr) + 14px) calc(var(--sb) + 12px) calc(var(--sl) + 14px); scrollbar-width: none }
+  .m-body::-webkit-scrollbar { display: none }
+  .stage.m-full .m-body { overflow-y: auto; touch-action: auto }
+  .m-sheet.peek .m-body { visibility: hidden }
+  .m-main .tab { gap: 10px }
+  .top .row { min-height: 50px; padding-block: 6px }
+  .fold summary, .drawer-body > .fold > summary { min-height: 44px; font-size: 13px }
+  .fish-current { grid-template-columns: 76px minmax(0, 1fr); padding: 6px 10px 6px 4px }
+  #loc-none[aria-pressed="true"] { display: none } /* nothing to clear */
+  /* A tapped spot (the short card, the details in the same sheet) and Where to go's area list: css/spot.css */
+
+  /* Modals: full-height sheets like the bottom sheet (the same surface, hairline and lit edge), rising into place; the close at the top, the content scrolling inside */
+  .modal { padding: calc(var(--st) + 10px) 0 0; place-items: end stretch }
+  .modal > .sheet { width: 100%; height: 100%; max-height: none; border-width: 1px 0 0; border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 0 var(--sr) var(--sb) var(--sl);
+    background: var(--panel); box-shadow: var(--edge), 0 -12px 32px rgb(0 0 0 / .45); animation: m-rise .22s var(--ease) }
+  @keyframes m-rise { from { transform: translateY(28px); opacity: 0 } }
+  #guide { padding: calc(var(--st) + 16px) calc(var(--sr) + 16px) calc(var(--sb) + 16px) calc(var(--sl) + 16px); place-items: center }
+  .guide-card { max-height: 100%; overflow-y: auto }
+  .sheet-body { padding: 12px; overscroll-behavior: contain }
+  #help-modal .sheet-head { display: none } /* the help centre has its own bar with back and close */
+  .help-host { overflow: hidden }
+  /* fish picker: search and close in one row; groups with a compact sort button, then the methods on their own row (each row fades
+     at its right edge when more chips are off-screen); filters step aside while typing */
+  .sheet-head { gap: 8px; padding: 6px 4px 8px 16px }
+  #fish-title, .sort > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap } /* the search box says it */
+  .sheet-head input { flex: 1; min-width: 0; height: 44px; padding: 0 14px; font-size: 16px } /* 16 px: no zoom on focus */
+  .sheet-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "groups sort" "methods methods"; align-items: center; gap: 8px; padding: 0 0 8px 16px }
+  #fish-groups { grid-area: groups } #fish-methods { grid-area: methods } .sort { grid-area: sort }
+  .sheet-tools .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-right: 28px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent) }
+  .sheet-tools .chips::-webkit-scrollbar { display: none }
+  .sheet-tools .chips button { flex: none; font-size: 13px }
+  .sort { margin: 0; padding-right: 12px }
+  .sort select { width: 44px; min-height: 44px; padding: 0; font-size: 13px; color: transparent; -webkit-appearance: none; appearance: none; /* the sort as an icon button: the option names stay in the list it opens */
+    background: var(--raise) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f4f4f4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4'/%3E%3C/svg%3E") center / 20px no-repeat }
+  .sort option { color: var(--ink); background: var(--panel) }
+  #fish-modal .sheet:has(#fish-search:focus) :is(.sheet-tools, .sheet-foot), #fish-modal .sheet:has(#fish-search:not(:placeholder-shown)) .sheet-tools { display: none } /* keyboard up: keep the room for the fish; a search looks through every fish (ui.js) */
+  .fish-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px }
+  .sheet-foot { padding: 6px 16px }
+}
+
+/* Phone on its side: the sheet is a panel on the right (the map keeps the left, top to bottom) that scrolls as a whole. js/mobile.js
+   (SIDE, the same query) keeps it open, skips dragging and pads the map by its width. A spot open: one time row instead of the day
+   strip and hour bars, so the card gets the height; closing it brings them back. */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 960px) and (min-width: 560px) {
+  :root { --m-side: min(50vw, 420px); --m-nav: calc(52px + var(--sb)) }
+  .m-nav { left: auto; width: var(--m-side); padding-left: 0; border-left: 1px solid var(--line-2) } /* the tab bar at the panel's foot */
+  .m-sheet { --sl: 0px; top: calc(var(--st) + 8px); left: auto; width: var(--m-side); height: auto !important; transform: none !important; overflow-y: auto; overscroll-behavior: contain;
+    overflow-anchor: none; scrollbar-width: none; /* no anchoring: rotating with a card open would scroll its close button away */ border-top: 0; border-left: 1px solid var(--line-2); border-radius: var(--r-lg) 0 0 0 }
+  .m-sheet::-webkit-scrollbar { display: none }
+  .m-grab, .m-ptr { display: none } /* the panel is always open: its tabs and lists, no peek */
+  .mb-chips { margin-right: 0; padding-right: 0; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent) } /* ends at the panel */
+  .m-head { padding-top: 8px; touch-action: auto }
+  .m-body, .stage.m-full .m-body { height: auto !important; overflow: visible; touch-action: auto }
+  .m-sheet.peek .m-body { visibility: visible }
+  .m-sheet.spot .m-head .tl-main { display: none }
+  .m-spot .drawer-head { top: 0 }
+  .mobile-bar { right: calc(var(--m-side) + 8px) }
+  .hud, .stage.m-full .hud { right: calc(var(--m-side) + 8px); visibility: visible }
+  .banner, .stage.has-drawer .banner { right: calc(var(--m-side) + 60px) }
+  .map-legend, .rail:not(.collapsed) ~ .map-legend { bottom: calc(var(--sb) + 8px); max-height: calc(100% - var(--m-bar) - 20px) }
+  .leaflet-bottom { bottom: var(--sb) } /* locate at the map's bottom right, clear of Layers at its top right */
+  .leaflet-right { right: var(--m-side) }
+  .toast { left: calc((100% - var(--m-side)) / 2); bottom: calc(var(--sb) + 16px) }
+  .sheet-tools { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; grid-template-areas: "groups methods sort" } /* fish picker: the filters in one row, so the fish get the height */
+}
+/* round 16 P: a 360 px phone: the readings a little smaller, so the wind keeps its gusts number (it showed "km/h · gusts" with the number cut) */
+@media (max-width: 374px) { .m-read .chip, .m-read .chip:hover { font-size: 14px; gap: 4px } .m-read .chip small { font-size: 11px } }

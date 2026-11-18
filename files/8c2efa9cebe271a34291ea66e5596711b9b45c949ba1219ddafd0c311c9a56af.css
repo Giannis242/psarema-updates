@@ -1,0 +1,86 @@
+/* Sheets: the modal shell every panel uses, and what fills the fish picker. Help and tour: css/help.css.
+   Tokens: css/tokens.css. Phones: the shell's rules sit in css/mobile.css; the picker's and guide's own phone rules at the end of this file. */
+/* ---------- Sheets (and every panel's modal) ---------- */
+.modal { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; background: var(--scrim); animation: scrim-in var(--dur); /* only the dim fades: a see-through rising sheet showed the map's sheet through it */
+  padding: max(14px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)) }
+.sheet { width: min(1040px, 100%); height: min(860px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; background: var(--panel); animation: pop-in .18s var(--ease) }
+.sheet-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 12px 20px }
+.sheet-head h2 { flex: none; font: 650 17px var(--sans); letter-spacing: -.01em; color: var(--ink) }
+.sheet-head input { flex: 1; min-width: 0; padding: 7px 14px; font-size: 13.5px }
+.sheet-head .spacer { flex: 1 }
+.sheet-tools { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 0 20px 12px; border-bottom: 1px solid var(--line) }
+.sort { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; font: 500 var(--fs-sm) var(--sans); color: var(--muted) }
+.sort > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap } /* the icon in the select says it; screen readers keep the word */
+.sort select { min-height: 34px; padding: 3px 28px 3px 32px; border-radius: var(--r); border-color: var(--line); box-shadow: var(--edge); font: 550 12.5px var(--sans); -webkit-appearance: none; appearance: none;
+  background-color: var(--raise); background-repeat: no-repeat; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-position: 10px center, right 9px center; background-size: 15px, 14px } /* the sort icon, the select's name, a chevron */
+.sort option { color: var(--ink); background: var(--panel) }
+.sheet-body { flex: 1; padding: 16px 10px 20px 20px }
+.sheet-foot { padding: 10px 20px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--dim) }
+.sheet-foot:empty { display: none }
+
+/* ---------- Fish picker (#fish-modal, ui.js drawGallery): a gallery, each fish's cut-out on a dark stage with its chance as a dial ---------- */
+.fsearch { position: relative; flex: 1; min-width: 0; display: flex; align-items: center }
+.fsearch > span { position: absolute; left: 12px; display: flex; color: var(--dim); pointer-events: none }
+.fsearch input { height: var(--h-lg); border-radius: var(--r); background: rgb(0 0 0 / .28); border-color: var(--line-2) }
+#fish-search { padding-left: 36px } /* an id: clear of the icon on phones too, whatever css/mobile.css pads */
+/* the filters as segmented tracks (as app.css .seg): the chosen one white */
+.sheet-tools .chips { gap: 2px; padding: 3px; border-radius: var(--r); background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px var(--line) }
+.sheet-tools .chips button { min-height: 28px; padding: 2px 11px; background: none; box-shadow: none; font-size: 12px }
+.sheet-tools .chips button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 4px rgb(0 0 0 / .4) }
+.fish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 12px }
+/* a card: stage (cut-out, flag, dial) over a name plate; content-visibility: the ~57 cards out of view are not laid out or painted */
+.fish-card { position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden; border-radius: var(--r); border: 1px solid var(--line); background: var(--raise); text-align: left;
+  content-visibility: auto; contain-intrinsic-size: auto 210px }
+.fish-card > :is(.fish-art, .ph) { width: 100%; aspect-ratio: 16 / 10; padding: 18px 14px 10px; /* the stage: a lit middle and a soft floor, drawn once (no per-card shadow filter) */
+  background: radial-gradient(40% 7% at 50% 88%, rgb(0 0 0 / .55), transparent), radial-gradient(90% 85% at 50% 30%, #2c2c2c, #151515 78%) }
+.fish-card > .fish-art { display: block; overflow: hidden } /* the stage keeps its ratio: a tall cut-out is fitted, not let grow the card */
+.fish-card > .fish-art.photo { padding: 0 }
+.fish-card .fish-art img { width: 100%; height: 100%; object-fit: contain; filter: none; transition: transform .22s var(--ease) }
+.fish-card > .fish-art.photo img { object-fit: cover; border-radius: 0 }
+@media (hover: hover) { .fish-card:hover .fish-art img { transform: scale(1.05) } }
+.fish-card > .ring { --sz: 28px; position: absolute; top: 7px; right: 7px; background: rgb(0 0 0 / .5) } /* ring('sm') a little larger: its number reads at a glance */
+.fish-card > .ring.empty { animation: sk-breathe 1.6s ease-in-out 6 } /* not ranked yet (model.js fills the ranking in steps): an empty dial, breathing a few times (css/splash.css) */
+.fish-card > .ring.empty b { visibility: hidden }
+/* dark badges: red for bans, amber for caution */
+.fish-card .flag { position: absolute; top: 9px; left: 8px; display: inline-flex; gap: 4px; align-items: center; padding: 2px 7px 2px 5px; border-radius: var(--r-sm); background: rgb(14 14 14 / .82); font: 650 var(--fs-xs) var(--sans); color: var(--warn) }
+.fish-card .flag.ban { color: var(--bad) }
+.fish-card .body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 9px 11px 10px; border-top: 1px solid var(--line) }
+.fish-card .body b { font: 650 var(--fs-md)/1.2 var(--sans); letter-spacing: -.01em; overflow-wrap: anywhere }
+.fish-card small { overflow: hidden; font-size: 11.5px; line-height: 1.3; color: var(--muted); white-space: nowrap; text-overflow: ellipsis }
+.fish-card .row2 { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 7px }
+.fish-card .row2 small { flex: none; display: inline-flex; gap: 3px; color: var(--dim) }
+.fish-card .months { flex: 1; max-width: 96px; margin-left: auto }
+/* chosen: a white frame and a white name plate */
+.fish-card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) }
+.fish-card[aria-pressed="true"] .body { background: var(--accent); color: var(--accent-ink) }
+.fish-card[aria-pressed="true"] :is(small, .row2 small) { color: rgb(18 18 18 / .62) }
+.fish-card[aria-pressed="true"] .months { color: var(--accent-ink) }
+/* the season: one slim bar a month, brighter where it peaks; this month stands taller */
+.months { display: grid; grid-template-columns: repeat(12, 1fr); align-items: end; gap: 2px; color: var(--ink) }
+.months i { height: 3px; border-radius: 1px; background: currentColor; opacity: calc(.14 + .86 * var(--v)) }
+.months i.now { height: 8px }
+.grid-credit { grid-column: 1 / -1; margin: 6px 2px 0; font-size: 11.5px; line-height: 1.4; color: var(--dim) }
+/* ---------- The plain how-to card (#guide before js/help.js's tour takes it over: css/help.css) ---------- */
+.guide-card { width: min(480px, 100%); display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: var(--panel); animation: pop-in .18s var(--ease) }
+.guide-card h2 { font: 700 22px/1.2 var(--sans); letter-spacing: -.015em; color: var(--ink) }
+.guide-card ol { display: flex; flex-direction: column; gap: 9px; margin: 0; padding-left: 22px; font-size: var(--fs-md); line-height: 1.45; color: #dcdcdc }
+.guide-card ol li::marker { color: var(--muted); font-weight: 700 }
+.guide-card b { color: var(--ink) }
+.guide-foot { display: flex; justify-content: flex-end }
+.sheet-body.help-host { padding: 0 } /* the help centre draws its own bar and margins (two classes: past css/mobile.css's .sheet-body) */
+
+/* ---------- Phones (core.js isPhone): the shell's phone rules are in css/mobile.css, which comes later; these only add to them ---------- */
+@keyframes scrim-in { from { background-color: transparent } }
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .fish-card { contain-intrinsic-size: auto 190px } /* the phone card's real height: the grid no longer changes height as the picker rises */
+  /* every modal sheet rising from the foot carries a grab handle (as app.css .ui-grab); the help centre and the tour draw their own tops */
+  .modal:not(#help-modal, #guide) > .sheet::before { content: ""; display: block; flex: none; width: 36px; height: 4px; margin: 7px auto -3px; border-radius: 2px; background: rgb(255 255 255 / .22) }
+  .modal > .sheet .sheet-head h2 { font-size: var(--fs-lg) }
+  .sheet-tools .chips { padding: 2px }
+  .sheet-tools .chips button { min-height: 44px; padding: 2px 13px } /* the track's chips stay 44 px touch targets */
+  .fish-card > :is(.fish-art, .ph) { padding: 14px 10px 8px }
+  .fish-card .body { padding: 8px 10px 9px }
+  .fish-card > .ring { top: 6px; right: 6px }
+  .fish-card .flag { top: 7px; left: 6px; padding: 1px 6px 1px 4px }
+}

@@ -1,0 +1,77 @@
+/* Psarema: the map search (js/search.js). A filled field; results in sections (Fish, Spots, Areas, Towns) of clean rows split by hairlines, fish with
+   their cut-out and their week's best chance (the only colour); empty: the week's best fish as a strip of cut-outs, All species, recent searches.
+   Desktop: a list under the field; phones: the whole screen. */
+.rail-search { position: relative; z-index: 3; padding: 0 10px 10px 12px }
+.rail.collapsed .rail-search { padding-top: 4px }
+.pss { position: relative }
+.pss-field { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 4px 0 12px; border-radius: var(--r); background: var(--raise);
+  box-shadow: var(--edge); color: var(--muted); cursor: text; transition: background var(--dur), box-shadow var(--dur) }
+.pss-field:focus-within { background: var(--raise-2); box-shadow: var(--edge), 0 0 0 1px rgb(255 255 255 / .22); color: var(--ink) }
+.pss-field input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: none; color: var(--ink); font: 500 var(--fs-md) var(--sans) }
+.pss-field input::placeholder { color: var(--dim); opacity: 1 }
+.pss-field input::-webkit-search-cancel-button { -webkit-appearance: none; display: none }
+.pss-x, .pss-back { flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer }
+.pss-x { width: 26px; height: 26px; margin-right: 3px; border-radius: 50%; background: rgb(255 255 255 / .12); color: var(--ink) }
+.pss-x .i { width: 14px; height: 14px }
+.pss-x:hover { background: rgb(255 255 255 / .2) } .pss-back:hover { background: var(--raise-3); color: var(--ink) }
+.pss-back { display: none }
+.pss-list { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 6px); max-height: min(64vh, 560px); overflow-y: auto; overscroll-behavior: contain; padding: 4px 8px 10px;
+  border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--panel); box-shadow: var(--shadow); animation: pop-in var(--dur) var(--ease); transform-origin: top center;
+  scrollbar-width: thin; scrollbar-color: var(--line-2) transparent }
+
+/* a section: its micro label (a count, or Clear for the recent ones), then its rows as one group split by hairlines */
+.pss-h { display: flex; align-items: center; gap: 8px; min-height: 28px; margin: 10px 4px 4px }
+.pss-h small { font: 600 var(--fs-xs) var(--sans); color: var(--dim); font-variant-numeric: tabular-nums }
+.pss-clr { margin-left: auto; min-height: 28px; padding: 0 6px; border: 0; border-radius: var(--r-sm); background: none; font: 600 12px var(--sans); color: var(--muted); cursor: pointer }
+.pss-clr:hover { color: var(--ink); background: var(--raise) }
+.pss-rows { overflow: hidden; border-radius: var(--r); background: var(--card, var(--raise)); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.pss-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 10px; cursor: pointer; transition: background var(--dur) }
+.pss-row + .pss-row::before { content: ""; position: absolute; top: 0; left: 62px; right: 0; height: 1px; background: var(--line) } /* a hairline after the art, as lists do */
+.pss-row[aria-selected="true"] { background: var(--raise-2) }
+.pss-row:active { background: var(--raise-3) }
+.pss-ic { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--r); background: var(--raise-2); color: var(--muted) }
+.pss-ic .i { width: 18px; height: 18px }
+.pss-art { flex: none; display: grid; place-items: center; width: 40px; height: 40px; overflow: hidden; border-radius: var(--r);
+  background: radial-gradient(90% 80% at 50% 35%, #333, #1a1a1a 85%) }
+.pss-art img { display: block; width: 100%; height: 100%; padding: 3px; object-fit: contain; transform: scale(1.18) }
+.pss-art .fish-art { display: block; width: 100%; height: 100% } .pss-art .fish-art.photo img { object-fit: cover; padding: 0; transform: none }
+.pss-art .ph svg { width: 26px; fill: var(--dim) }
+.pss-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.pss-t b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 var(--fs-md) var(--sans); color: var(--ink) }
+.pss-t mark { background: none; color: inherit; text-decoration: underline 1.5px rgb(255 255 255 / .55); text-underline-offset: 3px }
+.pss-t small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm); color: var(--muted) }
+.pss-row .ring { flex: none }
+.pss-more { flex: none; display: grid; place-items: center; width: 24px; color: var(--dim) }
+.pss-more .i { width: 16px; height: 16px }
+.pss-empty { margin: 0; padding: 20px 12px; font-size: var(--fs-sm); line-height: 1.45; color: var(--dim); text-align: center }
+.pss-empty small { display: block; margin-top: 4px; font-size: var(--fs-xs, 11.5px); color: var(--dim); opacity: .8 } /* round 16 P: what to try, under "nothing found" */
+
+/* the week's best fish: a strip of cut-outs that scrolls sideways */
+.g-top .pss-rows { display: flex; gap: 8px; margin: 0 -8px; padding: 0 8px 2px; overflow-x: auto; border-radius: 0; background: none; box-shadow: none; scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain; scroll-padding-inline: 8px; scrollbar-width: none }
+.g-top .pss-rows::-webkit-scrollbar { display: none }
+.pss-tile { position: relative; flex: none; display: flex; flex-direction: column; width: 104px; overflow: hidden; border-radius: var(--r); background: var(--card, var(--raise));
+  box-shadow: var(--edge), inset 0 0 0 1px var(--line); cursor: pointer; scroll-snap-align: start; transition: background var(--dur) }
+.pss-tile[aria-selected="true"], .pss-tile:active { background: var(--raise-2) }
+.pss-stage { display: block; height: 58px; padding: 8px 8px 4px; background: radial-gradient(40% 8% at 50% 88%, rgb(0 0 0 / .5), transparent), radial-gradient(90% 85% at 50% 30%, #333, #1a1a1a 80%) }
+.pss-stage img { display: block; width: 100%; height: 100%; object-fit: contain }
+.pss-tile b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; height: 2.5em; margin: 6px 8px 8px; overflow: hidden; font: 600 12px/1.25 var(--sans); color: var(--ink) }
+.pss-tile .ring { position: absolute; top: 4px; right: 4px; background: rgb(0 0 0 / .55) }
+
+/* phones: tapped, the search takes the screen (js/search.js moves it to <body>): Back arrow and the field on a bar, the results below */
+.pss.full { position: fixed; z-index: 2600; inset: 0; display: flex; flex-direction: column; padding: calc(var(--st, 0px) + 8px) calc(var(--sr, 0px) + 12px) 0 calc(var(--sl, 0px) + 6px);
+  background: var(--page, var(--bg)); animation: fade-in var(--dur) }
+.pss.full .pss-field { flex: none; height: 44px; padding-left: 0; gap: 4px; background: none; box-shadow: none }
+.pss.full .pss-field:focus-within { background: none; box-shadow: none }
+.pss.full .pss-field input { height: 40px; padding: 0 12px; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge); font-size: 16px } /* 16 px: mobile browsers zoom into smaller fields */
+.pss.full .pss-field input:focus { background: var(--raise-2) }
+.pss.full .pss-back { display: grid; width: 44px; height: 44px }
+.pss.full .pss-lens { display: none }
+.pss.full .pss-x { position: absolute; right: 8px; top: 50%; translate: 0 -50%; width: 28px; height: 28px; margin: 0 }
+.pss.full .pss-field { position: relative }
+.pss.full .pss-field input { padding-right: 40px }
+.pss.full .pss-list { position: static; flex: 1; max-height: none; margin: 4px -12px 0 -6px; padding: 0 12px calc(var(--sb, 0px) + 24px); border: 0; border-radius: 0; background: none; box-shadow: none; animation: none }
+.pss.full .g-top .pss-rows { margin: 0 -12px; padding: 0 12px 2px; scroll-padding-inline: 12px }
+.pss.full .pss-h { margin-top: 14px }
+.pss.full .pss-t b { font-size: 15px }
+.pss.full .pss-t small { font-size: 12.5px }

@@ -1,0 +1,146 @@
+/* Psarema: the Feed and one sighting or report (js/feed.js) - feed agent, round 8: a post feed. Grey cards, white text; photos bring the colour.
+   A post: header (avatar, title, place · time ago, a kind badge), a big media box (the photo, else the fish's cut-out drawn over a depth
+   gradient and labelled as a drawing), fact chips, the text, a footer (who, the licence). The views are a tab strip with an underline.
+   Motion: a card fades up once as it is added; the skeleton pulses a few times then rests (both off under reduced motion, app.css). */
+.fd { display: flex; flex-direction: column; gap: 10px; max-width: 560px; margin: 0 auto }
+.fd-rf[aria-busy] { opacity: .45; pointer-events: none } /* refreshing: the list shows the skeleton meanwhile */
+
+/* The views: a top tab strip, the chosen one underlined */
+.fd-bar { display: flex; align-items: flex-end; gap: 8px; margin: -4px 0 0; border-bottom: 1px solid var(--line) }
+.fd-tabs { flex: 1; display: flex; min-width: 0 }
+.fd-tabs button { position: relative; flex: 1 1 0; min-width: 0; min-height: 42px; padding: 0 6px; font: 600 13px/1.2 var(--sans); color: var(--dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: var(--r-sm) var(--r-sm) 0 0 }
+.fd-tabs button:hover { color: var(--ink) }
+.fd-tabs button[aria-pressed="true"] { color: var(--ink) }
+.fd-tabs button::after { content: ''; position: absolute; left: 22%; right: 22%; bottom: -1px; height: 2px; border-radius: 2px; background: var(--ink); transform: scaleX(0);
+  transition: transform var(--dur) var(--ease) }
+.fd-tabs button[aria-pressed="true"]::after { transform: none }
+.fd-tabs button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px }
+
+/* round 17 G: the fish filter, one picker (a native list under a button, as the Forecast's fish) where a row of chips was */
+.fd-pick { position: relative; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); background: var(--raise);
+  box-shadow: inset 0 0 0 1px var(--line-2); color: var(--muted); cursor: pointer }
+.fd-pick:hover { background: var(--raise-2) }
+.fd-pick b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px var(--sans); color: var(--ink) }
+.fd-pick select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px }
+.fd-pick select option { background: var(--panel); color: var(--ink) }
+.fd-pick:focus-within { box-shadow: inset 0 0 0 1px rgb(255 255 255 / .5), 0 0 0 2px var(--focus) }
+.fd-intro, .fd-warn { display: flex; gap: 7px; margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--dim) }
+.fd-intro .i, .fd-warn .i { flex: none; margin-top: 2px }
+.fd-warn { padding: 8px 10px; border-radius: var(--r); background: rgb(232 166 74 / .08); color: var(--muted) }
+.fd-warn .i { color: var(--warn) }
+.fd-msg:empty { display: none }
+.fd-note { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 14px }
+.fd-note > .i { width: 22px; height: 22px; color: var(--dim) }
+.fd-note p { margin: 0; max-width: 34ch }
+.fd-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px }
+.fd-list { display: flex; flex-direction: column; gap: 12px }
+.fd-more:empty { height: 1px }
+.fd-end { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0; padding: 14px 8px 6px; font-size: 12px; color: var(--dim); text-align: center }
+
+/* A post */
+.fd-card { display: flex; flex-direction: column; border-radius: var(--r); overflow: hidden; background: var(--card, var(--raise)); box-shadow: inset 0 0 0 1px var(--line), var(--edge);
+  cursor: pointer; -webkit-tap-highlight-color: transparent; animation: fd-in .24s var(--ease) both; contain: content }
+.fd-card:hover { background: var(--card-2, #292929) }
+.fd-card:active { opacity: .88 }
+.fd-card:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+@keyframes fd-in { from { opacity: 0; transform: translateY(8px) } }
+.fd-hd { display: flex; align-items: center; gap: 10px; padding: 9px 10px 9px 10px; min-height: 58px }
+.fd-av { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #333; box-shadow: inset 0 0 0 1px var(--line-2); overflow: hidden }
+.fd-av img { width: 88%; height: 66%; object-fit: contain }
+.fd-av .i { width: 20px; height: 20px; color: var(--muted) }
+.fd-av.me { background: var(--ink); color: var(--accent-ink); font: 700 14px/1 var(--sans); letter-spacing: .02em }
+.fd-av.me img { width: 100%; height: 100%; object-fit: cover }
+.fd-av.lg { width: 52px; height: 52px }
+.fd-ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.fd-ttl b { font: 650 14.5px/1.25 var(--sans); color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere } /* round 16 P: a long name in two lines, not "Yellowspotted puffer (invasi…" */
+.fd-ttl small, .fd-ttl i { font-size: 11.5px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.fd-ttl small { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical } /* round 16 P: place and time whole (Greek runs longer: "Κόλπος Λάρνακας · πριν από 12 ημέρες") */
+.fd-badge { flex: none; padding: 3px 7px; border-radius: var(--r-sm); background: rgb(255 255 255 / .06); box-shadow: inset 0 0 0 1px var(--line-2);
+  font: 650 10px/1.3 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--muted) }
+.k-rep .fd-badge { background: #3a3a3a; box-shadow: none; color: var(--ink) }
+.k-you .fd-badge { background: var(--accent); box-shadow: none; color: var(--accent-ink) }
+
+/* The media box: a photo (4:3), else the drawing (a shorter 16:9) */
+.fd-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #161616 }
+.fd-media.ph { aspect-ratio: 4 / 3 }
+.fd-pic { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .25s var(--ease) }
+.in > .fd-pic { opacity: 1 }
+.fd-art { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / .07), transparent 60%),
+    repeating-linear-gradient(180deg, transparent 0 22px, rgb(255 255 255 / .018) 22px 23px),
+    linear-gradient(180deg, #2b2f31 0%, #1f2224 48%, #151617 100%) }
+.fd-art::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: linear-gradient(transparent, rgb(0 0 0 / .28)) }
+.fd-art img { position: relative; z-index: 1; width: 68%; max-height: 70%; object-fit: contain; filter: drop-shadow(0 10px 14px rgb(0 0 0 / .45)) }
+.fd-art > .i { width: 64px; height: 64px; color: rgb(255 255 255 / .22) }
+.fd-art-lbl { position: absolute; z-index: 2; right: 8px; bottom: 7px; padding: 2px 6px; border-radius: var(--r-sm); background: rgb(0 0 0 / .35);
+  font: 550 10px/1.4 var(--sans); color: rgb(255 255 255 / .62) }
+.in > .fd-art, .ph:has(> .fd-pic) .fd-art-lbl { display: none } /* a photo: the drawing only while it loads, and never its label */
+
+.fd-body { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 2px }
+.fd-body:empty { display: none }
+.fd-what { margin: 0; font: 650 14px/1.3 var(--sans); color: var(--ink) }
+.fd-facts { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0; list-style: none }
+.fd-facts li { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 8px; border-radius: var(--r-sm); background: rgb(255 255 255 / .055);
+  font: 550 11.5px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--ink); max-width: 100% }
+.fd-facts li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.fd-facts .i { flex: none; color: var(--muted) }
+.fd-tx { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden }
+.fd-ft { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 8px; padding: 9px 12px 10px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--dim) }
+.fd-ft > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.fd-ft .i { flex: none }
+.fd-lic { flex: none; margin-left: auto; padding: 0 5px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px var(--line-2); font: 600 10px/1.6 var(--sans); letter-spacing: .03em; color: var(--muted) }
+
+/* Loading: grey shapes where the posts will be */
+.fd-skel { cursor: default; animation: fd-pulse 1s ease-in-out 6 alternate }
+.fd-skel .fd-ttl b, .fd-skel .fd-ttl i, .fd-skel .fd-ft b { display: block; height: 11px; border-radius: 3px; background: rgb(255 255 255 / .07) }
+.fd-skel .fd-ttl b { width: 55% } .fd-skel .fd-ttl i { width: 35%; height: 9px; margin-top: 4px } .fd-skel .fd-ft b { width: 70% }
+.fd-skel .fd-media { background: rgb(255 255 255 / .035) }
+@keyframes fd-pulse { to { opacity: .55 } }
+
+/* One sighting or report */
+.sg { display: flex; flex-direction: column; gap: 12px; max-width: 560px; margin: 0 auto }
+.sg-hero { position: relative; margin: 0; aspect-ratio: 16 / 9; border-radius: var(--r); overflow: hidden; background: #0b0b0b; box-shadow: inset 0 0 0 1px var(--line) }
+.sg-hero.ph { aspect-ratio: 4 / 3 }
+.sg-hero .fd-pic { object-fit: contain }
+.sg-hero > .fd-badge { position: absolute; z-index: 3; left: 10px; top: 10px; background: rgb(18 18 18 / .78); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink) }
+.sg.k-rep .sg-hero > .fd-badge { background: rgb(58 58 58 / .9) }
+.sg-hd { display: flex; align-items: center; gap: 12px }
+.sg-hd > div { min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.sg-hd h3 { margin: 0; font: 700 19px/1.2 var(--sans); color: var(--ink) }
+.sg-hd p { margin: 0; font-size: 12px; color: var(--muted) }
+.sg-hd small { font-size: 11.5px; color: var(--dim) }
+.sg-tx { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink) }
+.sg-facts { display: flex; flex-direction: column; margin: 0; border-radius: var(--r); background: var(--card, var(--raise)); box-shadow: inset 0 0 0 1px var(--line); padding: 0 12px }
+.sg-facts > div { display: grid; grid-template-columns: minmax(84px, 30%) 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line) }
+.sg-facts > div:first-child { border-top: 0 }
+.sg-facts dt { padding-top: 2px }
+.sg-facts dd { margin: 0; min-width: 0; font-size: 13px; line-height: 1.4; color: var(--ink); overflow-wrap: anywhere }
+.sg-facts small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--dim) }
+
+/* The locator: a slice of coast with the place on it; the whole box is the Show on map button */
+.sg-mm { display: flex; flex-direction: column; width: 100%; padding: 0; border-radius: var(--r); overflow: hidden; background: var(--card, var(--raise)); box-shadow: inset 0 0 0 1px var(--line);
+  text-align: left; cursor: pointer; color: var(--ink) }
+.sg-mm:hover { background: var(--card-2, #292929) }
+.sg-mm:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+.sg-mm svg { display: block; width: 100%; aspect-ratio: 5 / 2; background: linear-gradient(180deg, #1a1d1f, #141617) }
+.sg-mm-land { fill: #34373a; stroke: rgb(255 255 255 / .22); stroke-width: 1 }
+.sg-mm-halo { fill: rgb(255 255 255 / .14) }
+.sg-mm-area { fill: rgb(255 255 255 / .08); stroke: rgb(255 255 255 / .45); stroke-width: 1.2; stroke-dasharray: 4 3 }
+.sg-mm-dot { fill: var(--ink); stroke: #121212; stroke-width: 2 }
+.sg-mm-cap { display: flex; align-items: center; gap: 8px; padding: 9px 12px; min-height: 44px; border-top: 1px solid var(--line) }
+.sg-mm-cap > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px }
+.sg-mm-cap b { font: 600 13px/1.3 var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.sg-mm-cap small { font-size: 11px; color: var(--dim) }
+.sg-mm-cap .i { flex: none; color: var(--muted) }
+.sg-acts { display: flex; flex-wrap: wrap; gap: 8px }
+.sg-acts .btn { flex: 1 1 auto; min-height: 40px }
+.sg-note { display: flex; gap: 7px; margin: 0; line-height: 1.5 }
+.sg-note .i { flex: none; margin-top: 2px }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .fd-tabs button { min-height: 44px; font-size: 13.5px }
+  .sg-acts .btn, .fd-btns .btn, .fd-end .btn { min-height: 44px }
+  .fd-rf { width: 44px; height: 44px }
+  .fd-ttl b { font-size: 15px }
+}

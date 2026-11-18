@@ -1,0 +1,66 @@
+/* Psarema dive view (js/dive3d.js): a full-screen 3D block of the seabed around a spot. Above everything but the toast. */
+.dive { --st: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)); --sb: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)); --sl: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)); --sr: max(env(safe-area-inset-right, 0px), var(--safe-right, 0px));
+  position: fixed; inset: 0; z-index: 2500; overflow: hidden; color: var(--ink); font: 13px/1.35 var(--sans); user-select: none; -webkit-user-select: none;
+  background: radial-gradient(130% 85% at 50% 8%, #1a4560 0%, #0d2436 48%, #050c13 100%) }
+.dive-stage, .dive-labels { position: absolute; inset: 0 }
+.dive-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; cursor: grab }
+.dive-stage canvas:active { cursor: grabbing }
+.dive-labels { pointer-events: none; overflow: hidden }
+
+.dive-top, .dive-panel, .dive-compass { background: var(--glass); border: 1px solid var(--line-2); box-shadow: var(--shadow) } /* the app's glass, no blur: a blur re-ran every frame the scene turned */
+.dive-top { position: absolute; top: calc(var(--st) + 10px); left: calc(var(--sl) + 10px); max-width: min(520px, calc(100% - var(--sl) - var(--sr) - 20px));
+  display: flex; align-items: center; gap: 6px; padding: 4px 14px 4px 4px; border-radius: var(--r-lg) } /* a compact bar, as a pushed page's: back, then the title */
+.dive-ttl { display: grid; gap: 3px; min-width: 0 }
+.dive-ttl b { font: 650 15px/1.2 var(--sans); letter-spacing: -.01em }
+.dive-ttl small { font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap } /* .lbl */
+.dive-x { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r); color: var(--ink); font-size: 16px }
+.dive-x:hover, .dive-x:focus-visible { background: var(--raise-2) }
+.dive-x .i { width: 22px; height: 22px }
+
+.dive-compass { position: absolute; top: calc(var(--st) + 10px); right: calc(var(--sr) + 10px); width: 52px; height: 52px; padding: 0; border-radius: 50%; display: grid; place-items: center }
+.dive-rose { width: 44px; height: 44px; overflow: visible; transition: none }
+.dive-rose text { fill: var(--ink); font: 700 7px var(--sans) }
+
+.dive-panel { position: absolute; left: calc(var(--sl) + 10px); bottom: calc(var(--sb) + 10px); width: 300px; padding: 10px 12px; border-radius: var(--r-lg); display: grid; gap: 8px }
+.dive-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; border-radius: var(--r); background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px var(--line) } /* app.css .seg */
+.dive-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 4px 8px; border-radius: var(--r-sm); color: var(--muted); font: 600 12.5px var(--sans) }
+.dive-seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 4px rgb(0 0 0 / .4) } /* selected = white, as app.css .seg */
+.dive-pill { display: inline-block; min-width: 24px; padding: 1px 5px; border-radius: var(--r-sm); color: #111; font: 700 11px var(--sans); font-style: normal; text-align: center }
+.dive-bar { height: 6px; border-radius: 3px }
+.dive-words { display: flex; justify-content: space-between; margin-top: 3px; color: var(--muted); font-size: 11px }
+.dive.no-heat .dive-heat { display: none }
+.dive-key { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 11.5px }
+.dive-key span { display: inline-flex; align-items: center; gap: 5px }
+.dive-key i { width: 10px; height: 10px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .15) }
+.dive-meta { color: var(--dim); font-size: 11px }
+.dive-meta:empty { display: none }
+
+.dive-hint { position: absolute; left: 50%; bottom: calc(var(--sb) + 14px); transform: translateX(-50%); margin: 0; padding: 6px 12px; pointer-events: none;
+  width: max-content; max-width: calc(100% - 32px); background: var(--glass); border: 1px solid var(--line-2); color: var(--muted); font-size: 12px; text-align: center; transition: opacity .4s; border-radius: var(--r) }
+.dive.is-touched .dive-hint { opacity: 0 }
+
+.dive-msg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: min(360px, calc(100% - 40px)); display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--r-lg); background: var(--glass); border: 1px solid var(--line-2); box-shadow: var(--shadow); text-align: center }
+.dive-msg[hidden] { display: none }
+.dive-spin { flex: none; width: 18px; height: 18px; border: 2px solid rgb(255 255 255 / .25); border-top-color: #fff; border-radius: 50%; animation: dive-spin .8s linear infinite }
+@keyframes dive-spin { to { transform: rotate(1turn) } }
+.dive-btn { min-height: var(--h); padding: 6px 14px; border-radius: var(--r); background: var(--accent); color: var(--accent-ink); font: 650 12.5px var(--sans) }
+
+/* labels pinned to points in the scene (js/dive3d.js moves the outer box; the inner one sets the anchor) */
+.dive-lab { position: absolute; left: 0; top: 0; will-change: transform; white-space: nowrap; color: #eaf5fb; font: 600 11px var(--sans);
+  text-shadow: 0 1px 2px rgb(0 0 0 / .9), 0 0 8px rgb(0 0 0 / .5) }
+.dive-lab > span { display: block }
+.dive-lab.tick > span { transform: translate(0, -50%); font-variant-numeric: tabular-nums; opacity: .9 }
+.dive-lab.north > span { transform: translate(-50%, -50%); font-size: 15px; font-weight: 700; color: #ff8a7e }
+.dive-lab.spot > span { transform: translate(-50%, calc(-100% - 12px)); padding: 4px 9px; border-radius: var(--r-sm); background: var(--glass); border: 1px solid var(--line-2);
+  text-shadow: none; font-weight: 500; font-size: 12px }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .dive-top { right: calc(var(--sr) + 72px); max-width: none }
+  .dive-panel { left: calc(var(--sl) + 8px); right: calc(var(--sr) + 8px); bottom: calc(var(--sb) + 8px); width: auto; padding: 8px 10px; gap: 6px }
+  .dive-hint { bottom: auto; top: calc(var(--st) + 72px) }
+}
+@media (max-height: 500px) and (max-width: 960px) { /* phones on their side: the panel to one side */
+  .dive-panel { right: auto; width: 260px }
+  .dive-key { display: none }
+}

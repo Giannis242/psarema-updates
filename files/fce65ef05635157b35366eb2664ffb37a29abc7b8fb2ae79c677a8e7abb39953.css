@@ -1,0 +1,325 @@
+/* Psarema help centre (js/help.js). Everything is scoped under .ps-help and uses css/tokens.css.
+   Type: title 17 (as css/sheets.css .sheet-head h2), headings 15, text 14, notes 13, chips 12. Cards as the app's: raised, a hairline and a lit top edge. */
+#help-modal .sheet-head { display: none } /* one header: the help centre's own bar has back and close (phones: the same in css/mobile.css) */
+.ps-help {
+  height: 100%; display: flex; flex-direction: column; min-height: 0;
+  background: var(--panel); color: var(--ink); font: 14px/1.5 var(--sans);
+  -webkit-tap-highlight-color: transparent;
+}
+.ps-help *, .ps-help *::before, .ps-help *::after { box-sizing: border-box }
+.ps-help button { font: inherit; color: inherit }
+.ps-help a { color: var(--ink) }
+.ps-help :focus-visible { outline: 2px solid #8ab4ff; outline-offset: 2px } /* the app's focus ring */
+.ps-help .ps-ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none }
+
+/* top bar */
+.ps-help-bar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-bottom: 1px solid var(--line); background: var(--panel); flex: none;
+}
+.ps-help .ps-help-title { flex: 1; min-width: 0; margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: none }
+.ps-help-logo { width: 44px; height: 44px; display: grid; place-items: center; color: var(--muted) }
+.ps-help-logo .ps-ic { width: 20px; height: 20px }
+.ps-help-btn { /* as app.css .btn */
+  min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; padding: 0 10px;
+  background: var(--raise); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--edge); cursor: pointer;
+}
+.ps-help-btn:hover { background: var(--raise-2) }
+.ps-help-btn.is-primary, .ps-help-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.ps-help-bar .ps-help-btn { background: none; border-color: transparent; box-shadow: none; color: var(--muted) } /* back and close: plain icons, as app.css .icon-btn */
+.ps-help-bar .ps-help-btn:hover { background: var(--raise-2); color: var(--ink) }
+.ps-help .ps-help-pill { min-height: 44px; padding: 0 18px; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: var(--r); cursor: pointer; font-weight: 650 }
+
+.ps-help-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; container-type: size } /* size: the knot stage fits its height (cqh) */
+.ps-help-page { max-width: 1120px; margin: 0 auto; padding: 16px 16px 40px }
+.ps-help-home, .ps-help-topic { max-width: 760px }
+
+/* start page: the quick tour as a card, then the topics as one grouped list (rows split by hairlines), as the app's lists */
+.ps-help-topics { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; background: var(--card, var(--raise)); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--edge); overflow: hidden }
+.ps-help-topics li + li { border-top: 1px solid var(--line) }
+.ps-help-card {
+  width: 100%; height: 100%; min-height: 60px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; text-align: left;
+  background: none; border: 0; border-radius: 0; cursor: pointer; transition: background-color var(--dur);
+}
+.ps-help-card:hover { background: var(--card-2, var(--raise-2)) }
+.ps-help-card:active { background: var(--raise-3) }
+.ps-help-badge { width: 36px; height: 36px; border-radius: var(--r); display: grid; place-items: center; background: var(--raise-2); color: var(--ink); flex: none }
+.ps-help-badge .ps-ic { width: 19px; height: 19px }
+.ps-help .ps-help-tour { margin-bottom: 16px; min-height: 68px; padding: 12px 14px; border-radius: var(--r); background: var(--card, var(--raise)); border: 1px solid var(--line-2); box-shadow: var(--edge) }
+.ps-help-tour .ps-help-badge { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-ink) }
+.ps-help-tour .ps-help-badge .ps-ic { width: 18px; height: 18px; margin-left: 2px }
+.ps-help-card-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px }
+.ps-help-card-txt b { font-size: 14px; font-weight: 600; line-height: 1.3 }
+.ps-help-card-txt small, .ps-knot-card-txt small { color: var(--muted); font-size: 12.5px; line-height: 1.4 }
+.ps-help-topics .ps-help-card-txt small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap } /* one line a row: the topic says the rest */
+.ps-help-chev { color: var(--dim); width: 18px !important; height: 18px !important }
+
+/* topic pages */
+.ps-help-sec { margin: 0 0 22px }
+.ps-help-sec + .ps-help-sec { padding-top: 18px; border-top: 1px solid var(--line) } /* sections apart by hairlines, not boxes */
+.ps-help-sec h3, .ps-knot-info h3 { margin: 0 0 8px; font-size: 15px; font-weight: 650; letter-spacing: -.005em; color: var(--ink) }
+.ps-help-sec p { margin: 0 0 10px }
+.ps-help-list, .ps-help-steps { margin: 0 0 10px; padding-left: 22px }
+.ps-help-list li, .ps-help-steps li { margin: 0 0 7px; padding-left: 2px }
+.ps-help-list li::marker { color: var(--dim) }
+.ps-help-steps li::marker { color: var(--muted); font-weight: 650 }
+.ps-help-note {
+  margin: 0 0 12px; padding: 10px 12px; border-radius: var(--r-sm);
+  background: var(--raise); border-left: 3px solid var(--line-2); color: var(--ink);
+}
+.ps-help-note.is-warn { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, var(--raise)) }
+.ps-help-note.is-bad { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 13%, var(--raise)) }
+.ps-help-note.is-good { border-left-color: var(--good) }
+.ps-help-table { overflow-x: auto; margin: 0 0 10px; border: 1px solid var(--line-2); border-radius: var(--r-sm) }
+.ps-help-table table { border-collapse: collapse; width: 100%; font-size: 13px; line-height: 1.35 }
+.ps-help-table th, .ps-help-table td { padding: 8px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line) }
+.ps-help-table thead th { background: var(--raise); color: var(--muted); font-weight: 600; white-space: nowrap }
+.ps-help-table tbody th, .ps-help-table td.nw { font-weight: 600; white-space: nowrap }
+.ps-help-table td.nw { font-weight: inherit; font-variant-numeric: tabular-nums }
+.ps-help-table tr:last-child > * { border-bottom: 0 }
+.ps-help-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px }
+.ps-help-links a {
+  min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px;
+  background: var(--raise); border: 1px solid var(--line); border-radius: var(--r-sm); text-decoration: none;
+}
+.ps-help-links a:hover { background: var(--raise-2) }
+.ps-help-ext { color: var(--dim); flex: none }
+
+/* knot list */
+.ps-knot-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) }
+.ps-knot-card {
+  width: 100%; height: 100%; display: flex; gap: 12px; align-items: stretch; padding: 10px; text-align: left;
+  background: var(--card, var(--raise)); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--edge); cursor: pointer;
+  content-visibility: auto; contain-intrinsic-size: auto 104px; /* each thumbnail is ~450 SVG lines: cards out of view are not laid out or painted */
+}
+.ps-knot-card:hover { background: var(--card-2, var(--raise-2)) }
+.ps-knot-thumb { width: 84px; height: 84px; flex: none; border-radius: var(--r-sm); background: radial-gradient(90% 85% at 50% 30%, #2c2c2c, #151515 78%); overflow: hidden } /* the fish picker's dark stage (css/sheets.css) */
+.ps-knot-card-txt { min-width: 0; display: flex; flex-direction: column; gap: 3px }
+.ps-knot-card-txt b { font-size: 14px; font-weight: 600 }
+.ps-knot-card-txt small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden }
+.ps-knot-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px }
+.ps-chip { font-size: 12px; padding: 1px 8px; border-radius: var(--r-sm); background: var(--raise-2); color: var(--ink) } /* as app.css .facts chips */
+
+/* flat picture */
+.ps-flat { width: 100%; height: 100%; display: block }
+.ps-flat line { stroke-linecap: round }
+.ps-flat .ps-flat-edge { stroke: var(--bg); stroke-linecap: butt }
+.ps-tone-main { stroke: var(--ink); background: var(--ink) }
+.ps-tone-tag { stroke: var(--warn); background: var(--warn) }
+.ps-tone-line2 { stroke: var(--you); background: var(--you) }
+.ps-tone-line2tag { stroke: color-mix(in srgb, var(--you) 55%, var(--ink)); background: color-mix(in srgb, var(--you) 55%, var(--ink)) }
+.ps-tone-metal { stroke: var(--dim) }
+.ps-tone-lure { stroke: color-mix(in srgb, var(--you) 45%, var(--dim)) }
+
+/* knot page */
+.ps-knot-layout { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start }
+.ps-knot-viewer { position: sticky; top: 0 }
+.ps-knot-stage {
+  position: relative; height: min(58vh, 520px); height: clamp(220px, 100cqh - 230px, 520px); /* the controls and legend under it stay in view */
+  border-radius: var(--r-lg); overflow: hidden;
+  background: radial-gradient(130% 95% at 50% 30%, color-mix(in srgb, var(--raise-2) 70%, var(--bg)) 0%, var(--raise) 45%, var(--bg) 100%);
+  border: 1px solid var(--line); outline: none; touch-action: none;
+}
+.ps-knot-stage:focus-visible { outline: 2px solid #8ab4ff; outline-offset: 2px }
+.ps-knot-stage.is-flat { touch-action: auto }
+.ps-knot-stage.is-flat .ps-flat { padding: 8%; }
+.ps-knot-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab }
+.ps-knot-canvas:active { cursor: grabbing }
+.ps-knot-msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; text-align: center; color: var(--muted) }
+.ps-knot-msg.is-error { inset: auto 0 0; background: color-mix(in srgb, var(--bg) 85%, transparent); color: var(--ink); font-size: 14px }
+.ps-knot-hint {
+  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--bg) 75%, transparent); padding: 3px 10px; border-radius: var(--r-sm);
+  transition: opacity .4s;
+}
+.ps-knot-stage.is-touched .ps-knot-hint { opacity: 0 }
+/* view tools over the top-right corner of the stage */
+.ps-knot-tools { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 1 }
+.ps-knot-viewer.is-flat .ps-knot-tools { display: none }
+.ps-help .ps-knot-tool {
+  width: 44px; height: 44px; display: grid; place-items: center; padding: 0; cursor: pointer; border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-2); color: var(--ink); /* no blur: cheap phones */
+}
+.ps-help .ps-knot-tool:hover { background: var(--raise-2) }
+.ps-help .ps-knot-tool[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.ps-knot-tool .ps-ic { width: 20px; height: 20px }
+.ps-knot-caption { margin: 10px 2px 4px; min-height: 3em; font-size: 14px }
+.ps-knot-caption b { display: block; font-size: 12px; color: var(--muted); font-weight: 600 } /* as the app's section headings */
+/* progress: one segment per step */
+.ps-knot-track { position: relative; height: 44px; margin: 0 2px 2px }
+.ps-knot-ticks {
+  position: absolute; left: 10px; right: 10px; top: 50%; height: 6px; transform: translateY(-50%); display: flex; border-radius: 3px; overflow: hidden;
+  background: linear-gradient(90deg, var(--accent) var(--p), var(--line-2) var(--p));
+}
+.ps-knot-ticks i { flex: 1; border-right: 3px solid var(--panel) }
+.ps-knot-ticks i:last-child { border-right: 0 }
+.ps-knot-scrub { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none }
+.ps-knot-scrub:focus-visible { outline: 2px solid #8ab4ff; outline-offset: 2px; border-radius: var(--r-sm) }
+.ps-knot-scrub::-webkit-slider-runnable-track { height: 100%; background: transparent }
+.ps-knot-scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: 12px; border-radius: 50%; background: var(--accent); border: 3px solid var(--panel); box-shadow: 0 1px 4px rgb(0 0 0 / .4) }
+.ps-knot-scrub::-moz-range-track { height: 100%; background: transparent }
+.ps-knot-scrub::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid var(--panel); box-shadow: 0 1px 4px rgb(0 0 0 / .4) }
+.ps-knot-ctrl { display: flex; align-items: center; gap: 6px }
+.ps-knot-gap { flex: 1 }
+.ps-help .ps-knot-play { min-width: 56px }
+.ps-help .ps-knot-speed { min-width: 52px; font-weight: 650; font-variant-numeric: tabular-nums }
+.ps-knot-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 2px 0; padding: 0; font-size: 13px; color: var(--muted) }
+.ps-knot-legend li { display: flex; align-items: center; gap: 6px }
+.ps-knot-legend i { width: 18px; height: 5px; border-radius: 3px }
+
+.ps-knot-use { margin: 0 0 12px; font-size: 15px }
+.ps-knot-facts { margin: 0 0 18px; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden }
+.ps-knot-facts div { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 8px 12px; background: var(--raise) }
+.ps-knot-facts dt { color: var(--muted); font-size: 13px }
+.ps-knot-facts dd { margin: 0; display: flex; align-items: center; gap: 8px }
+.ps-dots { display: inline-flex; gap: 3px }
+.ps-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-2) }
+.ps-dots i.on { background: var(--ink) }
+.ps-knot-steps { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 6px }
+.ps-knot-steps button {
+  width: 100%; min-height: 44px; display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; text-align: left; line-height: 1.4;
+  background: var(--raise); border: 1px solid transparent; border-radius: var(--r-sm); cursor: pointer;
+}
+.ps-knot-steps button:hover { background: var(--raise-2) }
+.ps-knot-n { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--panel); color: var(--muted); font-size: 13px; font-weight: 700 }
+.ps-knot-steps li.is-on button { border-color: var(--ink); background: var(--raise-2) }
+.ps-knot-steps li.is-on .ps-knot-n { background: var(--accent); color: var(--accent-ink) }
+.ps-knot-video {
+  min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 10px 14px; text-decoration: none;
+  background: var(--raise); border: 0; border-radius: var(--r);
+}
+.ps-knot-video:hover { background: var(--raise-2) }
+.ps-knot-video span { display: flex; flex-direction: column }
+.ps-knot-video small { color: var(--muted); font-size: 13px }
+
+@media (max-width: 760px) {
+  .ps-knot-layout { grid-template-columns: minmax(0, 1fr) }
+  .ps-knot-viewer { position: relative }
+  .ps-knot-stage { height: min(52vh, 92vw, 420px) }
+  .ps-knot-ctrl { gap: 4px }
+  .ps-knot-list { grid-template-columns: 1fr }
+}
+@media (max-height: 500px) and (max-width: 960px) { /* phones on their side: a sticky viewer taller than the screen would hide its own controls */
+  .ps-knot-viewer { position: relative }
+  .ps-knot-stage { height: clamp(180px, 100cqh - 40px, 320px) }
+}
+
+/* ---------- First-run tour (js/help.js tour): #guide's card (app.css .guide-card) as five illustrated steps ---------- */
+@keyframes ps-tour-wait { from, to { visibility: hidden } }
+#guide:not(.is-tour) .guide-card { animation: ps-tour-wait 1.2s } /* the plain list waits a moment for the tour to take over; it shows if the tour never loads */
+/* Round 14: the first run's welcome (#guide.wl, index.html; the same card before the tour takes it over): the name, one line of what it
+   is, three points with the app's icons (the first over the score ramp), the honest note, Quick tour and Start fishing. Phones: a bottom
+   sheet, the map above it. */
+#guide.wl .guide-card { animation: none; width: min(420px, 100%); gap: 14px; padding: 14px 18px 16px }
+.wl-top { display: flex; align-items: center; justify-content: space-between; gap: 8px }
+.wl-brand { display: inline-flex; align-items: center; gap: 8px; font: 700 15px/1 var(--sans); letter-spacing: -.01em; color: var(--ink) }
+.wl-brand img { width: 26px; height: 26px }
+.wl-top .lang { margin: 0; padding: 3px; border-radius: var(--r); background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px var(--line) }
+.wl-top .lang button { min-width: 44px; min-height: 32px; border-radius: var(--r-sm); font: 650 12px var(--sans) }
+.wl-top .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink) }
+#guide.wl #guide-title { margin: 2px 0 0; font: 700 22px/1.2 var(--sans); letter-spacing: -.015em }
+.wl-pts { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none }
+.wl-pts > li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 14px; line-height: 1.45; color: #dcdcdc }
+.wl-pts > li > [data-icon] { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line); color: var(--ink) }
+.wl-pts > li > [data-icon] .i { width: 19px; height: 19px }
+.wl-pts > li > span:last-child { padding-top: 1px }
+.wl-ramp { display: block; max-width: 240px; height: 6px; margin-top: 8px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--heat-35), var(--heat-45), var(--heat-55), var(--heat-65), var(--heat-75), var(--heat-85), var(--heat-95)) }
+.wl-note { margin: 0; padding: 1px 0 1px 12px; border-left: 2px solid var(--line-2); font-size: 12.5px; line-height: 1.5; color: var(--muted) } /* as the tour's note */
+#guide.wl .guide-foot { justify-content: space-between; gap: 8px; padding-top: 2px }
+#guide.wl .guide-foot .btn { min-height: 44px; padding: 0 18px; font-size: 14px }
+#guide.wl .guide-foot .btn.ghost { padding-left: 6px }
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  #guide.wl { padding: calc(var(--st, 0px) + 16px) 0 0; place-items: end stretch }
+  #guide.wl .guide-card { width: 100%; max-width: none; border-width: 1px 0 0; border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 14px calc(var(--sr, 0px) + 18px) calc(var(--sb, 0px) + 16px) calc(var(--sl, 0px) + 18px); box-shadow: var(--edge), 0 -12px 32px rgb(0 0 0 / .45) }
+}
+@media (max-height: 500px) and (max-width: 960px) { #guide.wl .guide-card { width: min(520px, 100%); justify-self: center; max-height: 100% } } /* a phone on its side: not the full width */
+.guide-card.ps-tour { width: min(440px, 100%); max-height: 100%; padding: 0; gap: 0; overflow: hidden auto; overscroll-behavior: contain; touch-action: pan-y }
+.ps-tour-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 10px 10px 14px }
+.ps-tour-top .lang button { min-width: 44px; min-height: 32px; font-size: 12px }
+.ps-tour-top .btn { min-height: 36px }
+.ps-tour .btn.ghost { box-shadow: none } /* Skip: a plain word, no lit edge */
+.ps-tour-art {
+  position: relative; height: 150px; margin: 0 14px; overflow: hidden; border-radius: var(--r); border: 1px solid var(--line-2);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 12px;
+  background: radial-gradient(120% 100% at 50% 0%, #262626, #171717); /* a grey stage; step 1 lays the sea over it */
+}
+.ps-tour-txt { padding: 16px 18px 4px; min-height: 172px }
+.ps-tour-n { margin: 0 0 6px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) } /* as app.css .lbl */
+.ps-tour #guide-title { margin: 0 0 8px; font: 700 22px/1.2 var(--sans); letter-spacing: -.015em; color: var(--ink); outline: none }
+.ps-tour-x { margin: 0; font-size: 14px; line-height: 1.55; color: #dcdcdc }
+.ps-tour-note { margin: 12px 0 0; padding: 1px 0 1px 12px; border-left: 2px solid var(--line-2); font-size: 13px; line-height: 1.5; color: var(--muted) } /* as the Guide tab's tip */
+.ps-tour-note:empty { display: none }
+.ps-tour-foot { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 12px 14px 14px; border-top: 1px solid var(--line) }
+.ps-tour-foot .btn { min-height: 40px; padding: 0 18px; font-size: 13.5px }
+/* progress: one slim segment a step, the seen ones grey, this one white (colours only: nothing re-lays out) */
+.ps-tour-dots { flex: 1; display: flex; min-width: 0 }
+.ps-tour-dots button { flex: none; width: 26px; height: 40px; display: grid; place-items: center; border-radius: var(--r-sm) }
+.ps-tour-dots button::before { content: ''; width: 20px; height: 3px; border-radius: 1px; background: var(--line-2); transition: background-color var(--dur) }
+.ps-tour-dots button:hover::before { background: var(--dim) }
+.ps-tour-dots button:has(~ [aria-current])::before { background: var(--muted) }
+.ps-tour-dots button[aria-current]::before { background: var(--ink) }
+@keyframes ps-tour-in { from { opacity: 0; transform: translateX(14px) } }
+.ps-tour.is-in .ps-tour-art > *, .ps-tour.is-in .ps-tour-txt { animation: ps-tour-in .3s cubic-bezier(.2, .7, .2, 1) both }
+.ps-tour.is-in .ps-tour-txt { animation-delay: .05s }
+
+/* step 1: the map in miniature: the search bar and chips over it, the top spots, the legend */
+.ps-tour-art > .ps-tour-map { position: absolute; inset: 0; width: 100%; height: 100% }
+.ps-tour-pin circle { fill: #fff; stroke: rgb(0 0 0 / .45); stroke-width: 1.5 }
+.ps-tour-pin text { font: 700 11px var(--sans); fill: #1b1b1b; text-anchor: middle }
+.ps-tour-search { position: absolute; top: 8px; left: 8px; right: 8px; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 12px;
+  border-radius: var(--r-lg); background: rgb(32 32 32 / .96); box-shadow: inset 0 0 0 1px var(--line-2), 0 2px 8px rgb(0 0 0 / .4); font: 500 12px var(--sans); color: var(--muted) }
+.ps-tour-art .ps-tour-chips { position: absolute; top: 44px; left: 8px; right: 8px; display: flex; gap: 5px; overflow: hidden }
+.ps-tour-chips span, .ps-tour-tiles span, .ps-tour-steps span { display: inline-flex; align-items: center; gap: 5px; min-width: 0; padding: 4px 9px; border-radius: var(--r-sm);
+  background: rgb(38 38 38 / .95); box-shadow: inset 0 0 0 1px var(--line-2); font: 550 11.5px var(--sans); color: var(--ink); white-space: nowrap }
+.ps-tour-chips span.on { background: var(--accent); color: var(--accent-ink); box-shadow: none }
+.ps-tour-legend { position: absolute; left: 8px; bottom: 8px; display: flex; align-items: center; gap: 7px; padding: 4px 8px;
+  background: rgb(32 32 32 / .92); border-radius: var(--r-sm); font: 600 10.5px var(--sans); color: var(--ink) }
+.ps-tour-legend i { order: 1; width: 72px; height: 5px; border-radius: 3px }
+.ps-tour-legend span:last-child { order: 2 }
+.ps-tour-legend span:nth-of-type(2), .ps-tour-legend span:nth-of-type(3) { display: none } /* the ends say it; the words above say the rest */
+/* step 2: Forecast: the days with their best chance, the day's hours with the best one */
+.ps-tour-days { display: flex; gap: 6px; max-width: 100% }
+.ps-tour-days > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 5px 4px 10px; border-radius: var(--r-sm); background: var(--raise);
+  box-shadow: inset 0 0 0 1px var(--line-2); font: 600 12px var(--sans); color: var(--muted); white-space: nowrap }
+.ps-tour-days > span.on { background: var(--raise-3); color: var(--ink); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .4) }
+.ps-tour-tl { position: relative; width: min(280px, 100%); height: 44px; display: flex; align-items: flex-end; gap: 2px; padding-top: 12px }
+.ps-tour-tl i { flex: 1; height: calc(var(--v) * 100%); border-radius: 2px 2px 0 0; background: rgb(255 255 255 / .26) }
+.ps-tour-tl i.on { background: var(--ink) }
+.ps-tour-tl b { position: absolute; top: -4px; left: 27%; transform: translateX(-50%); font-size: 13px; color: var(--ink) }
+/* step 3: + and the logger's steps */
+.ps-tour-plus { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: var(--r-lg); background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 0 0 0 rgb(255 255 255 / .35); animation: ps-tour-ping 1.8s ease-out infinite }
+.ps-tour-plus .i { width: 24px; height: 24px; stroke-width: 2.2 }
+@keyframes ps-tour-ping { 0% { box-shadow: 0 0 0 0 rgb(255 255 255 / .35) } 70%, 100% { box-shadow: 0 0 0 14px rgb(255 255 255 / 0) } }
+.ps-tour-steps { display: flex; align-items: center; gap: 4px; max-width: 100% }
+.ps-tour-steps > .i { flex: none; color: var(--dim) }
+.ps-tour-steps span { overflow: hidden; text-overflow: ellipsis }
+/* step 4: Feed: its two views, and a post */
+.ps-tour-seg { display: flex; gap: 2px; padding: 3px; border-radius: var(--r); background: rgb(0 0 0 / .3); box-shadow: inset 0 0 0 1px var(--line) }
+.ps-tour-seg span { min-width: 84px; padding: 4px 12px; border-radius: var(--r-sm); text-align: center; font: 600 12px var(--sans); color: var(--muted) }
+.ps-tour-seg span.on { background: var(--accent); color: var(--accent-ink) }
+.ps-tour-post { width: min(280px, 100%); display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--r); background: var(--card, #202020); box-shadow: inset 0 0 0 1px var(--line-2) }
+.ps-tour-av { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--raise-3); color: var(--muted) }
+.ps-tour-av.lg { width: 44px; height: 44px }
+.ps-tour-lines { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px }
+.ps-tour-lines b { font: 650 12.5px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.ps-tour-lines i { height: 6px; width: 80%; border-radius: 3px; background: var(--raise-3) } .ps-tour-lines i + i { width: 55% }
+.ps-tour-pic { width: 64px; height: 40px; flex: none; display: grid; place-items: center; border-radius: var(--r-sm); background: #161616 }
+.ps-tour-pic img { max-width: 92%; max-height: 92%; object-fit: contain; filter: drop-shadow(0 2px 3px rgb(0 0 0 / .5)) }
+/* step 5: Me: you, your numbers and the tools */
+.ps-tour-me { display: flex; align-items: center; gap: 18px }
+.ps-tour-me > span:not(.ps-tour-av) { display: flex; flex-direction: column; align-items: center }
+.ps-tour-me b { font: 700 18px/1.1 var(--sans); font-variant-numeric: tabular-nums }
+.ps-tour-me small { font-size: 11px; color: var(--muted) }
+.ps-tour-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100% }
+.ps-tour-tiles span { padding: 5px 8px; overflow: hidden; text-overflow: ellipsis }
+.ps-tour-tiles .i { flex: none; color: var(--muted) }
+.ps-tour-top .lang button[aria-pressed="true"] { color: var(--accent-ink) } /* on the sliding white (css/motion.css) */
+
+@media (pointer: coarse) { .ps-tour-top .lang button, .ps-tour-top .btn, .ps-tour-foot .btn, .ps-tour-dots button { min-height: 44px } }
+@media (max-width: 400px) { .ps-tour-art { height: 140px; margin: 0 10px } .ps-tour-txt { padding: 12px 14px 2px } .ps-tour-foot { padding: 8px 10px 12px } .ps-tour-dots button { width: 20px } .ps-tour-dots button::before { width: 15px } .ps-tour-foot .btn { padding: 0 14px } }
+@media (max-height: 560px) { .ps-tour-art { display: none } .ps-tour-txt { min-height: 0 } } /* phones on their side: the words and buttons only */
+@media (prefers-reduced-motion: reduce) { .ps-tour *, .ps-tour::before { animation: none !important; transition: none !important } }
+#guide.wl #guide-title:focus { outline: none } /* focused for screen readers (js/app.js), not a control */

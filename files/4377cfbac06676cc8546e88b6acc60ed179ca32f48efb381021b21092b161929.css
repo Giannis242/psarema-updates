@@ -1,0 +1,286 @@
+/* Psarema: the species pages (js/species-page.js) - species agent. Tokens: css/tokens.css; dials: app.css .ring; gear cards: app.css .gear.
+   Laid out by the width of the page itself (a container), so the same rules fit the sheet, the phone and a full-screen page. */
+.spx-host { container-type: inline-size }
+.spx { display: flex; flex-direction: column; gap: 22px; min-width: 0; color: var(--ink); font-size: var(--fs); line-height: 1.4 }
+.spx p { margin: 0 }
+.spx h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.spx h3::after { content: ""; order: 5; flex: 1 1 12px; height: 1px; background: var(--line) }
+.spx h3 .i { flex: none }
+.spx h4 { display: flex; align-items: center; gap: 6px; margin: 14px 0 8px; font: 650 12.5px var(--sans); color: var(--ink) }
+.spx .bad { color: var(--bad) }
+.spx-h3sub, .spx-est, .spx-count { order: 6; font: 500 11px var(--sans); letter-spacing: 0; text-transform: none; color: var(--dim) }
+.spx-est { padding: 1px 6px; border-radius: var(--r-sm); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); font-weight: 600; font-size: 10.5px }
+.spx-sec { min-width: 0 }
+.spx-panel > .spx-sec { padding: 14px; border-radius: var(--r); background: var(--card, var(--raise)); box-shadow: var(--edge), inset 0 0 0 1px var(--line) } /* each section a card */
+.spx-panel :is(.sx-sim, .sx-src).spx-sec { padding: 0; background: none; box-shadow: none }
+.spx-panel .spx-pair > .spx-sec { padding: 14px; border-radius: var(--r); background: var(--card, var(--raise)); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.spx-panel > .sx-src { content-visibility: auto; contain-intrinsic-size: auto 300px }
+.spx-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px !important; font-size: 12.5px; line-height: 1.45; color: var(--muted) }
+.spx-note .i { flex: none; margin-top: 2px }
+.spx-note .spx-est { margin-left: auto }
+.spx-links { font-size: 12px; line-height: 1.75; color: var(--dim); overflow-wrap: anywhere }
+.spx-links a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 2px }
+.spx-flag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 6px; border-radius: var(--r-sm); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line);
+  font: 600 var(--fs-xs) var(--sans); color: var(--muted); white-space: nowrap }
+.spx-flag.ban { color: var(--bad); background: rgb(255 123 110 / .1) }
+.spx-flag.warn { color: var(--warn) }
+
+/* ---------- A fish's hero: the cut-out on a soft gradient to the page's edges, its names (EN / EL / scientific), quick facts, the actions ---------- */
+.spx-page { gap: 12px }
+.spx-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: -12px -12px 0; padding: 0 12px 4px;
+  background: linear-gradient(180deg, var(--raise-2) 0%, var(--card, var(--raise)) 46%, transparent 100%) }
+.spx-art { position: relative; height: 172px; display: block; padding: 18px 26px 10px; overflow: hidden;
+  background: radial-gradient(46% 9% at 50% 92%, rgb(0 0 0 / .5), transparent), radial-gradient(70% 80% at 50% 40%, rgb(255 255 255 / .07), transparent 70%) }
+.spx-art > :is(.fish-art, .ph) { display: block; width: 100%; height: 100%; aspect-ratio: auto }
+.spx-art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 14px 12px rgb(0 0 0 / .5)) } /* one picture, drawn once */
+.spx-art .fish-art.photo img { object-fit: cover; border-radius: var(--r); filter: none }
+.spx-id .lbl { font-size: 10px }
+.spx-id h2 { margin: 2px 0 0; font: 700 25px/1.12 var(--sans); color: var(--ink); letter-spacing: -.02em; overflow-wrap: anywhere }
+.spx-alt { margin-top: 3px !important; font-size: 13.5px; color: var(--muted) }
+.spx-alt i { color: var(--dim) }
+.spx-facts { display: flex; flex-wrap: wrap; gap: 6px }
+.spx-fact { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 8px; border-radius: var(--r-sm); background: rgb(255 255 255 / .07);
+  box-shadow: inset 0 0 0 1px var(--line); font: 600 12px var(--sans); color: var(--ink); white-space: nowrap }
+.spx-fact .i { flex: none; width: 15px; height: 15px; color: var(--muted) }
+.spx-fact.score { padding-left: 3px } .spx-fact.score > span:last-child { color: var(--muted); font-weight: 550 }
+.spx-fact.on { background: var(--accent); box-shadow: none; color: var(--accent-ink) } .spx-fact.on .i { color: var(--accent-ink) }
+.spx-fact.bad { color: var(--bad); background: rgb(255 123 110 / .1) } .spx-fact.bad .i { color: var(--bad) }
+.spx-acts { display: flex; gap: 8px; margin-top: 2px }
+.spx-acts .btn { flex: 1; min-height: 40px; min-width: 0 }
+.spx-lede { font-size: 14px; line-height: 1.55; color: var(--ink) }
+
+/* the tabs: stuck to the top of the page while it scrolls */
+.spx-tabs { position: sticky; top: 0; z-index: 4; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; background: var(--page, var(--bg));
+  box-shadow: 0 -14px 0 var(--page, var(--bg)) } /* the shadow covers the body's top padding over which it sticks */
+.spx-tabs::-webkit-scrollbar { display: none }
+.spx-tabs button { flex: 1 0 auto; min-height: 44px; padding: 0 8px; font-size: 13px }
+.spx-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding-top: 2px }
+.spx-panel[hidden] { display: none }
+
+/* Where & when: two dials (near you now, best this week) */
+.spx-dials { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; overflow: hidden; border-radius: var(--r); background: var(--line); box-shadow: inset 0 0 0 1px var(--line) }
+.spx-dial { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px; background: var(--card, var(--raise)) }
+.spx-dial > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.spx-dial > span b { font: 650 15px/1.2 var(--sans); font-variant-numeric: tabular-nums } /* not the dial's own <b> */
+.spx-dial > span small { font-size: 11.5px; line-height: 1.3; color: var(--dim) }
+@container (min-width: 640px) {
+  .spx-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-areas: "id art" "facts art" "acts art"; grid-template-rows: auto auto 1fr; column-gap: 22px; align-items: start }
+  .spx-art { grid-area: art; height: 240px }
+  .spx-id { grid-area: id; padding-top: 18px } .spx-facts { grid-area: facts } .spx-acts { grid-area: acts }
+  .spx-id h2 { font-size: 30px }
+  .spx-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) }
+}
+.spx-pair { display: grid; gap: 12px }
+
+/* ---------- Rules: three numbers in hairline cells, the full text in a fold ---------- */
+.spx-fold { margin-top: 8px; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.spx-fold > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; list-style: none; cursor: pointer; font: 600 12.5px var(--sans); color: var(--muted) }
+.spx-fold > summary::-webkit-details-marker { display: none }
+.spx-fold > summary .i { transition: transform var(--dur) var(--ease) }
+.spx-fold[open] > summary .i { transform: rotate(90deg) }
+.spx-fold[open] > summary { color: var(--ink) }
+.spx-fold > :not(summary) { padding: 0 12px 12px }
+.spx-fold .text { font-size: 12.5px; line-height: 1.55 }
+.spx-read { display: grid; gap: 4px 24px }
+.spx-read h4 { margin-top: 8px }
+@container (min-width: 640px) { .spx-read { grid-template-columns: 1fr 1fr } }
+
+/* ---------- Lists: the index's ranked fish, a fish's best spots ---------- */
+.spx-rank { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none }
+.spx-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 7px 10px; border-radius: var(--r); background: var(--raise);
+  box-shadow: var(--edge), inset 0 0 0 1px var(--line); text-align: left; color: var(--ink); transition: background var(--dur) }
+.spx-row:hover { background: var(--raise-2) } .spx-row:active { background: var(--raise-3) }
+/* a fish's best spots now: cards in a row that scrolls sideways, each with its dial */
+.spx-spots { display: flex; gap: 8px; margin: 0 -14px; padding: 0 14px 2px; list-style: none; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
+  scroll-padding-inline: 14px; scrollbar-width: none }
+.spx-spots::-webkit-scrollbar { display: none }
+.spx-spots > li { flex: 0 0 min(168px, 46%); scroll-snap-align: start }
+.spx-spot { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; height: 100%; padding: 12px; border-radius: var(--r);
+  background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line); text-align: left; color: var(--ink); transition: background var(--dur) }
+.spx-spot:hover { background: var(--raise-2) } .spx-spot:active { background: var(--raise-3) }
+.spx-spot .ring { margin-bottom: 7px }
+.spx-spot > b { font: 650 13px/1.25 var(--sans); overflow-wrap: anywhere }
+.spx-spot > small { font-size: 11.5px; line-height: 1.3; color: var(--muted) }
+.spx-sn { position: absolute; top: 10px; right: 10px; font: 650 11px var(--sans); color: var(--dim); font-variant-numeric: tabular-nums }
+.spx-go { display: inline-flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 9px; font: 600 11.5px var(--sans); color: var(--muted) }
+.spx-go .i { width: 13px; height: 13px }
+.spx-sk .spx-spot { min-height: 150px; pointer-events: none }
+.spx-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.spx-main b { font: 650 13.5px/1.25 var(--sans); overflow-wrap: anywhere }
+.spx-main small { overflow: hidden; font-size: 12px; line-height: 1.3; color: var(--muted); white-space: nowrap; text-overflow: ellipsis }
+.spx-main .spx-why { white-space: normal } /* the reasons wrap (Greek runs longer); the place keeps to a line */
+.spx-main .spx-at { display: flex; align-items: center; gap: 4px; color: var(--dim) }
+.spx-at .i { flex: none; width: 12px; height: 12px }
+.spx-at span { overflow: hidden; text-overflow: ellipsis }
+.spx-n { flex: none; width: 16px; font: 650 12px var(--sans); color: var(--dim); text-align: center; font-variant-numeric: tabular-nums }
+.spx-cut { flex: none; display: block; overflow: hidden; width: 76px; height: 46px; border-radius: var(--r-sm); background: radial-gradient(85% 95% at 50% 35%, #2e2e2e, #151515 80%) }
+.spx-cut img { display: block; width: 100%; height: 100%; padding: 3px 5px; object-fit: contain }
+.spx-row > .spx-flag { padding: 4px }
+.spx-rank > .spx-more { display: none }
+.spx-rank.open > .spx-more { display: block }
+.spx-all { width: 100%; min-height: 44px; margin-top: 8px }
+.spx-nowh { margin-bottom: 12px }
+.spx-nowh h3 { margin-bottom: 6px; font-size: 12px; color: var(--ink) }
+.spx-sub { font-size: 12.5px; color: var(--muted) }
+.spx-sk .spx-row { pointer-events: none }
+.spx-sk { animation: sk-breathe 1.6s ease-in-out calc(var(--i, 0) * .12s) 6 } /* css/splash.css: a few breaths while the ranking runs */
+.spx-index.searching .spx-now { display: none } /* a search looks through the A–Z list */
+
+/* ---------- Cards: the A–Z gallery and similar fish (each cut-out on a dark stage, as the fish picker's) ---------- */
+.spx-find { position: relative; display: flex; align-items: center; margin-bottom: 12px }
+.spx-find .i { position: absolute; left: 12px; color: var(--dim); pointer-events: none }
+.spx-find input { width: 100%; height: 44px; padding: 0 12px 0 36px; border: 0; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge); color: var(--ink); font: 500 14px var(--sans); outline: 0 }
+.spx-find input:focus { background: var(--raise-2); box-shadow: var(--edge), 0 0 0 1px rgb(255 255 255 / .22) }
+.spx-az, .spx-sims { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px }
+.spx-card { position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r); background: var(--raise);
+  text-align: left; color: var(--ink); content-visibility: auto; contain-intrinsic-size: auto 150px }
+.spx-card[hidden] { display: none }
+.spx-card:hover { background: var(--raise-2) } .spx-card:active { background: var(--raise-3) }
+.spx-stage { display: block; overflow: hidden; aspect-ratio: 16 / 10; padding: 12px 12px 8px; background: radial-gradient(40% 7% at 50% 88%, rgb(0 0 0 / .55), transparent), radial-gradient(90% 85% at 50% 30%, #2c2c2c, #151515 78%) }
+.spx-stage img { width: 100%; height: 100%; object-fit: contain; transition: transform .22s var(--ease) }
+@media (hover: hover) { .spx-card:hover .spx-stage img { transform: scale(1.05) } }
+.spx-cb { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 8px 10px 10px; border-top: 1px solid var(--line) }
+.spx-cb b { font: 650 13px/1.2 var(--sans); overflow-wrap: anywhere }
+.spx-cb small { overflow: hidden; font-size: 11.5px; color: var(--muted); white-space: nowrap; text-overflow: ellipsis }
+.spx-cr { position: absolute; top: 6px; right: 6px }
+.spx-cr .ring { background: rgb(0 0 0 / .5) }
+.spx-card > .spx-flag { position: absolute; top: 7px; left: 6px; background: rgb(14 14 14 / .85) }
+.spx .grid-credit { margin-top: 10px }
+
+/* ---------- Season, time of day: bars a month / a part of the day, this one white ---------- */
+.spx-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-bottom: 12px !important }
+.spx-big b { font: 650 17px/1.25 var(--sans); font-variant-numeric: tabular-nums }
+.spx-big .lbl + b { margin-right: 8px }
+/* the season calendar strip: a cell a month, filled from the foot to the season's value; the profile's own value a dashed tick */
+.spx-cal { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px }
+.spx-cal > div { position: relative; height: 62px; overflow: hidden; border-radius: var(--r-sm); background: rgb(255 255 255 / .05) }
+.spx-cal i { position: absolute; inset: auto 0 0; height: calc(var(--v) * 100%); background: rgb(255 255 255 / .2) }
+.spx-cal .peak i { background: rgb(255 255 255 / .42) }
+.spx-cal .now { box-shadow: inset 0 0 0 1.5px var(--ink) }
+.spx-cal .now i { background: var(--ink) }
+.spx-cal .closed i { background: rgb(255 123 110 / .5) }
+.spx-cal u { position: absolute; left: 3px; right: 3px; bottom: calc(var(--w) * 100%); border-top: 1.5px dashed rgb(255 255 255 / .75) }
+.spx-cal .now u { border-top-color: var(--accent-ink) }
+.spx-cal b { position: absolute; left: 0; right: 0; top: 5px; font: 650 10px/1 var(--sans); color: var(--muted); text-align: center }
+.spx-cal .now b { color: var(--ink) }
+.spx-cal .now b { mix-blend-mode: difference }
+
+/* when it bites: the chance an hour for the next 24 h (the heat colour of each), then the part of the day it likes */
+.spx-big .ring { align-self: center; margin-left: auto }
+.spx-big .ring b { font: inherit; margin: 0 }
+.spx-hrs { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); align-items: end; gap: 2px; height: 64px }
+.spx-hrs i { height: calc(var(--v) * 100%); border-radius: 2px 2px 0 0; background: rgb(255 255 255 / .18) }
+.spx-hrs i.top { background: var(--c) }
+.spx-hax { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); margin: 5px 0 16px; padding-top: 4px; border-top: 1px solid var(--line) }
+.spx-hax span { font: 550 10.5px var(--sans); color: var(--dim); font-variant-numeric: tabular-nums }
+
+/* records: your own catches of it (count, personal best, last), then the open records */
+.spx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; overflow: hidden; border-radius: var(--r); background: var(--line); box-shadow: inset 0 0 0 1px var(--line) }
+.spx-stats > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 10px 12px; background: var(--raise) }
+.spx-stats b { font: 700 16px/1.2 var(--sans); font-variant-numeric: tabular-nums; overflow-wrap: anywhere }
+.spx-stats span { font-size: 11px; color: var(--muted) }
+.spx-mrows { display: flex; flex-direction: column; margin-top: 8px }
+.spx-mrow { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 6px 2px; text-align: left; color: var(--ink) }
+.spx-mrow + .spx-mrow { border-top: 1px solid var(--line) }
+.spx-mrow > .i { flex: none; color: var(--dim) }
+.spx-mi { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r); background: var(--raise-2); color: var(--muted) }
+.spx-pbt { margin-left: 6px; padding: 1px 6px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink) !important; font: 650 10.5px var(--sans) }
+.spx-mine0 { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px 8px 4px; text-align: center }
+.spx-mine0 .spx-mi { width: 52px; height: 52px; border-radius: var(--r-lg) }
+.spx-mine0 .spx-mi .i { width: 26px; height: 26px }
+.spx-mine0 p { max-width: 300px; font-size: 13px; line-height: 1.45; color: var(--muted) }
+.spx-mine0 .btn { min-height: 40px }
+.spx-mo { display: grid; grid-template-columns: repeat(12, 1fr); margin-top: 5px }
+.spx-mo b { font: 600 10px/1 var(--sans); color: var(--dim); text-align: center }
+.spx-mo b.now { color: var(--ink) }
+.spx-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px !important; font-size: 11.5px; line-height: 1.35; color: var(--muted) }
+.spx-key span { display: inline-flex; align-items: center; gap: 6px }
+.spx-key i { flex: none; width: 10px; height: 10px; border-radius: 2px; background: rgb(255 255 255 / .45) }
+.spx-key i.k-line { width: 14px; height: 0; border-top: 1.5px dashed var(--ink); border-radius: 0; background: none }
+.spx-key i.closed { background: rgb(255 123 110 / .55) }
+.spx-tod { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px }
+.spx-tod > div { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; padding: 10px 4px 8px; border-radius: var(--r); color: var(--muted) }
+.spx-tod > div.now { background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line-2); color: var(--ink) }
+.spx-col { display: flex; align-items: flex-end; width: 14px; height: 58px; overflow: hidden; border-radius: 3px; background: rgb(255 255 255 / .06) }
+.spx-col i { width: 100%; height: calc(var(--v) * 100%); border-radius: 3px; background: rgb(255 255 255 / .42) }
+.spx-tod .top .spx-col i { background: var(--ink) }
+.spx-tod b { max-width: 100%; overflow: hidden; font: 600 12px var(--sans); color: inherit; text-overflow: ellipsis; white-space: nowrap }
+.spx-tod small { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums }
+
+/* ---------- Depth, seabed, water: a range bar (the tolerated range grey, the best white), the numbers under it ---------- */
+.spx-gauge { position: relative; height: 10px; margin: 4px 0 12px; border-radius: 3px; background: rgb(255 255 255 / .06) }
+.spx-gauge i { position: absolute; top: 0; bottom: 0; border-radius: 3px }
+.spx-gauge .tol { background: rgb(255 255 255 / .22) }
+.spx-gauge .ok { background: var(--ink) }
+.spx-gauge .mark { width: 4px; margin-left: -2px; top: -5px; bottom: -5px; border-radius: 2px; background: var(--bg); box-shadow: 0 0 0 1.5px var(--ink) }
+.spx-gauge.temp { margin-bottom: 4px }
+.spx-scale { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 10.5px; color: var(--dim) }
+.spx-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 10px; margin: 0 }
+.spx-kv > div { min-width: 0 }
+.spx-kv dt { font: 650 var(--fs-label)/1.25 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.spx-kv dd { margin: 4px 0 0; font: 650 14px var(--sans); font-variant-numeric: tabular-nums }
+.spx-ax { margin-top: 12px !important }
+.spx-sub2 { margin-top: 16px !important; font-size: 11.5px; color: var(--dim) }
+.spx-sub2 + .spx-hab { margin-top: 6px }
+.spx-hab { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin-top: 16px }
+.spx-hab > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 12px; color: var(--muted) }
+.spx-hab i { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--ink) calc(var(--v) * 100%), rgb(255 255 255 / .08) 0) }
+
+/* ---------- How to catch it ---------- */
+.spx-seg { margin-bottom: 4px }
+.spx-seg button { min-height: 44px; flex-direction: row; gap: 7px; font-size: 12.5px }
+.spx-setup .kv-list { font-size: 12.5px }
+.spx-setup .text { margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--muted) }
+.sx-how .gear { border-radius: var(--r); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); cursor: pointer }
+.sx-how .gear small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden } /* a tap shows it all (js) */
+.sx-how .gear.full small { -webkit-line-clamp: unset }
+/* tiles: two a row on a phone, more on a wide page */
+.sx-how .gear-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); align-items: start }
+.sx-how .gear b { margin-top: 4px }
+
+/* ---------- Records: the island with a dot a record, the months they fall in, the latest live ones ---------- */
+.spx-recmap { position: relative; display: block; width: 100%; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r); background: #0d1418; cursor: pointer }
+.spx-recmap canvas { display: block; width: 100%; height: auto }
+.spx-recmap .btn { position: absolute; right: 8px; bottom: 8px; min-height: 36px; background: rgb(28 28 28 / .92); pointer-events: none }
+.spx-big > span { font-size: 12.5px; color: var(--muted) }
+.spx-big > b:first-child { font-size: 26px; letter-spacing: -.02em }
+.spx-bym { display: grid; grid-template-columns: repeat(12, 1fr); align-items: end; gap: 3px; height: 34px; margin-top: 14px; padding: 0 3px }
+.spx-bym i { height: calc(6% + var(--v) * 94%); border-radius: 2px; background: rgb(255 255 255 / .36) }
+.spx-bym i.now { background: var(--ink) }
+.spx-rec + .hint, .spx-mo + .hint { margin-top: 6px }
+.spx-live { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px }
+.spx-rec { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-bottom: 8px; overflow: hidden; border-radius: var(--r); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); text-decoration: none }
+.spx-rec > :not(.spx-ph) { padding: 0 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.spx-rec b { font-size: 12.5px } .spx-rec small { font-size: 11px; color: var(--muted) }
+.spx-ph { display: grid; place-items: center; aspect-ratio: 4 / 3; margin-bottom: 6px; background: #161616; color: var(--dim) }
+.spx-ph img { width: 100%; height: 100%; object-fit: cover }
+.sx-src > div + div { margin-top: 4px }
+.sx-src h4 { margin: 8px 0 2px; font-size: 11.5px; color: var(--muted) }
+
+/* ---------- Ways in (js/ui.js): the fish's name on a spot's card and details, the picker's info corner ---------- */
+.sp-link { cursor: pointer; text-decoration: underline dotted rgb(255 255 255 / .35); text-underline-offset: 4px; text-decoration-thickness: 1.5px }
+.sp-link:hover { text-decoration-color: var(--ink) }
+.sp-link .i { width: 14px; height: 14px; margin-left: 2px; vertical-align: -2px; color: var(--dim) }
+.fish-card .sp-info { position: relative; flex: none; display: grid; place-items: center; width: 26px; height: 26px; margin: -6px -6px -6px 0; border-radius: var(--r-sm); color: var(--muted) }
+.fish-card .sp-info::before { content: ""; position: absolute; inset: -9px } /* a 44 px target around a small icon */
+.fish-card .sp-info:hover { background: var(--raise-3); color: var(--ink) }
+.fish-card[aria-pressed="true"] .sp-info { color: var(--accent-ink) }
+
+/* ---------- The index (r8): the ranked fish as one list group split by hairlines, section titles as the app's headings ---------- */
+.spx-index { gap: 18px }
+.spx-index h3 { margin-bottom: 10px; font: 650 var(--fs-h, 16px)/1.25 var(--sans); letter-spacing: -.01em; text-transform: none; color: var(--ink) }
+.spx-index h3::after { display: none }
+.spx-index h3 .i { color: var(--muted) }
+.spx-index .spx-count { margin-left: auto; font-size: 12px }
+.spx-nowh h3 { margin-bottom: 2px; font-size: var(--fs-h, 16px) }
+.spx-rank { gap: 0; overflow: hidden; border-radius: var(--r); background: var(--card, var(--raise)); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.spx-rank > li + li { border-top: 1px solid var(--line) }
+.spx-rank .spx-row { min-height: 64px; padding: 8px 12px 8px 8px; border-radius: 0; background: none; box-shadow: none }
+.spx-rank .spx-row:hover { background: var(--card-2, var(--raise-2)) }
+.spx-rank .spx-cut { width: 64px; height: 44px; border-radius: var(--r-sm) }
+.spx-rank .spx-main b { font-size: 14px }
+/* round 17 G: Overview's "More about this fish" fold (depth, seabed, water, sources) and Baits' "All baits and lures" fold */
+.spx-panel > .spx-more { margin-top: 0 }
+.spx-morein { display: flex; flex-direction: column; gap: 12px }
+.spx-morein .spx-pair > .spx-sec { background: var(--panel) }
+.spx-allgear > h4:first-child { margin-top: 4px }

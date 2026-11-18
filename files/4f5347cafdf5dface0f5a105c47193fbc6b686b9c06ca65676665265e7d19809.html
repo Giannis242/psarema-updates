@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Content-Security-Policy (round 11 security, round11/SEC/REPORT.md): scripts only from the app, blob: (data/boot.js) and the exact CDN
+     library folders (SRI-pinned too); no inline script except the splash limit below (its sha256 is here: change one, change both;
+     mobile/sync-web.mjs checks); no inline handlers (js/core.js data-fb / data-in). connect-src: every host the app fetches. A new host or
+     library: add it here or it is blocked (a console error). 'unsafe-eval' only for the test pages that read the app through iframe eval
+     (eval/smoke): mobile/sync-web.mjs drops it from the app it builds (APK and over-the-air update). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' blob: 'sha256-YZF2tTyg49RRdWxRMELF7Vh1s1SBs5oJQT7TZaO22XU=' https://unpkg.com/leaflet@1.9.4/dist/ https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/ https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/ https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/ https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/; style-src 'self' 'unsafe-inline' https://unpkg.com/leaflet@1.9.4/dist/; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' blob: https://api.open-meteo.com https://marine-api.open-meteo.com https://s3.waw3-1.cloudferro.com https://stac.marine.copernicus.eu https://giannis242.github.io https://api.inaturalist.org https://api.gbif.org https://mesonet.agron.iastate.edu https://commons.wikimedia.org https://api.kartaview.org https://server.arcgisonline.com https://ibasemaps-api.arcgis.com https://tiles.openseamap.org wss://psarema-ais.live-ais.workers.dev https://*.supabase.co ws://localhost:8765; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="color-scheme" content="dark"> <!-- the page's canvas is dark before any stylesheet is in: no white flash -->
+<title>Psarema</title>
+<link rel="icon" href="assets/app-icon/favicon-32.png" sizes="32x32">
+<link rel="icon" href="assets/app-icon/favicon-16.png" sizes="16x16">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml"> <!-- the logo (scripts/icon/make-icons.mjs makes every icon) -->
+<link rel="apple-touch-icon" href="assets/app-icon/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<!-- The seabed grids (scripts/pack-data.mjs packs them; data/boot.js decodes them): fetched at once, in parallel with everything below -->
+<link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="data/bathy.bin" as="fetch" crossorigin>
+<link rel="preload" href="data/habitat.bin" as="fetch" crossorigin>
+<link rel="preload" href="data/terrain.bin" as="fetch" crossorigin>
+<link rel="preload" href="data/north.bin" as="fetch" crossorigin>
+<link rel="preload" href="data/protected.bin" as="fetch" crossorigin>
+<link rel="preload" href="data/access.bin" as="fetch" crossorigin>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/spot.css">
+<link rel="stylesheet" href="css/sheets.css">
+<link rel="stylesheet" href="css/timeline.css">
+<link rel="stylesheet" href="css/weather.css">
+<link rel="stylesheet" href="css/conditions.css">
+<link rel="stylesheet" href="css/help.css">
+<link rel="stylesheet" href="css/area-gear.css">
+<link rel="stylesheet" href="css/vessels.css">
+<link rel="stylesheet" href="css/live-ships.css">
+<link rel="stylesheet" href="css/mobile.css">
+<link rel="stylesheet" href="css/map-fx.css">
+<link rel="stylesheet" href="css/dive3d.css">
+<link rel="stylesheet" href="css/area3d.css"> <!-- round 10b: a fishing area in 3D (js/area3d.js) -->
+<link rel="stylesheet" href="css/area3d-street.css"> <!-- round 13: street view in the 3D area (js/area3d-street.js) -->
+<link rel="stylesheet" href="css/areas.css"> <!-- round 10b: the areas on the map and their page (js/areas.js) -->
+<link rel="stylesheet" href="css/catchlog.css">
+<link rel="stylesheet" href="css/planner.css">
+<link rel="stylesheet" href="css/calendar.css">
+<link rel="stylesheet" href="css/offline.css">
+<link rel="stylesheet" href="css/instruments.css">
+<link rel="stylesheet" href="css/splash.css">
+<link rel="stylesheet" href="css/nav.css">
+<link rel="stylesheet" href="css/me.css">
+<link rel="stylesheet" href="css/account.css">
+<link rel="stylesheet" href="css/chart.css">
+<link rel="stylesheet" href="css/search.css">
+<link rel="stylesheet" href="css/pins.css">
+<link rel="stylesheet" href="css/feed.css">
+<link rel="stylesheet" href="css/forecast.css">
+<link rel="stylesheet" href="css/species-page.css">
+<link rel="stylesheet" href="css/obs.css">
+<link rel="stylesheet" href="css/motion.css"> <!-- last: entrance and state motion over every component -->
+<link rel="stylesheet" href="css/a11y.css"> <!-- round 14: tap targets, small text, larger system text, landscape and tablets (after motion: its ::befores stay) -->
+</head>
+<body>
+<!-- The splash (css/splash.css; round11/splash/scene.mjs makes it): inline, so it is in the very first paint. A 2.5 s story, played
+     through once: the logo's fish (where the native splash leaves it) swims off and goes down far out; an angler casts there; the lure
+     lands, the fish turns under the rings; the name. js/app.js reveal() lifts it once the first heat map is drawn and the story is over
+     (or after its 3 s wait, or at an error); the script below lifts it after 8 s whatever happens. aria-hidden: #status says what loads. -->
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="sp-scene">
+    <div class="ss-sea"><svg viewBox="0 0 400 300"><path d="M-1200 150H1600"/></svg></div>
+    <div class="ss-waves"><svg viewBox="0 0 400 300"><path d="M210 158.5h34M286 160.5h58M402 157.5h46M150 167.5h40M232 170h70M330 168h30M460 166h80M128 184h56M262 188h40M372 182h86M520 186h60M170 210h76M330 214h50M440 206h90M150 246h40M262 250h96M420 242h70M300 290h80M480 282h90M200 330h60M380 352h110M240 400h90"/></svg></div>
+    <div class="ss-rock"><svg viewBox="0 0 400 300"><path d="M-900 237H58C70 234 92 233.5 112 236 124 238 132 244 140 252 146 258 152 262 160 266C166 282 160 312 150 342L136 760H-900Z"/><path class="ss-edge" d="M-900 237H58C70 234 92 233.5 112 236 124 238 132 244 140 252 146 258 152 262 160 266"/><path class="ss-foam" d="M150 268h20M176 266.5h10M141 273h12"/></svg></div>
+    <div class="ss-fish"><div><svg viewBox="0 0 100 100"><path id="sp-bream" fill-rule="evenodd" d="M89 52.4C89.4 44.5 83.8 35.6 70.5 33.6C56 31.4 38 38 27.5 46.3Q25.2 50.5 27.5 54.7C38 61 50 65.8 62 65.8C74 65.8 84 61 88.3 54.4L85 53.4ZM25.5 46.6Q17 41.5 8.5 34.5Q13.5 43.5 15.2 50.5Q13.5 57.5 8.5 66.5Q17 59.5 25.5 54.4Q23.2 50.5 25.5 46.6ZM64.5 31.4L59.8 25C52 25.8 42.5 29.6 34.5 35.8L32 40.6C41 36.3 50 32.6 64.5 31.4ZM50.5 66.2L45.5 72.6C41 70.5 37.4 66.6 35.2 61.2C40 63.4 45 65.2 50.5 66.2ZM81.1 45A3.1 3.1 0 1 0 74.9 45A3.1 3.1 0 1 0 81.1 45ZM70.2 38.8Q62 50 70.2 61.2Q66.4 50 70.2 38.8Z"/></svg></div></div>
+    <div class="ss-body"><svg class="ss-fig" viewBox="0 0 400 300"><path d="M75.6 145.2C80.6 141.4 90 140.8 95.2 144.4L93.4 160C92.6 169 90.6 176.6 86.6 181.4L77.4 181.4C75.2 175.6 74.2 166.6 74.6 156.4Z"/><path d="M85 142 86.6 138.6" stroke-width="5.2"/><circle cx="88.2" cy="133" r="6.9"/><path d="M80.8 132C80.6 125.6 84.9 122.3 89.3 122.5 93.8 122.7 96.1 125.6 96.3 129L102.8 130.7C101.8 132.4 99.1 132.9 96.2 132.4Z"/><path d="M79.4 179 75.4 205.6" stroke-width="9.2"/><path d="M75.4 205.6 69.6 231.6" stroke-width="7"/><path d="M85.4 179 95 204.6" stroke-width="9.2"/><path d="M95 204.6 99 231.6" stroke-width="7"/><path d="M62.5 236.6C62.5 232.6 66 231 70.5 231.6 74.5 232.2 77 234 77 236.6Z"/><path d="M94.5 236.6C94.5 232.6 98 231 102 231.6 106 232.2 109 234 109.5 236.6Z"/></svg><div class="ss-arm"><svg class="ss-lim" viewBox="0 0 400 300"><path d="M84 147L102.79 153.84" stroke-width="7.2"/></svg><div class="ss-fore"><svg class="ss-lim" viewBox="0 0 400 300"><path d="M102.79 153.84L119.11 146.23" stroke-width="6.2"/><circle cx="119.11" cy="146.23" r="3.7"/></svg><div class="ss-rod"><svg class="ss-stick" viewBox="0 0 400 300"><path d="M104.24 159.62L119.11 146.23" stroke-width="3.2"/><path d="M119.11 146.23L151.81 116.79" stroke-width="2.1"/><circle cx="126.17" cy="145.12" r="2.8"/></svg><div class="ss-r2"><svg class="ss-stick" viewBox="0 0 400 300"><path d="M151.81 116.79L180.05 91.36" stroke-width="1.7"/></svg><div class="ss-r3"><svg class="ss-stick" viewBox="0 0 400 300"><path d="M180.05 91.36L199.37 73.97" stroke-width="1.35"/></svg><div class="ss-r4"><svg class="ss-stick" viewBox="0 0 400 300"><path d="M199.37 73.97L214.23 60.58" stroke-width="1.05"/></svg><div class="ss-bait"><svg viewBox="0 0 400 300"><circle cx="214.23" cy="60.58" r="1.9"/></svg></div></div></div></div></div></div></div></div>
+    <div class="ss-win"><div><svg viewBox="0 0 400 300"><path d="M223.12 67.74L232.21 60.8L240.84 54.7L248.96 49.45L256.55 45.04L263.6 41.48L270.13 38.76L276.15 36.87L281.7 35.8L286.8 35.55L291.49 36.1L295.79 37.43L299.72 39.52L303.32 42.34L306.61 45.87L309.6 50.08L312.33 54.91L314.8 60.33L317.03 66.29L319.04 72.72L320.85 79.58L322.46 86.77L323.88 94.24L325.14 101.9L326.23 109.65L327.16 117.4L327.95 125.04L328.6 132.46L329.12 139.54L329.51 146.17L329.79 152.21L329.95 157.53L330 162"/></svg></div></div>
+    <div class="ss-slack"><svg viewBox="0 0 400 300"><path d="M223.12 67.74C267.12 93.74 260 161 330 162"/></svg></div>
+    <div class="ss-ring"><svg viewBox="0 0 400 300"><ellipse cx="330" cy="163" rx="17" ry="3.2"/></svg></div><div class="ss-ring"><svg viewBox="0 0 400 300"><ellipse cx="330" cy="163" rx="17" ry="3.2"/></svg></div><div class="ss-ring"><svg viewBox="0 0 400 300"><ellipse cx="330" cy="163" rx="17" ry="3.2"/></svg></div>
+    <div class="ss-drops"><svg viewBox="0 0 400 300"><path d="M327 159l-2.5-5M330 158v-6M333 159l2.5-5"/></svg></div>
+    <div class="ss-lx"><div class="ss-ly"><div class="ss-lure"><svg viewBox="0 0 400 300"><circle cx="330" cy="162" r="2"/></svg></div></div></div>
+  </div>
+  <p class="sp-word"><b><i><svg viewBox="8 24 82 50"><use href="#sp-bream"/></svg>Psarema</i></b><span lang="en">Where and when to fish around Cyprus</span><span lang="el">Πού και πότε να ψαρέψετε στην Κύπρο</span></p>
+</div>
+<script>{ // the splash's language before js/i18n.js is in (core.js's own rule), and its story's end for js/app.js reveal() (data-end, ms).
+  // In the Android app the native splash stays until the page's load event and then fades: the story waits for it on its first frame,
+  // which is the native splash's own picture (the fish, small, in the middle), and starts as that fades (4 s at most).
+  const s = document.getElementById('splash'), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let l, on = 0; try { l = JSON.parse(localStorage.getItem('psarema-prefs-v3'))?.lang; } catch {}
+  s.lang = (l || navigator.language || '').toLowerCase().startsWith('el') ? 'el' : 'en';
+  const go = () => { if (on++) return; s.classList.remove('wait'); requestAnimationFrame(t => { s.dataset.end = Math.round(t + (still ? 900 : 2500)); }); };
+  s.dataset.end = Math.round(performance.now() + 9000); // until it starts: js/app.js waits (and asks again every 100 ms)
+  if (/; wv\)/.test(navigator.userAgent)) { s.classList.add('wait'); addEventListener('load', () => setTimeout(go, 250)); setTimeout(go, 4000); } else go();
+  setTimeout(() => { if (s.isConnected && !s.classList.contains('out')) { s.classList.add('out'); setTimeout(() => s.remove(), 500); } }, 8000); // the hard limit: up and taking taps 8 s at most, whatever the start-up does
+}</script>
+<div class="app">
+  <div class="stage">
+    <div id="map" data-i18n-aria="mapLabel"></div>
+
+    <aside class="rail glass" id="rail">
+      <div class="rail-head">
+        <div class="brand"><img class="logo" src="assets/logo.svg" alt=""><span class="wordmark">Psarema</span></div>
+        <div class="lang" id="lang" role="group" data-i18n-aria="language"><button data-lang="en">EN</button><button data-lang="el">ΕΛ</button></div>
+        <button class="icon-btn" id="help-btn" data-ui="help" data-i18n-tip="helpCentre" data-icon="help"></button>
+        <button class="icon-btn" id="rail-toggle" data-ui="rail" aria-expanded="true" aria-controls="rail-body" data-icon="chevron-down"></button>
+      </div>
+      <p class="status" id="status" role="status"><i></i><span>Loading…</span><button class="btn" id="retry" data-ui="retry" hidden data-i18n="retry">Retry</button></p>
+      <!-- The app's five places (js/nav.js). Wide screens: this row, and pages fill the rail under it (#pages); phones: the tab bar (#m-nav) -->
+      <nav class="ps-tabs" id="ps-tabs" data-i18n-aria="nav_label">
+        <button data-nav="map" aria-current="page"><span data-icon="map"></span><span data-i18n="nav_map">Map</span></button>
+        <button data-nav="forecast"><span data-icon="forecast"></span><span data-i18n="nav_forecast">Forecast</span></button>
+        <button class="nav-plus" data-nav="log" data-i18n-aria="nav_log" data-i18n-title="nav_log"><span data-icon="plus"></span></button>
+        <button data-nav="feed"><span data-icon="feed"></span><span data-i18n="nav_feed">Feed</span></button>
+        <button data-nav="me"><span data-icon="user"></span><span data-i18n="nav_me">Me</span></button>
+      </nav>
+      <div class="rail-body" id="rail-body">
+        <button class="fish-current" id="fish-current" data-ui="gallery" aria-haspopup="dialog"></button>
+        <div class="seg" id="mode" role="group" data-i18n-aria="ui_method">
+          <button data-mode="boat"><span data-icon="boat"></span><span data-i18n="boat">Boat</span></button>
+          <button data-mode="shore"><span data-icon="shore"></span><span data-i18n="shore">Shore</span></button>
+          <button data-mode="spear"><span data-icon="spear"></span><span data-i18n="spear">Spear</span></button>
+        </div>
+        <!-- Round 17 G: one list, Where to go (it was four tabs: When, Spots, Near me, Guide). Anywhere: the best spots at the hour on the map;
+             a distance: the best near you (ui.js showTab: state.tab 'spots' | 'near'). Each area's best window this week folds under it and is
+             worked out only while open (js/conditions.js); the fish's guide, rules and how the score works are its species page. -->
+        <section class="tab where" id="tab-where">
+          <div class="sec-head"><h2 class="lbl" id="top-when"></h2><div class="chips" id="radius" role="group" data-i18n-aria="nearMe"></div></div>
+          <p class="warn" id="sp-warn" hidden></p> <!-- the fish is rarely taken this way (its scores lowered), and the spearfishing rules -->
+          <p class="hint sk-cap" data-i18n="waiting">Waiting for the forecast…</p> <!-- shown while #top holds its skeleton rows -->
+          <ol class="top" id="top" aria-labelledby="top-when"><!-- skeleton rows (ui.js spotRow's shape) until ui.js drawSpotList writes the list -->
+            <li class="sk-row" style="--i:0" aria-hidden="true"><span class="row"><span class="rank"></span><span class="t-main"><i class="sk-bar" style="width:68%"></i><i class="sk-bar sm" style="width:44%"></i></span><span class="t-side"><span class="ring sm empty"></span></span></span></li>
+            <li class="sk-row" style="--i:1" aria-hidden="true"><span class="row"><span class="rank"></span><span class="t-main"><i class="sk-bar" style="width:54%"></i><i class="sk-bar sm" style="width:38%"></i></span><span class="t-side"><span class="ring sm empty"></span></span></span></li>
+            <li class="sk-row" style="--i:2" aria-hidden="true"><span class="row"><span class="rank"></span><span class="t-main"><i class="sk-bar" style="width:74%"></i><i class="sk-bar sm" style="width:50%"></i></span><span class="t-side"><span class="ring sm empty"></span></span></span></li>
+            <li class="sk-row" style="--i:3" aria-hidden="true"><span class="row"><span class="rank"></span><span class="t-main"><i class="sk-bar" style="width:60%"></i><i class="sk-bar sm" style="width:34%"></i></span><span class="t-side"><span class="ring sm empty"></span></span></span></li>
+            <li class="sk-row" style="--i:4" aria-hidden="true"><span class="row"><span class="rank"></span><span class="t-main"><i class="sk-bar" style="width:48%"></i><i class="sk-bar sm" style="width:42%"></i></span><span class="t-side"><span class="ring sm empty"></span></span></span></li>
+          </ol>
+          <div class="hint" id="near-msg" role="status" hidden></div>
+          <ol class="top" id="near-list" hidden></ol>
+          <div class="near-btns" id="near-btns" hidden>
+            <button class="btn" id="loc-me" data-ui="locate"><span data-icon="my-location"></span><span data-i18n="myLoc">My location</span></button>
+            <button class="btn ghost" id="loc-none" data-ui="loc-none"><span data-icon="close"></span><span data-i18n="noLoc">No location</span></button>
+          </div>
+          <details class="fold where-fold" id="areas-fold"><summary><span data-icon="chevron-right"></span><span data-i18n="g17_byArea">By area, this week</span></summary>
+            <div id="areas-body"><p class="hint" data-i18n="waiting">Waiting for the forecast…</p></div>
+            <ol class="area-list sk" aria-hidden="true"><!-- skeleton rows while #areas-body holds only its caption (css/splash.css) -->
+              <li class="area" style="--i:0"><span class="a-name"><i class="sk-bar" style="width:58%"></i></span></li>
+              <li class="area" style="--i:1"><span class="a-name"><i class="sk-bar" style="width:44%"></i></span></li>
+              <li class="area" style="--i:2"><span class="a-name"><i class="sk-bar" style="width:66%"></i></span></li>
+            </ol>
+          </details>
+          <button class="btn where-fish" id="where-fish" data-sp-page=""></button> <!-- ui.js drawFishPanel: the fish's own page -->
+        </section>
+      </div>
+      <!-- the extra tools, docked under the scrolling body: a short label, the full name as tooltip and accessible name (phones: the top bar's menu) -->
+      <div class="rail-tools">
+        <button data-ui="plan" data-i18n-tip="pl_title"><span data-icon="route"></span><span data-i18n="sh_plan">Plan</span></button>
+        <button data-cal-open data-i18n-tip="cal_title"><span data-icon="calendar"></span><span data-i18n="sh_cal">Calendar</span></button>
+        <button data-ct-open data-i18n-tip="ct_my"><span data-icon="fish"></span><span data-i18n="sh_catches">Catches</span></button>
+        <button data-ps-offline data-i18n-tip="offAreas"><span data-icon="map"></span><span data-i18n="sh_offline">Offline</span></button>
+      </div>
+      <div class="pages" id="pages" hidden></div> <!-- js/nav.js: the open page (Forecast, Feed, Me, a species…). Phones: full-screen layers over the map -->
+    </aside>
+
+    <!-- Phones (css/mobile.css, js/mobile.js): the top bar floats over the map: the search pill and the menu, then one row of
+         chips (the fish; how you fish: #mode moves in; round 17 G: the map layers are Layers' main list). Layers and Locate float on the right under it. -->
+    <div class="mobile-bar" id="mobile-bar">
+      <!-- the search: js/search.js PsSearch.mount() puts its field in (wide screens: its own slot in the rail); until then a stand-in that opens the fish picker -->
+      <div class="m-search" id="m-search"><button class="srch-ph glass" data-srch-ph><span data-icon="search"></span><span data-i18n="nav_search">Search fish</span></button></div>
+      <div class="mb-tools glass" id="mb-tools">
+        <button class="icon-btn" id="mb-more" data-icon="more" data-i18n-aria="menu" data-i18n-title="menu" aria-haspopup="true" aria-expanded="false" aria-controls="mb-menu"></button>
+      </div>
+      <div class="mb-chips" id="mb-chips" role="toolbar" data-i18n-aria="mc_bar">
+        <button class="mb-fish" id="mb-fish" data-ui="gallery" aria-haspopup="dialog"></button>
+      </div>
+      <!-- Round 17 G: the map's tools and its credits only. My catches, language, notifications and updates are on Me; How to use is the
+           help centre's Quick tour. -->
+      <div class="mb-menu glass" id="mb-menu" hidden>
+        <button id="mb-plan" data-ui="plan"><span data-icon="route"></span><span data-i18n="pl_title">Plan a trip</span></button>
+        <button id="mb-cal" data-cal-open><span data-icon="calendar"></span><span data-i18n="cal_title">Fishing calendar</span></button>
+        <button id="mb-offline" data-ps-offline><span data-icon="map"></span><span data-i18n="offAreas">Offline areas</span></button>
+        <button id="mb-help" class="mb-sep" data-ui="help"><span data-icon="help"></span><span data-i18n="helpCentre">Help centre</span></button>
+        <button id="mb-credits"><span data-icon="globe"></span><span data-i18n="credits">Map and data credits</span></button>
+      </div>
+      <!-- js/updater.js's "Check for updates" (the Android app): out of sight; Me → Help and about shows it and clicks it -->
+      <div hidden><button id="mb-update" hidden><span data-i18n="checkUpdates">Check for updates</span><small id="mb-version"></small></button></div>
+    </div>
+
+    <div class="hud">
+      <div class="strip glass" id="strip"></div>
+      <div class="layers-wrap">
+        <button class="layers-btn glass" id="layers-btn" data-ui="layers" aria-expanded="false" aria-controls="layers-pop"><span data-icon="layers"></span><span data-i18n="layers">Layers</span></button>
+        <!-- Round 17 G: Layers in two parts. The few most anglers use, always in sight (#lp-main), then More layers folded, its summary saying
+             how many of those are on (ui.js drawLayerCounts). Other files add their rows: js/chart.js the map style cards on top and the map
+             details group, js/pins.js and js/areas.js theirs in #lp-main, js/vessels.js #lay-ships; the heat switch's options go under More (ui.js groupLayers). -->
+        <div class="layers-pop glass" id="layers-pop" role="dialog" aria-labelledby="lp-title" hidden>
+          <div class="lp-head"><h3 id="lp-title" data-i18n="layers">Layers</h3><button class="icon-btn" id="layers-close" data-ui="layers-close" data-icon="close" data-i18n-tip="close"></button></div>
+          <div class="lp-items lp-main" id="lp-main">
+            <label><input type="checkbox" id="lay-heat"> <span data-i18n="l_heat"></span></label>
+            <label><input type="checkbox" id="lay-wind"> <span data-i18n="l_wind"></span></label>
+            <label><input type="checkbox" id="lay-waves"> <span data-i18n="l_waves"></span></label>
+            <label><input type="checkbox" id="lay-contours"> <span data-i18n="l_contours"></span> <span class="num">5–2000 m</span></label>
+            <label><input type="checkbox" id="lay-protected"><i class="sw prot"></i> <span data-i18n="l_protected"></span> <span class="num" id="n-protected">–</span></label>
+          </div>
+          <details class="lp-more" id="lp-more"><summary><span data-icon="chevron-right"></span><span data-i18n="g17_moreLayers">More layers</span><small class="lp-n"></small></summary>
+            <div class="lp-grp" data-grp="fishing"><h4 data-i18n="grpFishing">Fishing</h4><div class="lp-items">
+              <div class="slider"><span data-i18n="opacity"></span><input type="range" id="heat-op" min="30" max="100" data-i18n-aria="opacity"><output id="heat-op-v"></output></div>
+              <div class="slider"><span data-i18n="hideBelow"></span><input type="range" id="min-score" min="0" max="80" step="5" data-i18n-aria="hideBelow"><output id="min-score-v"></output></div>
+              <label><input type="checkbox" id="lay-zones"><i class="sw ring" style="color:var(--heat-85)"></i> <span data-i18n="l_zones"></span></label>
+            </div></div>
+            <div class="lp-grp" data-grp="weather"><h4 data-i18n="grpWeather">Weather and sea</h4><div class="lp-items">
+              <label><input type="checkbox" id="lay-currents"> <span data-i18n="l_currents"></span></label>
+              <label><input type="checkbox" id="lay-rain"> <span data-i18n="l_rain"></span></label>
+              <label><input type="checkbox" id="lay-temp"> <span data-i18n="l_temp"></span></label>
+            </div></div>
+            <div class="lp-grp" data-grp="places"><h4 data-i18n="grpPlaces">Places and seabed</h4><div class="lp-items">
+              <p class="hint" data-i18n="zoomHint"></p>
+              <label><input type="checkbox" id="lay-fishing"><i class="sw" style="background:#f0a63a"></i> <span data-i18n="l_fishing"></span> <span class="num" id="n-fishing">0</span></label>
+              <label><input type="checkbox" id="lay-structure"><i class="sw" style="background:#a8e6f5"></i> <span data-i18n="l_structure"></span> <span class="num" id="n-structure">0</span></label>
+              <label><input type="checkbox" id="lay-access"><i class="sw" style="background:#9aa3ad"></i> <span data-i18n="l_access"></span> <span class="num" id="n-access">0</span></label>
+              <label><input type="checkbox" id="lay-beach"><i class="sw" style="background:#d8c39a"></i> <span data-i18n="l_beach"></span> <span class="num" id="n-beach">0</span></label>
+              <label><input type="checkbox" id="lay-labels"> <span data-i18n="l_labels"></span></label>
+            </div></div>
+            <div class="lp-grp" data-grp="ships"><h4 data-i18n="grpShips">Ships</h4><div class="lp-items" id="lay-ships"></div></div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner glass" id="banner" hidden></div>
+    <div class="map-legend glass" id="map-legend">
+      <div class="legend-bar" id="legend"></div>
+      <div class="legend-words"><span data-i18n="poor"></span><span data-i18n="fair"></span><span data-i18n="good"></span><span data-i18n="excellent"></span></div>
+      <details class="wx-fold" id="wx-fold" hidden><summary><span data-icon="chevron-right"></span><span id="wx-names"></span></summary><div id="weather-legend"></div></details>
+      <div class="readout" id="readout" hidden></div>
+    </div>
+    <aside class="drawer glass" id="drawer" hidden aria-live="polite"></aside>
+    <!-- Phones: one bottom sheet. Head (js/mobile.js moves them in): the status line, the timeline (all the peek shows), the readings (#strip),
+         the tabs. Body: the tab panels, or the tapped spot. -->
+    <section class="m-sheet" id="m-sheet" data-i18n-aria="sheet">
+      <div class="m-head" id="m-head">
+        <button class="m-grab" id="m-grab" data-i18n-aria="sheetToggle"></button>
+        <div class="m-read" id="m-read"></div>
+      </div>
+      <div class="m-body" id="m-body"><div class="m-main" id="m-main"></div><div class="m-spot" id="m-spot" hidden aria-live="polite"></div></div>
+    </section>
+    <nav class="m-nav" id="m-nav"></nav> <!-- phones: the tab bar at the screen's foot, over the sheet's and every page's (#ps-tabs moves in) -->
+  </div>
+
+  <footer class="timeline">
+    <button class="play" id="play" data-ui="play" data-i18n-aria="playForecast"><span id="play-icon" data-icon="play"></span></button>
+    <div class="tl-main">
+      <div class="tl-track" id="tl"></div>
+      <input type="range" id="hour" min="0" max="71" value="0" data-i18n-aria="forecastHour" disabled>
+    </div>
+    <div class="tl-now">
+      <span class="tl-when"><b id="when-time">--:--</b><span class="tl-meta"><span id="when-day">–</span><span id="when-tags"></span></span></span>
+      <div class="tl-btns"><button class="btn" id="now-btn" data-ui="now" data-i18n="now">Now</button><button class="btn primary" id="best-btn" data-ui="best" hidden></button></div>
+    </div>
+  </footer>
+</div>
+
+<div class="modal" id="fish-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fish-title">
+  <div class="sheet glass">
+    <div class="sheet-head">
+      <h2 id="fish-title" data-i18n="chooseFish">Choose your fish</h2>
+      <label class="fsearch"><span data-icon="search"></span><input type="search" id="fish-search" autocomplete="off" data-i18n-aria="search"></label>
+      <button class="icon-btn" id="fish-close" data-close="#fish-modal" data-icon="close" data-i18n-tip="close"></button>
+    </div>
+    <div class="sheet-tools">
+      <div class="chips" id="fish-groups"></div>
+      <div class="chips" id="fish-methods"></div>
+      <label class="sort"><span data-i18n="sortBy">Sort</span><select id="fish-sort"></select></label>
+    </div>
+    <div class="sheet-body"><div class="fish-grid" id="fish-grid"></div></div>
+    <div class="sheet-foot" id="fish-foot"></div>
+  </div>
+</div>
+
+<div class="modal" id="help-modal" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="sheet glass">
+    <div class="sheet-head"><h2 id="help-title" data-i18n="helpCentre">Help centre</h2><span class="spacer"></span><button class="icon-btn" id="help-close" data-close="#help-modal" data-icon="close" data-i18n-tip="close"></button></div>
+    <div class="sheet-body help-host" id="help-host"></div>
+  </div>
+</div>
+
+<!-- round 14: the first run's welcome (#guide.wl, js/app.js; css/help.css .wl-*): what Psarema is in a few seconds, then the map. Quick tour
+     turns this card into the five-step tour (js/help.js tour keeps #guide-title and #guide-ok), as the help centre's Quick tour does. -->
+<div class="modal" id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="guide-title">
+  <div class="guide-card glass">
+    <div class="wl-top"><span class="wl-brand"><img src="assets/logo.svg" alt="">Psarema</span><div class="lang" role="group" data-i18n-aria="language"><button data-wl-lang="en" lang="en">EN</button><button data-wl-lang="el" lang="el">ΕΛ</button></div></div>
+    <h2 id="guide-title" tabindex="-1" data-i18n="wl_title">Where and when to fish around Cyprus</h2>
+    <ul class="wl-pts">
+      <li><span data-icon="layers"></span><span><span data-i18n="wl_1"></span><i class="wl-ramp" aria-hidden="true"></i></span></li>
+      <li><span data-icon="fish"></span><span data-i18n="wl_2"></span></li>
+      <li><span data-icon="pin"></span><span data-i18n="wl_3"></span></li>
+    </ul>
+    <p class="wl-note" data-i18n="tour_honest"></p>
+    <div class="guide-foot"><button class="btn ghost" data-ui="tour" data-i18n="wl_tour">Quick tour</button><button class="btn primary" id="guide-ok" data-close="#guide" data-i18n="tour_go">Start fishing</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/suncalc.js"></script>
+<script async src="vendor/d3.min.js"></script>
+<!-- Data (each file is optional except bathy and species). Loaded on first use instead (js/core.js loadScripts): data/vessels.js (js/vessels.js),
+     data/help.js + js/help.js (the help centre), data/gear-art.js + data/gear-1…3.js (a fish's page, a spot's gear) -->
+<script src="data/boot.js"></script> <!-- decodes the .bin grids preloaded in <head> (bathy, habitat, terrain, north, protected, access), then runs the type="ps/boot" scripts -->
+<script src="data/attractors.js"></script>
+<script src="data/spots.js"></script>
+<script src="data/species.js"></script>
+<script src="data/species-2.js"></script>
+<script src="data/species-3.js"></script>
+<script src="data/species-4.js"></script>
+<script src="data/species-tips.js"></script>
+<script src="data/season-fit.js"></script>
+<script src="data/el.js"></script>
+<script src="data/names-cy.js"></script>
+<script src="data/coast.js"></script>
+<script src="data/inland.js"></script> <!-- round 13: water not joined to the open sea (salt lakes) is land to the model (js/core.js) -->
+<script src="data/map-places.js"></script> <!-- round 9: the map's own place names and shore types (OpenStreetMap), js/map-marks.js -->
+<script src="data/map-shore.js"></script>
+<script src="data/areas.js"></script>
+<script type="ps/lazy" data-lazy="areagear" src="data/area-gear.js"></script> <!-- round 16 V: after the first map, with js/area-gear.js (js/lazy.js FEATURES says what loads when) -->
+<script src="data/fish/credits.js"></script>
+<script src="data/fish/cut/credits.js"></script>
+<script src="data/sightings.js"></script>
+<script type="ps/lazy" data-lazy="feed" src="data/reports.js"></script> <!-- js/feed.js only: with it -->
+<script src="data/calibration.js"></script>
+<script src="data/fit.js"></script>
+<script src="data/gear-catalog.js"></script>
+<script src="tiles/tiles.js"></script>
+<script src="js/map-config.js"></script> <!-- round 14 store: the online imagery and the owner's Esri key (one place) -->
+<script src="assets/icons.js"></script>
+<!-- App. From js/core.js on they read the grids, so data/boot.js runs them, in this order, once the grids are in
+     (type="ps/boot": the browser leaves them alone; the bench pages read this list too). A new app script goes here the same way. -->
+<script src="js/i18n.js"></script>
+<script type="ps/boot" src="js/core.js"></script>
+<script type="ps/boot" src="js/sources.js"></script>
+<script type="ps/boot" src="js/model.js"></script>
+<script type="ps/boot" src="js/fit.js"></script>
+<script type="ps/boot" src="js/personal.js"></script> <!-- round 10: your own water, learned on the phone from the catch log (PsPersonal) -->
+<script type="ps/boot" src="js/feeds.js"></script> <!-- round 10: feed stamps (PsFeeds) and a score's confidence and reasons (scoreInfo) -->
+<script type="ps/boot" src="js/map.js"></script>
+<script type="ps/boot" src="js/time-view.js"></script> <!-- round 16 timing view: day chips and the 24 h line follow the water in view -->
+<script type="ps/boot" src="js/weather.js"></script>
+<script type="ps/boot" src="js/conditions.js"></script>
+<script type="ps/boot" src="js/instruments.js"></script> <!-- wind compass, wave gauge, sun arc, moon: drawn by conditions/details/readings -->
+<script type="ps/boot" src="js/native.js"></script> <!-- before ui.js: its location watch starts as ui.js loads -->
+<script type="ps/boot" src="js/ui.js"></script>
+<script type="ps/lazy" data-lazy="areagear" src="js/area-gear.js"></script>
+<script type="ps/boot" src="js/spot-sheet.js"></script> <!-- the spot card's Save/Directions and the details' tabs (Overview · Conditions · Gear) -->
+<script type="ps/boot" src="js/vessels.js"></script>
+<script type="ps/lazy" data-lazy="liveships" src="js/live-ships.js"></script>
+<script type="ps/boot" src="js/updater.js"></script>
+<script type="ps/boot" src="js/auth-config.js"></script> <!-- round 11: the owner's Supabase project (public URL + anon key; empty = no accounts) -->
+<script type="ps/boot" src="js/cloud.js"></script> <!-- round 11: online accounts and sync (PsCloud), before mobile.js: the sign-in screen's Back runs first -->
+<script type="ps/lazy" data-lazy="dive3d" src="js/dive3d.js"></script> <!-- on first use (js/lazy.js); its Back handler listens in the capture phase, so it still runs before mobile.js's -->
+<script type="ps/lazy" data-lazy="area3d" src="js/area3d.js"></script> <!-- round 10b: a whole fishing area in 3D (PsArea3D); on first use, as dive3d.js -->
+<script type="ps/boot" src="js/catchlog-back.js"></script> <!-- before mobile.js: the catch logger's Back runs first -->
+<script type="ps/boot" src="js/lazy.js"></script> <!-- round 16 V: loads the type="ps/lazy" scripts after the first heat map or on first use; before mobile.js, as catchlog-back.js -->
+<script type="ps/boot" src="js/mobile.js"></script>
+<script type="ps/boot" src="js/catchlog.js"></script>
+<script type="ps/lazy" data-lazy="calendar" src="js/calendar.js"></script>
+<script type="ps/lazy" data-lazy="planner" src="js/planner.js"></script>
+<script type="ps/boot" src="js/offline.js"></script> <!-- after map/ui/mobile, before app.js: it wraps loadSatellite and loadOcean -->
+<!-- round 8: top-level pages (nav.js first: the page modules register with it as they load) -->
+<script type="ps/boot" src="js/nav.js"></script>
+<script type="ps/boot" src="js/records.js"></script>
+<script type="ps/boot" src="js/pins.js"></script>
+<script type="ps/boot" src="js/area-profile.js"></script> <!-- round 13: each area under water and its water quality (PsAreaProfile; data on first use) -->
+<script type="ps/boot" src="js/sure.js"></script> <!-- round 13: how sure a place's score is (PsSure; data/surveyed.js after the first map) -->
+<script type="ps/boot" src="js/seastate.js"></script> <!-- round 17 day map: the sea at each cell from its fetch toward the wind and swell (PsSea; data/exposure.bin when the layer or the per-cell gate is on) -->
+<script type="ps/boot" src="js/structure.js"></script> <!-- round 17 Q: the structure fish hold on, per 50 m sub-cell (PsStructure; data/structure/ on first use; before fine.js, which reads it) -->
+<script type="ps/boot" src="js/fine.js"></script> <!-- round 13: the heat map on ~50 m sub-cells where zoomed in (PsFine; data/fine/ on first use) -->
+<script type="ps/boot" src="js/hotspots.js"></script> <!-- round 17 K: the chance as places, its peaks outlined over a faint wash (PsHot; Layers > Fishing chance (all water) for the old look) -->
+<script type="ps/boot" src="js/areas.js"></script> <!-- round 10b: the fishing areas on the map and the area page (PsAreas; after nav.js) -->
+<script type="ps/boot" src="js/chart.js"></script>
+<script type="ps/boot" src="js/map-marks.js"></script> <!-- names, soundings, shore types, wrecks and reefs -->
+<script type="ps/boot" src="js/search.js"></script>
+<script type="ps/lazy" data-lazy="feed" src="js/feed.js"></script>
+<script type="ps/lazy" data-lazy="forecast" src="js/forecast.js"></script>
+<script type="ps/lazy" data-lazy="species" src="js/species-page.js"></script>
+<script type="ps/boot" src="js/account.js"></script> <!-- the angler profile (PsAccount) and the sign-in screen, before the Me page -->
+<script type="ps/lazy" data-lazy="me" src="js/me.js"></script>
+<script type="ps/boot" src="js/obs.js"></script>
+<script type="ps/boot" src="js/app.js"></script>
+<script type="ps/boot" src="js/motion.js"></script> <!-- entrance motion hooks (css/motion.css) -->
+</body>
+</html>

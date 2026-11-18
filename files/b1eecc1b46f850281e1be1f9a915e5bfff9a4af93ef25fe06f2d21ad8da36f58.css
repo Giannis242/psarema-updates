@@ -1,0 +1,77 @@
+/* Psarema: the Me page (js/me.js), a profile: header (avatar, name, @username, area, styles), the numbers, Catches · Species · Stats tabs,
+   then saved places and the logbook, Settings, Account, and Help and about folded (the shared ui-* components, css/app.css). Grey and white only. */
+/* the header: avatar left, who on the right */
+.me-prof { display: flex; align-items: center; gap: 14px; padding: 2px 0 12px }
+.me-av { --sz: 72px; box-shadow: 0 0 0 2px var(--page, var(--panel)), 0 0 0 3px var(--line-2) }
+.me-av b { font-weight: 700 }
+.me-who { flex: 1; min-width: 0 }
+.me-who h3 { margin: 0; font: 700 19px/1.2 var(--sans); letter-spacing: -.02em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.me-handle { margin: 2px 0 0; font: 500 13px/1.3 var(--sans); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.me-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 0; font: 500 12px/1.3 var(--sans); color: var(--dim) }
+.me-meta span { display: inline-flex; align-items: center; gap: 4px; min-width: 0 }
+.me-meta .i { width: 14px; height: 14px; flex: none }
+.me-fav { margin: 0 0 12px }
+.me-fav .ui-chip { padding-left: 6px }
+.me-favcut { width: 30px; height: 20px; display: grid; place-items: center }
+.me-favcut img { width: 30px; height: 20px; object-fit: contain }
+
+/* without an account: the invite */
+.me-invite { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px 14px; margin-bottom: 12px; padding: 14px }
+.me-invite .ui-av { background: var(--raise-2); color: var(--muted) }
+.me-inv-txt b { display: block; font: 650 15px/1.3 var(--sans); color: var(--ink) }
+.me-inv-txt p { margin: 3px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--muted) }
+.me-invite .btn { grid-column: 1 / -1 }
+/* the numbers: three, split by hairlines; each opens its tab */
+.me-stats { display: grid; gap: 0; padding: 0 }
+.me-stats > .ui-stat { align-items: center; padding: 12px 6px; text-align: center }
+.me-stats > * + * { border-left: 1px solid var(--line) }
+.me-stats b { font-size: 24px }
+.me-stats.sm b { font-size: 20px }
+button.me-stat { cursor: pointer; border-radius: 0 }
+button.me-stat:active { background: var(--card-2) }
+.me-tabs { margin: 14px 0 10px }
+.me-pane { min-height: 120px }
+/* catches: a square photo grid, edge to edge (cut-outs on grey when there is no photo) */
+.me-grid { margin-inline: calc(-1 * var(--pg-x, 12px)); border-radius: 0 }
+.me-tile { position: relative; display: grid; place-items: center; padding: 0; cursor: pointer }
+.me-tile.cut { background: var(--card) }
+.me-tile.cut .pn-cut { width: 78%; height: 60%; object-fit: contain; filter: drop-shadow(0 3px 4px rgb(0 0 0 / .5)) }
+.me-tile.cut > .i { width: 34px; height: 34px; color: var(--dim) }
+.me-tl { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 6px 5px; background: linear-gradient(transparent, rgb(0 0 0 / .65)); font: 600 11px/1.2 var(--sans); color: #fff;
+  text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.me-pb { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: var(--r-full); background: rgb(0 0 0 / .55); color: #fff }
+.me-pb .i { width: 13px; height: 13px }
+.me-tile:active { opacity: .8 }
+.me-empty { border-radius: var(--r); background: var(--card); border: 1px solid var(--line) }
+.me-gap { margin-top: 10px }
+/* catches by month: twelve bars */
+.me-months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; height: 92px; padding: 10px 10px 8px }
+.me-months span { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; min-width: 0 }
+.me-months i { width: 100%; max-width: 16px; height: calc(var(--h) * 52px); min-height: 2px; border-radius: 3px 3px 0 0; background: var(--muted) }
+.me-months small { font: 600 10.5px/1 var(--sans); color: var(--dim) }
+/* rows */
+.me-row > .i:first-child { color: var(--muted) }
+.me-static { cursor: default }
+.me-danger b, .me-danger > .i:first-child { color: var(--bad) }
+/* saved places: a fold; open, its chevron turns down */
+.me-fold > summary { list-style: none }
+.me-fold > summary::-webkit-details-marker { display: none }
+.me-fold[open] > summary .ui-chev { transform: rotate(90deg) }
+.me-fold > .me-sub { border-top: 1px solid var(--line) }
+.me-sub { min-height: 44px; padding-left: 44px }
+p.me-sub { margin: 0; padding: 10px 14px 12px 44px }
+/* settings: a name, then its segmented choice under it */
+.me-setrow { padding: 10px 12px 12px }
+.me-k { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font: 600 var(--fs-md)/1.3 var(--sans); color: var(--ink) }
+.me-k .i { width: 20px; height: 20px; color: var(--muted) }
+.me-seg { grid-template-columns: repeat(var(--n), minmax(0, 1fr)) }
+.me-seg button { flex-direction: row; gap: 7px; min-height: 40px; font-size: 13px }
+.me-seg button .i { width: 17px; height: 17px }
+.me-about { margin-top: 22px } /* round 17 G: Help and about, folded: the last group */
+.me-foot { margin: 18px 2px 4px; font-size: 12px; line-height: 1.45; color: var(--dim) }
+.me-credits { padding: 0 14px 14px; font-size: 13px; line-height: 1.55; color: var(--muted) }
+.me-credits a { color: var(--ink) }
+/* round 11: the online account's rows (js/me.js account()): the email with how the sync stands; the arrows turn while it syncs */
+.me-sync small.bad { color: var(--warn) }
+.me-spin.on { color: var(--ink); animation: au-spin 1s linear infinite } /* css/account.css @keyframes au-spin */
+@media (prefers-reduced-motion: reduce) { .me-spin.on { animation: none } }

@@ -1,0 +1,145 @@
+/* Psarema: Create account / Edit profile (js/account.js): one question per screen, the answer below, Back · Skip · Continue held at the foot.
+   And the one-time offer card after the first-launch tour. Grey and white only (the shared ui-* components, css/app.css). */
+.pg-body.ac-body { display: flex; flex-direction: column; padding: 0 }
+.ac-main { flex: 1 0 auto; padding: 14px calc(var(--sr, 0px) + 16px) 20px calc(var(--sl, 0px) + 16px) }
+.ac-foot { position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 6px; padding: 10px calc(var(--sr, 0px) + 16px) 14px calc(var(--sl, 0px) + 16px);
+  background: var(--page, var(--panel)); border-top: 1px solid var(--line) }
+.ac-row { display: flex; gap: 8px }
+.ac-row > .btn { flex: none }
+.ac-row > .ac-go, .ac-row > .danger { flex: 1 }
+.ac-go .i:last-child { width: 16px; height: 16px; margin-right: -4px }
+/* progress: five short bars */
+.ac-prog { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 2px 0 12px }
+.ac-prog i { height: 3px; border-radius: 2px; background: var(--raise-3); transition: background-color var(--dur) }
+.ac-prog i.on { background: var(--ink) }
+.ac-of { margin: 0 0 4px }
+.ac-q { margin: 0; font: 700 22px/1.2 var(--sans); letter-spacing: -.02em; color: var(--ink) }
+.ac-sub { margin: 6px 0 18px; font-size: 13.5px; line-height: 1.45; color: var(--muted) }
+.ac-part { display: flex; flex-direction: column; gap: 14px }
+/* welcome */
+.ac-hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 4px 6px }
+.ac-hero h2 { margin: 16px 0 0; font: 700 24px/1.2 var(--sans); letter-spacing: -.025em; color: var(--ink) }
+.ac-hero p { max-width: 36ch; margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--muted) }
+.ac-badge { position: relative; width: 88px; height: 88px; display: grid; place-items: center; border-radius: var(--r-full); background: var(--raise-2); box-shadow: var(--edge), 0 0 0 6px rgb(255 255 255 / .03); color: var(--ink) }
+.ac-badge > .i { width: 40px; height: 40px }
+.ac-badge > i { position: absolute; right: -2px; bottom: -2px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--r-full); background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 4px var(--page, var(--panel)) }
+.ac-badge > i .i { width: 20px; height: 20px }
+.ac-bul { display: flex; flex-direction: column; gap: 2px; margin: 22px 0 0; padding: 0; list-style: none; border-radius: var(--r); background: var(--card, var(--raise)); border: 1px solid var(--line) }
+.ac-bul li { display: flex; align-items: center; gap: 12px; padding: 11px 12px; font-size: 13.5px; line-height: 1.35; color: var(--ink) }
+.ac-bul li + li { border-top: 1px solid var(--line) }
+.ac-bul .i { width: 20px; height: 20px; flex: none; color: var(--muted) }
+.ac-note { display: flex; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--r); background: rgb(255 255 255 / .04); border: 1px dashed var(--line-2) }
+.ac-note > .i { width: 20px; height: 20px; flex: none; color: var(--ink) }
+.ac-note p { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--muted) }
+.ac-note b { color: var(--ink); font-weight: 600 }
+.ac-done .ac-handle { margin-top: 4px; font-weight: 600; color: var(--ink) }
+/* name + username */
+.ac-at { position: relative; display: block }
+.ac-at > i { position: absolute; left: 12px; top: 50%; translate: 0 -50%; font: 600 14px var(--sans); font-style: normal; color: var(--dim); pointer-events: none }
+.ac-at > .ui-input { padding-left: 28px }
+.ac-err, .ui-field > small.ac-err { color: var(--bad) }
+/* photo */
+.ac-av b { font-weight: 700 }
+.ac-big { --sz: 132px; margin: 0 auto; box-shadow: 0 0 0 3px var(--page, var(--panel)), 0 0 0 4px var(--line-2) }
+.ac-photo { display: flex; flex-direction: column; align-items: center; gap: 20px }
+.ac-photo-acts { display: flex; flex-direction: column; gap: 8px; width: 100% }
+.ac-photo-acts label.btn { cursor: pointer }
+/* tiles that toggle: a white tick when chosen */
+.ac-tile { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-width: 0; padding: 14px 6px 12px; border-radius: var(--r);
+  background: var(--card, var(--raise)); border: 1px solid var(--line); color: var(--muted); cursor: pointer; transition: background-color var(--dur), border-color var(--dur) }
+.ac-tile b { max-width: 100%; font: 600 12.5px/1.25 var(--sans); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ac-tile[aria-pressed="true"] { background: var(--raise-2); border-color: var(--ink) }
+.ac-tick { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: var(--r-full); background: var(--raise-3); color: transparent; transition: background-color var(--dur) }
+.ac-tick .i { width: 13px; height: 13px }
+.ac-tile[aria-pressed="true"] .ac-tick { background: var(--accent); color: var(--accent-ink) }
+.ac-styles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.ac-style { padding: 22px 6px 16px }
+.ac-style > .i { width: 32px; height: 32px; color: var(--ink) }
+.ac-fish { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.ac-cut { width: 100%; height: 44px; display: grid; place-items: center }
+.ac-cut img { width: 84%; height: 44px; object-fit: contain; filter: drop-shadow(0 2px 3px rgb(0 0 0 / .5)) }
+.ac-cut .i { width: 28px; height: 28px }
+/* home area: a radio list */
+.ac-area[aria-checked="true"] { background: var(--card-2, var(--raise-2)) }
+.ac-radio { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: var(--r-full); box-shadow: inset 0 0 0 1.5px var(--line-2); color: transparent }
+.ac-radio .i { width: 14px; height: 14px }
+.ac-area[aria-checked="true"] .ac-radio { background: var(--accent); box-shadow: none; color: var(--accent-ink) }
+.ac-area[aria-checked="true"] > .i:first-child { color: var(--ink) }
+/* edit profile: delete */
+.ac-edit .ui-sec:first-child { margin-top: 0 }
+.ac-delrow b, .ac-delrow > .i:first-child { color: var(--bad) }
+.ac-confirm { display: flex; flex-direction: column; gap: 10px; border-color: rgb(255 123 110 / .35) }
+.ac-confirm > b { font: 650 15px/1.3 var(--sans) }
+.ac-confirm p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted) }
+.ac-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 13.5px; color: var(--ink); cursor: pointer }
+.ac-check input { width: 20px; height: 20px; flex: none; margin: 0; accent-color: var(--bad) }
+/* the one-time offer: a small card over the map, above the tab bar; never in the way for long */
+.ac-offer { position: fixed; z-index: 880; left: calc(var(--sl, 0px) + 10px); right: calc(var(--sr, 0px) + 10px); bottom: calc(var(--m-nav, 0px) + 12px); max-width: 440px; margin: 0 auto;
+  display: flex; align-items: center; gap: 10px; padding: 10px 6px 10px 12px; border-radius: var(--r-lg); background: var(--glass); border: 1px solid var(--line-2); box-shadow: var(--shadow);
+  animation: ac-in .32s var(--ease) both }
+.ac-offer.out { animation: ac-out .2s ease-in both }
+.ac-offer .ui-av { --sz: 38px; background: var(--raise-2) }
+.ac-offer-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.ac-offer-txt b { font: 650 13.5px/1.25 var(--sans); color: var(--ink) }
+.ac-offer-txt small { font-size: 11.5px; line-height: 1.3; color: var(--muted) }
+.ac-offer .btn { flex: none; min-height: 40px }
+.ac-offer .icon-btn { width: 40px; height: 40px; flex: none }
+@keyframes ac-in { from { opacity: 0; transform: translateY(16px) } }
+@keyframes ac-out { to { opacity: 0; transform: translateY(12px) } }
+@media (prefers-reduced-motion: reduce) { .ac-offer, .ac-offer.out { animation: none } }
+@media (min-width: 761px) { .ac-offer { left: 50%; right: auto; width: 420px; translate: -50% 0; bottom: 18px } }
+/* fish names: up to two lines; the tick shows once chosen */
+.ac-fishtile b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; white-space: normal; text-align: center; min-height: 2.5em }
+.ac-tile:not([aria-pressed="true"]) .ac-tick { opacity: 0 }
+/* edit profile: the photo beside its buttons */
+.ac-edit .ac-photo { flex-direction: row; align-items: center; gap: 16px }
+.ac-edit .ac-big { --sz: 88px; margin: 0 }
+.ac-edit .ac-photo-acts { flex: 1; min-width: 0 }
+.ac-edit .ac-photo-acts .btn { min-height: 40px; font-size: 13px }
+/* round 11: the sign-in screen (js/account.js PsAccount.signin): full screen on phones, a card over the dimmed map on wide screens.
+   Over everything but the splash and the toasts; "Continue as guest" quiet at its foot. */
+.au { position: fixed; inset: 0; z-index: 2500; display: flex; justify-content: center; background: var(--page); outline: none }
+.au[hidden] { display: none }
+.au-card { display: flex; flex-direction: column; width: 100%; max-width: 440px; min-height: 0 }
+.au-main { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 14px;
+  padding: calc(var(--st, 0px) + 24px) calc(var(--sr, 0px) + 20px) 14px calc(var(--sl, 0px) + 20px) }
+.au-foot { padding: 4px calc(var(--sr, 0px) + 20px) calc(var(--sb, 0px) + 10px) calc(var(--sl, 0px) + 20px) }
+@media (min-width: 761px) {
+  .au { align-items: center; padding: 24px; background: var(--scrim) }
+  .au-card { max-height: min(780px, 100%); border-radius: var(--r-lg); background: var(--page); border: 1px solid var(--line-2); box-shadow: var(--shadow) }
+  .au-main { padding: 28px 28px 12px }
+  .au-foot { padding: 2px 28px 16px }
+}
+.au-brand { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 6px 0 2px }
+.au-logo { width: 60px; height: 60px; display: grid; place-items: center; border-radius: var(--r-lg); background: var(--accent); color: var(--accent-ink) }
+.au-logo .i { width: 34px; height: 34px }
+.au-brand h2 { margin: 12px 0 0; font: 700 26px/1.15 var(--sans); letter-spacing: -.025em; color: var(--ink) }
+.au-brand p { margin: 4px 0 0; font-size: 13.5px; line-height: 1.4; color: var(--muted) }
+.au-seg > button { min-height: 38px; font-size: 13.5px }
+.au-form { display: flex; flex-direction: column; gap: 12px }
+.au-in { position: relative; display: block }
+.au-in [data-au="pw"] { padding-right: 48px }
+.au-eye { position: absolute; right: 0; top: 0; width: 44px; height: 44px; color: var(--dim) }
+.au-eye[aria-pressed="true"] { color: var(--ink) }
+.au-rule { margin-top: -6px; font-size: 12px; line-height: 1.35; color: var(--dim) }
+.au-rule.bad { color: var(--bad) }
+.au-accept { min-height: 40px; font-size: 13px }
+.au-accept a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px }
+.au-msg { margin: 0; padding: 9px 12px; border-radius: var(--r); background: rgb(255 123 110 / .1); border: 1px solid rgb(255 123 110 / .32); color: var(--ink); font-size: 13px; line-height: 1.4 }
+.au-msg.info { background: rgb(255 255 255 / .05); border-color: var(--line-2) }
+.au-linkbtn { min-height: 44px; margin-top: -6px; font-size: 13px; white-space: normal }
+.au-or { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--dim) }
+.au-or::before, .au-or::after { content: ""; flex: 1; height: 1px; background: var(--line-2) }
+.au-google { gap: 10px }
+.au-g { width: 18px; height: 18px; flex: none }
+.au-hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px 0 2px }
+.au-hero > .i { width: 26px; height: 26px; padding: 15px; box-sizing: content-box; border-radius: var(--r-full); background: var(--raise-2); color: var(--ink) }
+.au-hero h2 { margin: 14px 0 0; font: 700 21px/1.25 var(--sans); letter-spacing: -.02em; color: var(--ink) }
+.au-hero p { max-width: 38ch; margin: 8px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); overflow-wrap: anywhere }
+.au-acts { display: flex; flex-direction: column; gap: 8px; margin-top: 6px }
+.au-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px }
+.au-guest { min-height: 44px; font-weight: 550 }
+.au-spin { width: 15px; height: 15px; flex: none; border-radius: var(--r-full); border: 2px solid currentColor; border-right-color: transparent; animation: au-spin .7s linear infinite }
+@keyframes au-spin { to { transform: rotate(360deg) } }
+@media (max-height: 680px) { .au-brand { flex-direction: row; gap: 12px; text-align: left; padding: 0 } .au-logo { width: 44px; height: 44px } .au-logo .i { width: 26px; height: 26px }
+  .au-brand h2 { margin: 0; font-size: 21px } .au-brand p { margin: 2px 0 0 } }

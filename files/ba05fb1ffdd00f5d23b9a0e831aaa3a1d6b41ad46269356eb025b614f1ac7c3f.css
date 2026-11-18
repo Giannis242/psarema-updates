@@ -1,0 +1,194 @@
+/* Psarema map effects (js/map.js): the fishing-chance image's sea shade, the top-spot pins, the tapped spot's marker, the "you" dot, the
+   screen's vignette, the Contour bands option, the fishing-chance legend. Nothing runs while the map is idle: a pin's pop, the best spot's
+   halo, the tapped spot's ring and beam and the you dot's ping each once (or 3 times) when shown. */
+
+/* A soft vignette at the screen's edges: one static layer over the map, under its controls (z 800+). The mask's own fade (map.js) does the
+   chart's edges; this only deepens the corners. Mostly transparent: the compositor skips its empty middle tiles. */
+#map::after { content: ""; position: absolute; inset: 0; z-index: 450; pointer-events: none;
+  background: radial-gradient(ellipse 80% 75% at 50% 48%, transparent 58%, rgb(0 0 0 / .1) 76%, rgb(0 0 0 / .3)); transition: opacity var(--dur) }
+#map.has-popup::after { opacity: 0 } /* it sits over the whole map pane, popups too: a card near a corner stays bright */
+
+/* Heat: a settled hour change (play, Now, ★, a tap on the timeline) fades the new picture (and its chance lines) in over the old, 180 ms,
+   by the Web Animations API in map.js paint (not under reduced motion); scrubbing swaps at once. */
+/* (The sea under the heat a shade darker: drawn in the box's own first canvas since round 17 Z, map.js.) The box dims while the next fish is made
+   ready (map.js heatWait); in a rule, so Leaflet's own transition on the box (the animated zoom's transform) still wins while it zooms */
+.heat-box { transition: opacity .12s }
+/* Beyond the island's waters (map.js mask): the graded open sea's own colour, so the chart's faded edges (map.js) melt into more sea on
+   every screen. Over the polygon's fill attribute, which js/mobile.js sets on phones. */
+.leaflet-mask-pane { --mask: #050a13 }
+.ps-mask { fill: var(--mask) }
+#map.leaflet-container:not(.ps-chart) { background: #050a13 } /* = --mask: past the mask's drawn extent (a pinch or fling uncovering more), the same dark sea (round 11) */
+
+/* Top spots (map.js drawTop): a dark disc at the spot, ringed in the score's colour, its rank inside. The three best in view (markDials)
+   instead wear a white ring with a dot of the score's colour (the heat under it is already that colour, so white keeps it seen) under a dark
+   glass tag on a stem: "#rank" and the score as a dial (core.js ring()). Ring and tag pop in once when shown. Static shadows only: nothing
+   repaints while the map pans. */
+.top-pin { width: 0 !important; height: 0 !important }
+.tp { --c: #f4f4f4; --p: 0; position: absolute; left: 0; top: 0; font: 700 12px/1 var(--sans); color: #fff; cursor: pointer }
+.tp::before { content: ""; position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50% } /* a finger-sized target around the spot */
+.tp-ring { position: absolute; left: -10px; top: -10px; display: grid; place-items: center; width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%;
+  background: rgb(14 14 14 / .88); border: 2px solid var(--c); box-shadow: 0 0 0 1px rgb(0 0 0 / .55), 0 2px 6px rgb(0 0 0 / .45); animation: tp-pop .45s var(--ease) }
+.tp-ring b { font: 700 10px/1 var(--sans); font-variant-numeric: tabular-nums }
+.tp.dial .tp-ring { left: -8px; top: -8px; width: 16px; height: 16px; background: none; border-color: #fff; box-shadow: 0 0 0 1.5px rgb(0 0 0 / .6), 0 0 10px 2px rgb(255 255 255 / .3) }
+.tp.dial .tp-ring b { display: none }
+.tp.dial .tp-ring::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1px rgb(0 0 0 / .45) }
+.tp-cap { display: none }
+.tp.dial .tp-cap { position: absolute; left: 0; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; height: 30px; box-sizing: border-box;
+  padding: 0 3px 0 7px; border-radius: var(--r); background: rgb(16 16 16 / .9); border: 1px solid rgb(255 255 255 / .16); box-shadow: 0 4px 12px rgb(0 0 0 / .5);
+  white-space: nowrap; animation: tp-rise .3s var(--ease) }
+.tp-cap::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 8px; margin-left: -1px; background: var(--c); box-shadow: 0 0 0 1px rgb(0 0 0 / .35) } /* the stem, down to the ring */
+.tp-cap > b { font: 700 11px/1 var(--sans); color: var(--muted); font-variant-numeric: tabular-nums }
+.tp-cap .ring { font-size: 10px; background: rgb(0 0 0 / .35) }
+.tp:hover .tp-cap { background: rgb(40 40 40 / .95) }
+/* round 15: under the rank and score, the fish and the hour the spot is best for (All fish: the fish likeliest there) */
+.tp.dial .tp-cap:has(.tp-who:not(:empty)) { flex-wrap: wrap; height: auto; max-width: 150px; padding: 4px 4px 4px 7px; row-gap: 3px; justify-content: center }
+.tp-who { display: none }
+.tp.dial .tp-who { display: flex; justify-content: center; gap: .3em; flex-basis: 100%; min-width: 0; font: 600 9.5px/1.15 var(--sans); font-style: normal; color: var(--muted) }
+.tp-who span { min-width: 0; overflow: hidden; text-overflow: ellipsis }
+/* round 16: on the whole island's view (map.js ps-zlo) the tag names the place instead of the fish (the fish is in the top bar) */
+.tp-where { display: none }
+.ps-zlo .tp.dial .tp-who { display: none }
+.ps-zlo .tp.dial .tp-where { display: flex; justify-content: center; gap: .3em; flex-basis: 100%; min-width: 0; font: 650 10px/1.15 var(--sans); font-style: normal; color: var(--ink) }
+/* the best spot: its rank white (selected, as everywhere), a wider ring and a stronger glow */
+.tp1 .tp-cap > b { margin-left: -4px; padding: 4px 5px; border-radius: var(--r-sm); background: #f5f5f5; color: #121212 }
+.tp1.dial .tp-ring { left: -10px; top: -10px; width: 20px; height: 20px; border-width: 2.5px; box-shadow: 0 0 0 1.5px rgb(0 0 0 / .6), 0 0 16px 5px rgb(255 255 255 / .42) }
+.tp1.dial .tp-ring::after { inset: 3px }
+.tp1.dial .tp-cap { bottom: 18px }
+/* ...and a halo in its colour that rings out three times after the pop, then rests (again only when the pin is shown anew) */
+.tp1.dial .tp-ring::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--c); opacity: 0; pointer-events: none;
+  animation: tp-halo 1.7s cubic-bezier(.2, .6, .35, 1) .45s 3 }
+@keyframes tp-pop { from { transform: scale(1.9); opacity: 0 } }
+@keyframes tp-rise { from { transform: translate(-50%, 5px); opacity: 0 } }
+@keyframes tp-halo { from { transform: scale(.85); opacity: .95 } to { transform: scale(2.6); opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .tp-ring, .tp-cap, .tp1 .tp-ring::before { animation: none } }
+
+/* The tapped spot (ui.js sel.ring): a white ring with a dark edge, and a soft beam of light rising from it. Both come in once, again when
+   another spot is picked (ui.js restarts them), then hold still. Under the pins (z), so a tapped pin keeps its tag on top. */
+.sel-mark { width: 0 !important; height: 0 !important; pointer-events: none }
+.sm-ring { position: absolute; left: -13px; top: -13px; width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; border: 2.5px solid #fff;
+  box-shadow: 0 0 0 1.5px rgb(0 0 0 / .55), inset 0 0 0 1.5px rgb(0 0 0 / .4), 0 0 14px 3px rgb(255 255 255 / .28); animation: sm-in .5s var(--ease) both }
+.sm-ring::after { content: ""; position: absolute; inset: -2.5px; border-radius: 50%; border: 2px solid #fff; opacity: 0; animation: sm-ripple .9s cubic-bezier(.2, .6, .35, 1) .12s }
+.sm-beam { position: absolute; left: -16px; bottom: 0; width: 32px; height: 92px; transform-origin: 50% 100%;
+  background: radial-gradient(50% 100% at 50% 100%, rgb(255 255 255 / .5), rgb(255 255 255 / .16) 45%, transparent 100%); animation: sm-beam .6s var(--ease) .05s both }
+@keyframes sm-in { from { transform: scale(2.2); opacity: 0 } }
+@keyframes sm-ripple { from { transform: scale(.9); opacity: .85 } to { transform: scale(2.6); opacity: 0 } }
+@keyframes sm-beam { from { transform: scaleY(0); opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .sm-ring, .sm-ring::after, .sm-beam { animation: none } }
+
+/* You (ui.js): a blue dot with a white rim over a soft halo; moving, a beam towards where you head (GPS heading, --hd); a ping 3 times when it appears */
+.you-dot { position: absolute; inset: 0; border-radius: 50%; background: var(--you); border: 2.5px solid #fff; box-sizing: border-box;
+  box-shadow: 0 1px 4px rgb(0 0 0 / .55), 0 0 0 7px rgb(90 169 255 / .2) }
+.you-dot::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--you); opacity: 0; animation: pulse 2s ease-out .3s 3 }
+.you-hd { position: absolute; left: -14px; bottom: 50%; width: 44px; height: 46px; transform-origin: 50% 100%; transform: rotate(var(--hd, 0deg)); display: none;
+  background: conic-gradient(from -28deg at 50% 100%, rgb(90 169 255 / .2), rgb(90 169 255 / .75) 28deg, rgb(90 169 255 / .2) 56deg, transparent 0);
+  -webkit-mask: radial-gradient(circle at 50% 100%, #000 30%, transparent 100%); mask: radial-gradient(circle at 50% 100%, #000 30%, transparent 100%) }
+.you.hd .you-hd { display: block }
+@media (prefers-reduced-motion: reduce) { .you-dot::after { animation: none } }
+
+/* Contour bands: an option of the fishing-chance layer, indented under it like its sliders (not counted as a layer of its own) */
+.lp-sub { padding-left: 24px }
+.lp-sub label { font-size: 12.5px; color: var(--muted) }
+
+/* The fishing-chance legend (map.js, in #map-legend; wide screens only since round 16): round 17, the fish's own fixed ramp, "Weaker" to
+   "Near its best" */
+.hl-t { display: flex; align-items: center; gap: 6px; margin-bottom: 7px }
+.hl-t .i { width: 14px; height: 14px; color: var(--muted) }
+.hl-bar { position: relative; height: 6px; margin: 5px 0 4px; border-radius: 3px; box-shadow: 0 0 0 1px rgb(0 0 0 / .35) }
+.hl-bar i { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: rgb(12 12 12 / .9) }
+.hl-bar.none { background: rgb(255 255 255 / .08) !important } .hl-bar.none i { display: none }
+.hl-w { display: flex; justify-content: space-between; gap: 8px; margin-top: 3px; font: 650 9.5px/1.2 var(--sans); color: var(--muted); letter-spacing: .01em; white-space: nowrap }
+.hl-w [data-i18n=hl_best] { color: #ff8a6a }
+.hl-note { max-width: 180px; margin-top: 3px; font: 600 10.5px/1.25 var(--sans); color: var(--warn) }
+/* round 13: the heat is drawn on ~50 m sub-cells here (js/fine.js); .busy while a tile loads or a fish is fitted */
+.hl-fine { margin-top: 3px; font: 650 10px/1.25 var(--sans); color: var(--ink); letter-spacing: .02em }
+.hl-fine::before { content: ''; display: inline-block; width: 5px; height: 5px; margin-right: 5px; border-radius: 1px; background: currentColor; vertical-align: 1px }
+.hl-fine.busy { color: var(--dim) }
+/* round 15: while the sea fronts show (map.js PsFronts): what the lines are, and that they are not a score */
+.hl-front { max-width: 200px; margin-top: 3px; font: 600 10px/1.25 var(--sans); color: var(--muted) }
+.hl-front::before { content: ''; display: inline-block; width: 13px; height: 3px; margin-right: 5px; background: radial-gradient(circle, #eef1f4 1.4px, transparent 1.6px) 0 0 / 5px 3px repeat-x; vertical-align: 2px }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .tp.dial .tp-cap { height: 32px }
+  .tp-cap > b { font-size: 12px }
+  .lp-sub label { font-size: 14px }
+  .layers-pop { padding-bottom: calc(var(--m-nav, 0px) + 16px) } /* round 11: the Layers sheet runs under the tab bar (css/mobile.css): its last rows (Beaches) sat under the bar and the + button */
+}
+
+/* Round 9 map features: the whole island (map.js ps-zlo, under zoom 9.5) is the best spots' view, so the live wind / current chips wait for a
+   closer look; the shore key (js/map-marks.js) under the legend while the shore types show (zoom 12+); Follow me (map.js PsFollow) lights
+   the locate button */
+.ps-zlo .obs-mk { display: none }
+.ml-key { display: flex; flex-wrap: wrap; gap: 3px 10px; max-width: 180px; margin-top: 5px; font: 600 10.5px/1.2 var(--sans); color: var(--muted) }
+.ml-key span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap }
+.ml-key i { width: 12px; height: 3px; border-radius: 2px; box-shadow: 0 0 0 1px rgb(0 0 0 / .5) }
+.leaflet-bar.locate a.following, [data-ui="locate"].following { color: var(--you) !important; box-shadow: inset 0 0 0 1.5px var(--you) }
+
+/* Round 16: closed water (map.js zoneCls): 'ban' a dense light hatch, 'dim' (rules unclear) a sparser one ('rules' only its thin dashed edge), both fixed to the
+   map (SVG patterns, map.js); none on the whole island's view; the small word on each from zoom 11 */
+.pz-ban { fill: url(#pz-h1); fill-opacity: 1 }
+.pz-dim { fill: url(#pz-h2); fill-opacity: 1 }
+.ps-zlo .leaflet-prot-pane { display: none }
+.pz-lab span { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+  font: 650 10px/1.2 var(--sans); color: #fff; background: rgb(14 14 14 / .7); box-shadow: 0 0 0 1px rgb(255 255 255 / .22) }
+.pz-lab .pz-w-rules { color: var(--muted); background: rgb(14 14 14 / .5); box-shadow: none }
+.pz-lab .pz-w-dim { color: #f2d27a; background: rgb(14 14 14 / .62); box-shadow: 0 0 0 1px rgb(242 210 122 / .3) }
+/* Round 16: declutter. The fishing areas' rings only while their names are the map's guide (the coast's view, map.js ps-zhi, has the heat's own
+   detail); phones: a scrim under the top bar, so names and soundings never show between its buttons */
+.ps-zhi .ar-ring { display: none }
+@media (max-width: 760px) {
+  #map::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--m-bar, 100px) + 28px); z-index: 450; pointer-events: none;
+    background: linear-gradient(rgb(5 8 12 / .9), rgb(5 8 12 / .82) 75%, transparent) }
+}
+
+/* Round 16, the owner's asks.
+   Satellite colour: a livelier picture, applied at display time only. Nothing is saved or derived from Esri's tiles. Only the imagery layers
+   carry the class 'sat' (js/map.js and js/catchlog.js), so the heat, the depth chart and the overlays keep their own colours. */
+/* Round 16 X: the same colour, one filter list per tile (app.css's dimming, then the livelier colour), drawn once with the tile. On the layer,
+   the filter sat over Leaflet's tile containers (each its own GPU layer, translate3d), so the GPU ran an extra full-screen pass every frame of a pan. */
+.leaflet-layer.sat .leaflet-tile { filter: contrast(1.28) brightness(.57) saturate(.52) sepia(.06) saturate(1.4) contrast(1.07) brightness(1.03) }
+/* Round 17 M: the app's own tiles (tiles/, Copernicus Sentinel-2) have exactly this colour baked in (scripts/tiles/build.mjs CHAIN: keep the two in
+   step), so they draw with no filter at all and hand over to the online imagery at zoom 14.5 in the same colours. */
+.leaflet-layer.sat img.leaflet-tile[src^="tiles"], .leaflet-layer.sat div.leaflet-tile { filter: none } /* and their parent-tile stand-ins (divs), and the open-sea blanks */
+/* Round 17 Z: the online imagery's tiles fade in over ours as they arrive (the map itself no longer fades tiles from script: map.js) */
+@keyframes sat-in { from { opacity: 0 } }
+.leaflet-layer.sat img.leaflet-tile-loaded:not([src^="tiles"]) { animation: sat-in .2s linear }
+@media (prefers-reduced-motion: reduce) { .leaflet-layer.sat img.leaflet-tile-loaded { animation: none } }
+/* Phones: no heat guide and no scale bar over the map. A weather overlay's own legend (#wx-fold) still shows when one is on.
+   "Powered by Esri" stays, because Esri's terms require it on the map while its imagery shows. It is made as small and quiet as still reads. */
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .leaflet-control.ps-scale { display: none !important }
+  .map-legend:not(:has(#wx-fold:not([hidden]))) { display: none }
+  .map-legend .hl { display: none }
+  .leaflet-control.powered-by { margin: 0 6px 4px 0; padding: 0; background: none; font-size: 8.5px; opacity: .55; text-shadow: 0 1px 2px rgb(0 0 0 / .9) }
+}
+
+/* Round 17: rough water (map.js PsVeil), two canvases cross-fading from hour to hour; at once under reduced motion */
+.rough-veil { transition: opacity .25s ease-out }
+@media (prefers-reduced-motion: reduce) { .rough-veil { transition: none } }
+/* No good water at the hour shown (map.js noGood): one short line under the top bar, a tap goes to the better hour or day */
+.no-good { position: absolute; z-index: 800; top: 62px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 120px); padding: 6px 12px; border: 1px solid rgb(255 255 255 / .14);
+  border-radius: var(--r, 10px); background: rgb(16 16 16 / .88); color: var(--ink); font: 600 12px/1.3 var(--sans); text-align: center; cursor: pointer; box-shadow: 0 4px 12px rgb(0 0 0 / .4) }
+.no-good:disabled { cursor: default }
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) { .no-good { top: calc(var(--m-bar, 100px) + 10px) } }
+
+/* Round 17 K: the hot spots (js/hotspots.js). The default look: the chance over all the water faint (its canvases only, so the hour's
+   cross-fade and the rough-water sheen stay as they are), the patches where it peaks drawn over it, and the best few marked: a dot in the
+   score's colour with a small dark tag beside it: the score (the whole island's view: and the place). They stand in for the numbered pins
+   (map.js spacePins; the Where to go list keeps them). Layers > Fishing chance (all water) takes .ps-hot off: the full colour and the pins. */
+.ps-hot canvas.heat-layer, .ps-hot .heat-layer > canvas { opacity: .12 !important } /* !important: over the island glow's own fade by zoom (map.js drawGlow) */
+.hs-pin { width: 0 !important; height: 0 !important }
+.hs-pin::before { content: ""; position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; cursor: pointer } /* a finger-sized target */
+.hs-dot { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; box-sizing: border-box; border-radius: 50%; background: var(--c); border: 2px solid #fff;
+  box-shadow: 0 0 0 1.5px rgb(0 0 0 / .6), 0 2px 6px rgb(0 0 0 / .5); pointer-events: none }
+.hs-tag { position: absolute; left: 9px; top: -10px; display: flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; box-sizing: border-box; white-space: nowrap;
+  border-radius: var(--r-sm); background: rgb(22 22 22 / .9); border: 1px solid var(--line-2); box-shadow: 0 2px 6px rgb(0 0 0 / .4); color: var(--ink);
+  font: 600 11px/1 var(--sans); cursor: pointer }
+.hs-tag b { font-weight: 700; font-variant-numeric: tabular-nums }
+.hs-tag span { color: var(--muted); max-width: 110px; overflow: hidden; text-overflow: ellipsis }
+.hs-l .hs-tag { left: auto; right: 9px }
+.hs-1 .hs-dot { left: -7px; top: -7px; width: 14px; height: 14px }
+.hs-pop .leaflet-popup-content { width: 240px !important; padding: 10px 12px 12px }
+.hs-h { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--muted) }
+.hs-h b { color: var(--ink) }
+.hs-why { margin: 8px 0 10px; font-size: var(--fs); line-height: 1.4; color: var(--ink) }
+.hs-pop .btn { width: 100%; min-height: var(--h-sm) }

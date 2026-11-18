@@ -1,0 +1,485 @@
+/* Psarema's look (tokens.css): a satellite map under floating panels; rail left, HUD right, drawer, timeline. Phones: css/mobile.css.
+   Order: base · components (every panel builds on them) · layout · details · sheets · Leaflet · states. */
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html, body { height: 100%; margin: 0 }
+body { background: var(--bg); color: var(--ink); font: var(--fs)/1.4 var(--sans); font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03"; letter-spacing: -.003em; -webkit-font-smoothing: antialiased; overflow: hidden;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent }
+.selectable, input[type=search] { user-select: text; -webkit-user-select: text }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer }
+a { color: var(--ink) }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px }
+h2, h3, h4 { margin: 0; font: 600 var(--fs-sm)/1.2 var(--sans); color: var(--muted) }
+.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px }
+.i.sm { width: 13px; height: 13px; vertical-align: -2px }
+.i.lg { width: 20px; height: 20px }
+/* Scrollers keep a stable gutter: with an "auto" bar every content change laid them out twice; a drawer part's rewrite went ~2 → ~0.5 ms */
+:is(.rail-body, .drawer-body, .layers-pop, .sheet-body) { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; scrollbar-gutter: stable }
+@media (prefers-reduced-motion: reduce) { *, ::before, ::after { transition: none !important; animation: none !important } }
+@keyframes fade-in { from { opacity: 0 } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(-4px) scale(.985) } }
+
+/* ---------- Components ---------- */
+.glass { background: var(--glass); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--shadow) } /* no blur: every pan re-blurred the map */
+/* buttons: default, .primary, .ghost; .icon-btn */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: var(--h); padding: 4px 14px; border-radius: var(--r); background: var(--raise);
+  border: 1px solid var(--line); box-shadow: var(--edge); font: 550 12.5px/1.2 var(--sans); color: var(--ink); white-space: nowrap; text-decoration: none }
+.btn.primary { background: var(--accent); border-color: var(--accent); box-shadow: 0 1px 0 rgb(255 255 255 / .6) inset, 0 2px 10px rgb(0 0 0 / .35); color: var(--accent-ink); font-weight: 650 }
+.btn.ghost { background: none; border-color: transparent; box-shadow: none; color: var(--muted) }
+:is(.btn, .icon-btn):disabled { opacity: .45; cursor: default; pointer-events: none }
+.icon-btn { width: var(--h); height: var(--h); display: grid; place-items: center; flex: none; border-radius: var(--r-sm); color: var(--muted); font: 600 14px var(--sans) }
+.icon-btn .i { width: 17px; height: 17px }
+.chips { display: flex; gap: var(--s-1); flex-wrap: wrap }
+.chips button { display: inline-flex; align-items: center; gap: 5px; min-height: var(--h-sm); padding: 2px 11px; border-radius: var(--r-sm); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); font: 550 11.5px var(--sans); color: var(--muted); white-space: nowrap }
+.chips button[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); box-shadow: none }
+/* segmented: icon over label ("Ψαροντούφεκο" fits) */
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 3px; border-radius: var(--r); background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px var(--line) }
+.seg button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 6px 2px 5px; border-radius: var(--r-sm); font: 500 11.5px/1.2 var(--sans); color: var(--muted) }
+.seg button span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 4px rgb(0 0 0 / .4) }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 -12px; padding: 0 12px; border-bottom: 1px solid var(--line) }
+.tabs button { min-width: 0; padding: 9px 2px 8px; margin-bottom: -1px; border-bottom: 2px solid transparent; font: 600 12.5px var(--sans); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink) }
+/* badges: a score on its colour */
+.pill { display: inline-block; min-width: 26px; padding: 1px 6px; border-radius: var(--r-sm); font: 700 11.5px var(--sans); color: #111; text-align: center; letter-spacing: -.01em }
+/* a score as a dial (core.js ring): --p the score, --c its colour; sizes .sm 24 · default 32 · .lg 52 · .xl 68 */
+.ring { --sz: 32px; --w: 3px; position: relative; display: inline-grid; place-items: center; width: var(--sz); height: var(--sz); flex: none; border-radius: 50%; background: rgb(0 0 0 / .25);
+  font: 700 calc(var(--sz) * .37)/1 var(--sans); letter-spacing: -.02em; color: var(--ink) }
+.ring::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1%), rgb(255 255 255 / .1) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--w)), #000 calc(100% - var(--w) + .5px)); mask: radial-gradient(farthest-side, transparent calc(100% - var(--w)), #000 calc(100% - var(--w) + .5px)) }
+.ring b { position: relative; font: inherit }
+.ring.sm { --sz: 24px; --w: 2.5px } .ring.lg { --sz: 52px; --w: 4px } .ring.xl { --sz: 68px; --w: 5px }
+.ring.empty { --p: 0; --c: transparent } /* no score (yet): the bare track, a dial's skeleton (css/splash.css) */
+.ring.empty b { color: var(--dim) }
+/* micro labels: section names, uppercase and tracked */
+.lbl { margin: 0; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.pill.empty { background: var(--raise-2); color: var(--dim) }
+.score { display: grid; place-items: center; height: 24px; border-radius: var(--r-sm); font: 700 var(--fs) var(--sans); color: #141414 }
+.tag-best { position: absolute; top: 5px; left: 5px; padding: 3px 7px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink); font: 650 10.5px/1 var(--sans) }
+/* fields: weak (:where), so each panel's rules win */
+:where(select, input:is([type=search], [type=text], [type=number], [type=date], [type=time]), textarea) { padding: 4px 10px; border-radius: var(--r-sm); background: var(--raise);
+  border: 1px solid var(--line-2); color: var(--ink); font: 500 12.5px var(--sans); outline: none }
+:where(select, input, textarea):focus { border-color: var(--muted); outline: none }
+:where(select) { cursor: pointer }
+:where(input:is([type=checkbox], [type=radio], [type=range])) { accent-color: #e6e6e6 }
+/* tooltips: data-tip on icon-only buttons, below and right-aligned */
+:where([data-tip]) { position: relative }
+[data-tip]::after { content: attr(data-tip); position: absolute; z-index: 20; top: calc(100% + 6px); right: 0; padding: 4px 8px; border-radius: var(--r-sm); background: #141414; border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-sm); color: var(--ink); font: 550 var(--fs-sm)/1.3 var(--sans); letter-spacing: 0; text-transform: none; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity var(--dur) } /* as .leaflet-tooltip */
+[data-tip]:is(:hover, :focus-visible)::after { opacity: 1; transition-delay: .35s }
+.hint, .tips, .warn, .text { margin: 0 }
+.hint { font-size: 11.5px; color: var(--dim) }
+.tips { font-size: 12.5px; line-height: 1.5; color: var(--ink) }
+.warn { font-size: 12.5px; color: var(--warn) }
+.text { max-width: 75ch; font-size: var(--fs); line-height: 1.55; color: #dcdcdc }
+.danger, .zone-warn { display: flex; gap: 8px; margin: 0; padding: 8px 10px; border-radius: var(--r-sm); background: rgb(255 123 110 / .1); font-size: 12.5px; line-height: 1.4; color: var(--bad) }
+.danger { font-weight: 600 }
+:is(.danger, .zone-warn) .i { margin-top: 1px } /* a hanging icon: the text wraps clear of it */
+:is(.fold, .lp-more, .wx-fold) > summary { display: flex; align-items: center; gap: 6px; list-style: none; cursor: pointer }
+:is(.fold, .lp-more, .wx-fold) > summary::-webkit-details-marker { display: none }
+:is(.fold, .lp-more, .wx-fold) > summary .i { color: var(--muted); transition: transform var(--dur) }
+:is(.fold, .lp-more, .wx-fold)[open] > summary .i { transform: rotate(90deg) }
+.fold > summary { min-height: 24px; padding: 3px 0; font: 600 var(--fs-sm) var(--sans); color: var(--muted) }
+.fold p { margin: 6px 0 0; max-width: 62ch; font-size: 12.5px; line-height: 1.5; color: var(--muted) }
+.kv-list { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 12.5px }
+.kv-list dt { color: var(--muted) }
+.kv-list dd { margin: 0 }
+.kv-list svg { vertical-align: -1px }
+.kv-list + .ps-weather { margin-top: 8px }
+.yesno { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--muted) }
+.yesno.yes { color: var(--good) }
+/* empty and loading boxes, one look. Loading: a short dash scans to and fro like a sounder's beam, ~25 s at most (no endless redraw).
+   The lists that wait for the forecast show skeleton rows instead (css/splash.css). */
+.empty, #near-msg:not(:empty, [hidden]) { margin: 0; padding: 12px; border-radius: var(--r); background: rgb(255 255 255 / .03); color: var(--muted); font-size: 12.5px; line-height: 1.45; text-align: center; list-style: none }
+.loading::before { content: ""; display: block; width: 18px; height: 2px; margin: 4px auto 10px; border-radius: 1px; background: var(--muted); animation: scan .8s ease-in-out 32 alternate }
+@keyframes scan { from { translate: -22px; opacity: .35 } 50% { opacity: 1 } to { translate: 22px; opacity: .35 } }
+/* a row that scrolls sideways; the fade says there is more */
+.scroll-row { --fade: linear-gradient(90deg, #000 calc(100% - 20px), transparent); display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; padding-right: 20px; -webkit-mask-image: var(--fade); mask-image: var(--fade) }
+.scroll-row::-webkit-scrollbar { display: none }
+
+/* ---------- Shared components (r8): one set every page builds with, `ui-` named ---------- */
+.btn.sm { min-height: 32px; padding: 3px 11px; font-size: var(--fs-sm) }
+.btn.lg { min-height: var(--h-xl); padding: 6px 18px; border-radius: var(--r); font-size: var(--fs-md) }
+.btn.block { display: flex; width: 100% }
+.btn.danger { color: var(--bad) }
+.icon-btn.lg { width: 40px; height: 40px }
+.icon-btn.lg .i { width: 20px; height: 20px }
+@media (hover: hover) { .btn:not(.primary, .ghost):hover { background: var(--raise-2) } .btn.ghost:hover, .icon-btn:hover { color: var(--ink); background: rgb(255 255 255 / .06) } }
+.ui-link { display: inline-flex; align-items: center; gap: 2px; min-height: 32px; padding: 0 2px; font: 600 12.5px var(--sans); color: var(--muted); white-space: nowrap }
+.ui-link .i { width: 14px; height: 14px }
+@media (hover: hover) { .ui-link:hover { color: var(--ink) } }
+/* layout */
+.ui-stack { display: flex; flex-direction: column; gap: var(--s-3) }
+.ui-stack.tight { gap: var(--s-2) }
+.ui-grid2, .ui-grid3 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2) }
+.ui-grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+.ui-grid3.photos { gap: 2px }
+.ui-grid3.photos > * { aspect-ratio: 1; overflow: hidden; border-radius: 0; background: var(--card) }
+.ui-grid3.photos img { width: 100%; height: 100%; object-fit: cover; display: block }
+.ui-sec { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); margin: 22px 0 8px; min-height: 28px }
+.ui-sec:first-child { margin-top: 4px }
+.ui-sec > :is(h2, h3) { min-width: 0; margin: 0; font: 650 var(--fs-h)/1.25 var(--sans); letter-spacing: -.012em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ui-sec > .ui-link { margin-right: -2px }
+.ui-carousel { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--pg-x, 14px); overscroll-behavior-x: contain;
+  margin-inline: calc(-1 * var(--pg-x, 14px)); padding: 2px var(--pg-x, 14px) 4px; scrollbar-width: none }
+.ui-carousel::-webkit-scrollbar { display: none }
+.ui-carousel > * { flex: 0 0 auto; scroll-snap-align: start }
+/* surfaces */
+:where(.ui-card) { display: block } /* weak: .ui-grid3, .ui-empty… on a card keep their own display */
+.ui-card { min-width: 0; padding: var(--s-3); border-radius: var(--r); background: var(--card); border: 1px solid var(--line); box-shadow: var(--edge); color: var(--ink); text-align: left; text-decoration: none }
+.ui-card.flush { display: flex; flex-direction: column; justify-content: flex-start; padding: 0; overflow: hidden } /* media on top, .ui-card-body under it (a button would centre them) */
+:is(button, a).ui-card, .ui-card.tap { width: 100%; cursor: pointer; font: inherit }
+:is(button, a).ui-card:active, .ui-card.tap:active { background: var(--card-2) }
+@media (hover: hover) { :is(button, a).ui-card:hover, .ui-card.tap:hover { background: var(--card-2); border-color: var(--line-2) } }
+.ui-carousel > .ui-card { width: auto }
+.ui-card > .ui-media:first-child { border-radius: 0 }
+.ui-card-body { padding: 10px 12px 12px }
+.ui-media { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--r); background: var(--raise) }
+.ui-media.sq { aspect-ratio: 1 } .ui-media.wide { aspect-ratio: 2 / 1 }
+.ui-media > img { width: 100%; height: 100%; object-fit: cover; display: block }
+.ui-thumb { width: 44px; height: 44px; flex: none; display: grid; place-items: center; overflow: hidden; border-radius: var(--r); background: var(--raise-2); color: var(--muted) }
+.ui-thumb > img { width: 100%; height: 100%; object-fit: cover }
+.ui-thumb.fish { width: 56px; background: none }
+.ui-thumb.fish > img { object-fit: contain; filter: drop-shadow(0 2px 3px rgb(0 0 0 / .5)) }
+.ui-av { --sz: 36px; width: var(--sz); height: var(--sz); flex: none; display: grid; place-items: center; overflow: hidden; border-radius: var(--r-full); background: var(--raise-3);
+  font: 650 calc(var(--sz) * .38)/1 var(--sans); color: var(--ink); text-transform: uppercase }
+.ui-av.sm { --sz: 28px } .ui-av.lg { --sz: 64px }
+.ui-av > img { width: 100%; height: 100%; object-fit: cover }
+.ui-av .i { width: 50%; height: 50% }
+.ui-stat { display: flex; flex-direction: column; gap: 3px; min-width: 0 }
+.ui-stat > b { font: 700 22px/1.05 var(--sans); letter-spacing: -.03em; color: var(--ink) }
+.ui-stat > span { font: 550 var(--fs-xs)/1.25 var(--sans); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ui-badge { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: var(--r-sm); background: var(--raise-2); font: 650 var(--fs-xs)/1 var(--sans); color: var(--muted); white-space: nowrap }
+.ui-badge.on { background: var(--accent); color: var(--accent-ink) }
+.ui-badge.good { color: var(--good) } .ui-badge.warn { color: var(--warn) } .ui-badge.bad { color: var(--bad) }
+.ui-badge .i { width: 12px; height: 12px }
+/* lists: a group of rows split by hairlines */
+.ui-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; overflow: hidden; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); box-shadow: var(--edge) }
+.ui-list > * + * { border-top: 1px solid var(--line) }
+.ui-row { display: flex; align-items: center; gap: var(--s-3); width: 100%; min-width: 0; min-height: 52px; padding: 8px 12px; color: var(--ink); font: 500 var(--fs-md)/1.3 var(--sans); text-align: left; text-decoration: none }
+:is(button, a, label).ui-row { cursor: pointer }
+:is(button, a, label).ui-row:active { background: var(--card-2) }
+@media (hover: hover) { :is(button, a, label).ui-row:hover { background: var(--card-2) } }
+.ui-row > .i:first-child { width: 20px; height: 20px; color: var(--muted) }
+.ui-row > .i:last-child:not(:first-child), .ui-chev { width: 16px; height: 16px; margin-left: auto; color: var(--dim) }
+.ui-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.ui-row-main > :is(b, strong, span) { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ui-row-main > small { font: 500 var(--fs-sm)/1.3 var(--sans); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ui-row-end { flex: none; font: 550 var(--fs)/1.2 var(--sans); color: var(--muted); font-variant-numeric: tabular-nums }
+/* chips: one line that scrolls sideways */
+.ui-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain }
+.ui-chips::-webkit-scrollbar { display: none }
+.ui-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--r-sm); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line-2);
+  font: 550 12.5px/1 var(--sans); color: var(--ink); white-space: nowrap }
+.ui-chip .i { width: 15px; height: 15px; color: var(--muted) }
+.ui-chip small { font: 600 var(--fs-xs) var(--sans); color: var(--dim) }
+.ui-chip:is([aria-pressed="true"], [aria-selected="true"], .on) { background: var(--accent); color: var(--accent-ink); box-shadow: none }
+.ui-chip:is([aria-pressed="true"], [aria-selected="true"], .on) :is(.i, small) { color: inherit }
+@media (hover: hover) { .ui-chip:not([aria-pressed="true"], [aria-selected="true"], .on):hover { background: var(--raise-2) } }
+/* segmented: text only, equal columns; the white slides (css/motion.css, js/motion.js) */
+.ui-seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 3px; border-radius: var(--r); background: rgb(0 0 0 / .3); box-shadow: inset 0 0 0 1px var(--line) }
+.ui-seg.block { display: grid; width: 100% }
+.ui-seg > button { min-width: 0; min-height: 32px; padding: 0 12px; border-radius: var(--r-sm); font: 600 12.5px/1 var(--sans); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.ui-seg > button:is([aria-pressed="true"], [aria-selected="true"]) { background: var(--accent); color: var(--accent-ink) }
+/* fields */
+.ui-field { display: flex; flex-direction: column; gap: 6px; min-width: 0 }
+.ui-field > span:first-child { font: 600 var(--fs-sm)/1.2 var(--sans); color: var(--muted) }
+.ui-field > small { font-size: 11.5px; line-height: 1.35; color: var(--dim) }
+.ui-input { width: 100%; min-width: 0; min-height: var(--h-xl); padding: 10px 12px; border-radius: var(--r); background: var(--raise); border: 1px solid var(--line-2); color: var(--ink);
+  font: 500 var(--fs-md)/1.3 var(--sans); outline: none; transition: border-color var(--dur), box-shadow var(--dur) }
+.ui-input::placeholder { color: var(--dim) }
+.ui-input:focus { border-color: var(--muted); box-shadow: 0 0 0 3px rgb(255 255 255 / .07) }
+textarea.ui-input { min-height: 88px; resize: vertical }
+select.ui-input { padding-right: 34px; -webkit-appearance: none; appearance: none; cursor: pointer; background: var(--raise) no-repeat right 11px center / 15px
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") }
+select.ui-input option { background: var(--panel); color: var(--ink) }
+.ui-switch { -webkit-appearance: none; appearance: none; position: relative; flex: none; width: 36px; height: 20px; margin: 0; border-radius: var(--r-full); background: var(--raise-3); cursor: pointer; transition: background-color var(--dur) }
+.ui-switch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #9a9a9a; box-shadow: 0 1px 3px rgb(0 0 0 / .4); transition: transform .3s var(--spring, var(--ease)), background-color var(--dur) }
+.ui-switch:checked { background: var(--accent) }
+.ui-switch:checked::before { transform: translateX(16px); background: var(--accent-ink) }
+.ui-switch:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+/* states */
+.ui-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 24px 16px; text-align: center }
+.ui-empty > .i:first-child { box-sizing: content-box; width: 32px; height: 32px; margin-bottom: 6px; padding: 16px; border-radius: var(--r-lg); background: var(--raise); box-shadow: var(--edge); color: var(--muted) }
+.ui-empty > b { font: 650 15px/1.3 var(--sans); color: var(--ink) }
+.ui-empty > p { max-width: 34ch; margin: 0; font-size: var(--fs); line-height: 1.45; color: var(--muted) }
+.ui-empty > .btn { margin-top: 10px }
+.ui-skel { display: block; border-radius: var(--r-sm); background: rgb(255 255 255 / .07); animation: sk-breathe 1.6s ease-in-out calc(var(--i, 0) * .12s) 6 }
+.ui-skel.line { height: 12px; width: 60% } .ui-skel.title { height: 18px; width: 40% }
+.ui-skel.line + .ui-skel.line { margin-top: 8px }
+.ui-skel.media { width: 100%; aspect-ratio: 16 / 9; border-radius: var(--r) }
+.ui-skel.round { width: 36px; height: 36px; border-radius: 50% }
+.ui-grab { display: block; width: 36px; height: 4px; margin: 8px auto 0; flex: none; border-radius: 2px; background: rgb(255 255 255 / .22) }
+
+/* ---------- Layout: stage and rail ---------- */
+.app { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100% }
+.stage { position: relative; min-height: 0; overflow: hidden }
+#map { position: absolute; inset: 0; z-index: 0; background: var(--bg) } /* own stacking context: Leaflet controls stay under the panels */
+.stage.has-drawer .leaflet-right { right: 372px } /* round 16 X: has-drawer and the other has-* classes stand for :has() (js/ui.js) */
+.rail { position: absolute; z-index: 810; top: 10px; left: max(10px, env(safe-area-inset-left, 0px)); width: 320px; max-height: calc(100% - 20px); display: flex; flex-direction: column; overflow: hidden }
+/* head: brand, language, help, collapse; the live line under it. Then the scrolling body, and the tool dock under it.
+   .rail-scoped rules are wide screens only: phones move #status, #mode and the Where to go list out of the rail. */
+.rail-head { display: flex; align-items: center; gap: 2px; padding: 10px 8px 4px 14px }
+.brand { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0 }
+.brand .logo { width: 22px; height: 22px; flex: none }
+.wordmark { font: 700 16px/1 var(--sans); letter-spacing: -.025em }
+.lang { display: flex; gap: 2px; margin-right: 4px; padding: 2px; border-radius: var(--r-sm); background: var(--raise) }
+.lang button { min-height: 24px; padding: 3px 9px; border-radius: 3px; font: 600 var(--fs-xs) var(--sans); color: var(--muted) }
+.lang button[aria-pressed="true"] { background: var(--raise-3); color: var(--ink) }
+.rail .lang { background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px var(--line) }
+.rail .lang button { min-height: 22px; padding: 2px 8px; font-weight: 650; letter-spacing: .03em }
+.rail .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink) }
+.rail.collapsed #rail-toggle .i { transform: rotate(180deg) }
+.rail.collapsed :is(.rail-body, .status, .rail-tools) { display: none }
+.status { display: flex; align-items: center; gap: 7px; min-width: 0; margin: 0; padding: 0 14px 8px; font-size: 11.5px; color: var(--muted) }
+.status span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.status i { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--dim) }
+.status.live i { background: var(--good); box-shadow: 0 0 6px var(--good) }
+.status:not(.live, .error) i { animation: sk-breathe 1.2s ease-in-out 16 } /* loading, trying again */
+/* A failed forecast says so kindly: the sentence in the text colour, the dot red (offline: amber, nothing is broken), the technical
+   detail (js/core.js renderStatus: span[data-detail]) small under it and in the tooltip */
+.status.error { color: var(--ink) } .status.error i { background: var(--bad) }
+.status.offline i { background: var(--warn); box-shadow: none }
+.status.error span { white-space: normal }
+.status.error span[data-detail]:not([data-detail=""])::after { content: attr(data-detail); display: block; margin-top: 3px; font: 10.5px/1.35 var(--mono); color: var(--dim); overflow-wrap: anywhere }
+.status .btn { min-height: 22px; padding: 1px 9px; font-size: var(--fs-xs) }
+.rail .status { padding: 2px 14px 10px 45px; font-size: var(--fs-xs); color: var(--dim) } /* under the wordmark */
+.rail .status i { width: 6px; height: 6px; align-self: flex-start; margin-top: 4px }
+.rail .status span { white-space: normal } /* Greek runs longer: two lines, not an ellipsis */
+.rail .status.error { align-items: flex-start; margin: 0 10px 10px; padding: 9px 10px; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge); font-size: 12px; line-height: 1.4; color: var(--ink) }
+.rail .status.error i { margin-top: 5px }
+.rail .status.error .btn { margin: -2px -2px 0 0; min-height: 26px }
+.rail-body { display: flex; flex-direction: column; gap: 12px; min-height: 0; padding: 12px 6px 14px 12px; border-top: 1px solid var(--line) }
+.tab { display: flex; flex-direction: column; gap: 9px }
+.rail .tab { gap: 10px }
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 18px }
+.sec-head h2 { white-space: nowrap }
+/* the tool dock: planner, calendar, catch log, offline areas; short names, the full ones in the tooltips (above: the rail clips below) */
+.rail-tools { flex: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 6px 8px 8px; border-top: 1px solid var(--line) }
+.rail-tools button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 7px 2px 6px; border-radius: var(--r-sm); font: 550 var(--fs-xs)/1.15 var(--sans); color: var(--muted) }
+.rail-tools button > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.rail-tools .i { width: 18px; height: 18px }
+.rail-tools [data-tip]::after { top: auto; bottom: calc(100% + 4px); right: auto; left: 50%; transform: translateX(-50%) }
+.rail-tools [data-tip]:first-child::after { left: 0; transform: none }
+.rail-tools [data-tip]:last-child::after { left: auto; right: 0; transform: none }
+/* the fish: [art · name over other names · 7-day dial; stats] in a row (phones); the rail makes it a hero, the cut-out large on top */
+.fish-current { position: relative; display: grid; grid-template-columns: 80px minmax(0, 1fr) auto; grid-template-areas: "art body dial" "art stats stats"; gap: 6px 10px; align-items: center;
+  padding: 8px 10px 8px 6px; border-radius: var(--r); background: var(--raise); text-align: left }
+.fish-current > :first-child { grid-area: art }
+.fish-art { width: 100%; aspect-ratio: 3 / 2; display: grid; place-items: center }
+.fish-art img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgb(0 0 0 / .45)) }
+.fish-art.photo img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--r-sm); filter: none }
+.ph { width: 100%; aspect-ratio: 3 / 2; display: grid; place-items: center; color: var(--dim) }
+.ph svg { width: 55%; fill: currentColor }
+.ph.all { color: var(--muted) } .ph.all .i { width: 34px; height: 34px }
+.fc-body { grid-area: body; display: flex; flex-direction: column; min-width: 0 }
+.fc-body .lbl { display: none }
+.fc-name { font: 650 var(--fs-lg)/1.15 var(--sans); letter-spacing: -.01em }
+.fc-sub { display: block; margin-top: 2px; font-size: var(--fs-sm); color: var(--muted) }
+.fc-change { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font: 500 11.5px var(--sans); color: var(--muted) }
+.fish-current:hover .fc-change { color: var(--ink) }
+.fc-dial { grid-area: dial; display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 72px }
+.fc-dial small { font: 650 9px/1.15 var(--sans); letter-spacing: .07em; text-transform: uppercase; color: var(--dim); text-align: center }
+.fc-stats { grid-area: stats; display: flex; flex-wrap: wrap; gap: 4px }
+.fc-stats:empty { display: none }
+.fc-stats span { flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 5px 8px 6px; border-radius: var(--r-sm); background: rgb(0 0 0 / .22); box-shadow: inset 0 0 0 1px var(--line) }
+.fc-stats small { font: 650 9px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.fc-stats b { overflow: hidden; font: 600 12.5px/1.15 var(--sans); text-overflow: ellipsis; white-space: nowrap }
+.rail .fish-current { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "lbl change" "art dial" "name name" "sub sub" "stats stats"; gap: 0 8px; padding: 10px 12px 12px;
+  border-radius: var(--r-lg); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.rail #fish-current { background-image: radial-gradient(60% 50% at 38% 34%, rgb(255 255 255 / .08), transparent 70%) } /* a soft spotlight behind the fish; an id: hover and press set only the colour under it */
+.rail .fish-current:hover { background-color: var(--raise-2) }
+.rail .fc-body { display: contents }
+.rail .fc-body .lbl { display: block; grid-area: lbl; align-self: center }
+.rail .fc-change { grid-area: change; justify-self: end; margin: 0 }
+.rail .fish-current > :first-child { display: flex; align-items: center; justify-content: center; width: 100%; height: 104px; aspect-ratio: auto; margin: 6px 0 8px } /* flex: the picture's max-height: 100% resolves */
+.rail .fish-current .fish-art img { filter: drop-shadow(0 10px 14px rgb(0 0 0 / .55)) }
+.rail .fc-dial { margin-right: 2px }
+.rail .fc-name { grid-area: name; font: 700 var(--fs-xl)/1.1 var(--sans); letter-spacing: -.025em }
+.rail .fc-sub { grid-area: sub; margin-top: 3px }
+.rail .fc-sub i { color: var(--dim) }
+.rail .fc-stats { margin-top: 12px; flex-wrap: nowrap }
+.rail .ph.all .i { width: 44px; height: 44px; color: var(--dim) }
+@media (max-height: 820px) { /* short windows: the hero folds into a row, so the tabs' lists keep room */
+  .rail .fish-current { grid-template-columns: 66px minmax(0, 1fr) auto; grid-template-areas: "lbl lbl change" "art name dial" "art sub dial" "stats stats stats"; gap: 0 10px; padding: 8px 10px 10px }
+  .rail .fish-current > :first-child { height: 50px; margin: 6px 0 }
+  .rail .fc-name { align-self: end; font-size: 16px }
+  .rail .fc-sub { align-self: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+  .rail .fc-dial small { display: none } /* the dial's tooltip says it */
+  .rail .ring.lg { --sz: 44px }
+  .rail .fc-stats { margin-top: 6px }
+}
+.facts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px } /* small fact chips (js/area-gear.js, js/weather.js) */
+.facts span { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: var(--r-sm); background: var(--raise-2); font-size: 11.5px; color: var(--ink) }
+#radius { flex-wrap: nowrap; min-width: 0; overflow-x: auto; scrollbar-width: none }
+#radius button { flex: none }
+#radius { gap: 2px; padding: 2px; border-radius: var(--r); background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px var(--line) } /* a track, as the tabs */
+#radius button { min-height: 24px; padding: 0 9px; background: none; box-shadow: none }
+#radius button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink) }
+#near-msg:not(:empty, [hidden]) { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 14px }
+#near-msg > .i { color: var(--dim) }
+#near-msg .btn { margin-top: 2px }
+.near-btns { display: flex; flex-wrap: wrap; gap: 6px }
+.near-btns .btn { flex: 1 1 auto } /* each on its own row when Greek does not fit */
+#loc-none[aria-pressed="true"] { display: none }
+.likely { display: flex; gap: 6px; align-items: flex-start; margin: 6px 0 0; font-size: 12.5px; color: #dcdcdc }
+.likely .i { margin-top: 2px; color: var(--muted) }
+.best-time, .setup, .gps-row, .gear { border-radius: var(--r); background: var(--raise) }
+.best-time { display: flex; align-items: center; gap: 10px; padding: 9px 10px }
+.best-time > .i { color: var(--muted) }
+.best-time b { display: block; font-size: 13.5px }
+.best-time small { display: block; font-size: 11.5px; color: var(--muted) }
+.best-time .btn { margin-left: auto }
+.setup { display: flex; flex-direction: column; gap: 8px; padding: 12px }
+.setup h4 { display: flex; align-items: center; gap: 6px; color: var(--ink); font-size: var(--fs) }
+.gear-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px }
+.gear { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 8px }
+.gear .art { position: relative; aspect-ratio: 16 / 10; display: grid; place-items: center; background: #242424; border-radius: var(--r-sm); overflow: hidden }
+.gear .art svg { width: 100%; height: 100%; display: block }
+.gear b { font-size: 12.5px; line-height: 1.25 }
+.gear small { font-size: 11.5px; color: var(--muted); line-height: 1.3 }
+.gear.best { box-shadow: inset 0 0 0 1.5px var(--ink) }
+.swatches { display: flex; gap: 3px 9px; flex-wrap: wrap; margin-top: 3px }
+.swatches span { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); color: var(--muted); line-height: 1.3 }
+.swatches i { display: inline-block; width: 10px; height: 10px; flex: none; border-radius: 50%; border: 1px solid rgb(255 255 255 / .25) }
+
+/* ---------- Map overlays ---------- */
+/* above the drawer: strip and Layers stay usable */
+.hud { position: absolute; z-index: 830; top: 10px; right: max(10px, env(safe-area-inset-right, 0px)); left: 342px; display: flex; justify-content: flex-end; align-items: flex-start; gap: 8px; pointer-events: none }
+.hud > * { pointer-events: auto }
+.strip { display: flex; flex-wrap: nowrap; gap: 2px; min-width: 0; padding: 4px; overflow-x: auto; scrollbar-width: none }
+.strip::-webkit-scrollbar, .strip:empty { display: none }
+.chip { flex: none; height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 9px; border-radius: var(--r-sm); font: 600 12.5px var(--sans); white-space: nowrap }
+.chip small { font-size: var(--fs-xs); font-weight: 400; color: var(--muted) }
+.chip .i { color: var(--muted) }
+.chip.where { flex: 0 1 auto; min-width: 64px; max-width: 200px; font: 500 var(--fs-sm) var(--sans); color: var(--muted) } /* shrinks first, before the strip has to scroll */
+.chip.where span { min-width: 0; overflow: hidden; text-overflow: ellipsis }
+/* the readings: one capsule, a hairline between readings (phones show them in the sheet's head: css/mobile.css .m-read) */
+.hud .strip { height: 40px; align-items: center; gap: 0; padding: 0 4px }
+.hud .chip { position: relative; height: 38px; padding: 0 12px; border-radius: 0; font: 650 var(--fs) var(--sans); letter-spacing: -.005em }
+.hud .chip + .chip::before { content: ""; position: absolute; left: 0; top: 11px; bottom: 11px; width: 1px; background: var(--line-2) }
+.hud .chip small { margin-left: -1px; font: 500 var(--fs-xs) var(--sans); color: var(--dim) }
+.hud .chip.where { padding-left: 10px; font: 500 var(--fs-sm) var(--sans) }
+@media (max-width: 1180px) { .hud .chip { padding: 0 8px } } /* narrow: tighter, so the readings fit before the strip has to scroll */
+@media (max-width: 1100px) { .hud .chip.where { display: none } } /* no room left for the place: the readings first */
+.layers-wrap { position: relative; flex: none }
+.layers-btn { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 14px 0 12px; font: 600 var(--fs) var(--sans) }
+.layers-btn .i { color: var(--muted) }
+.layers-btn:hover { background: var(--raise-2) }
+.layers-btn[aria-expanded="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) } /* open: selected, white */
+.layers-btn[aria-expanded="true"] .i { color: inherit }
+.layers-pop { position: absolute; right: 0; top: calc(100% + 8px); width: 312px; max-height: min(78vh, calc(100vh - 150px)); display: flex; flex-direction: column; padding: 0 6px 6px 14px; animation: pop-in var(--dur) var(--ease); transform-origin: top right }
+.lp-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-right: -6px; padding: 8px 0 6px; background: var(--panel) }
+.lp-head h3 { font: 650 var(--fs-md) var(--sans); color: var(--ink) }
+/* round 17 G: the main layers, then More layers folded (an uppercase micro header with how many of its layers are on), its groups under small headings */
+.lp-main { padding: 4px 0 8px; border-top: 1px solid var(--line) }
+.lp-more { border-top: 1px solid var(--line) }
+.lp-more > summary { gap: 8px; min-height: 40px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.lp-more[open] > summary { color: var(--ink) }
+.lp-grp > h4 { margin: 6px 0 2px; font: 600 var(--fs-label)/1.2 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--dim) }
+.lp-grp .lp-over { margin-top: 0 }
+.lp-grp .lp-sub { padding-left: 18px } /* the heat switch's options, under More layers with the opacity: names in line with the rows' */
+.lp-n { margin-left: auto; padding: 2px 6px; border-radius: var(--r-sm); background: var(--raise-2); box-shadow: inset 0 0 0 1px var(--line); font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink) }
+.lp-n:empty { display: none }
+.lp-items { display: flex; flex-direction: column; padding: 0 0 8px }
+.lp-grp:has(> .lp-items:empty), #lay-ships > h4 { display: none }
+.layers-pop .hint { margin: 6px 0 0 }
+/* a row: [swatch] name [count] switch; rows without a swatch keep its slot, so the names line up */
+.layers-pop label { display: flex; align-items: center; gap: 9px; min-height: 32px; cursor: pointer }
+.layers-pop label > span:not(.num) { flex: 1; min-width: 0 }
+.lp-items > label:not(:has(> .sw))::before { content: ""; width: 9px; flex: none }
+.layers-pop label .num { font-size: 11.5px; color: var(--dim) }
+/* switches: the same checkbox (keyboard, label, :checked), drawn as a square-cornered track and knob; on = white */
+.layers-pop label > input[type=checkbox] { order: 9; appearance: none; -webkit-appearance: none; position: relative; width: 30px; height: 18px; flex: none; margin: 0 0 0 2px; border-radius: var(--r-sm);
+  background: rgb(255 255 255 / .1); box-shadow: inset 0 0 0 1px var(--line-2); cursor: pointer; transition: background-color var(--dur) }
+.layers-pop label > input[type=checkbox]::before { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 2px; background: #9a9a9a;
+  transition: transform var(--dur) var(--ease), background-color var(--dur) }
+.layers-pop label > input[type=checkbox]:checked { background: var(--accent); box-shadow: none }
+.layers-pop label > input[type=checkbox]:checked::before { transform: translateX(12px); background: var(--accent-ink) }
+.layers-pop label:hover > input[type=checkbox]:not(:checked) { background: rgb(255 255 255 / .16) }
+.sw { width: 9px; height: 9px; flex: none; border-radius: 50% }
+.sw.ring { box-shadow: inset 0 0 0 2px currentColor }
+.sw.prot { border-radius: 2px; background: rgb(0 0 0 / .55); box-shadow: inset 0 0 0 1.5px #fff }
+.slider { display: grid; grid-template-columns: 118px 1fr 26px; align-items: center; gap: 8px; min-height: 32px; padding-left: 24px; font-size: var(--fs-sm); color: var(--muted) }
+.slider input { width: 100% }
+.slider output { font: 600 11.5px var(--sans); color: var(--ink); text-align: right }
+/* sliders: a thin track lit up to the thumb (--v: ui.js fillRange), a white round thumb */
+.layers-pop input[type=range] { -webkit-appearance: none; appearance: none; height: 18px; margin: 0; background: none; cursor: pointer }
+.layers-pop input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) var(--v, 0%), rgb(255 255 255 / .14) 0) }
+.layers-pop input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) var(--v, 0%), rgb(255 255 255 / .14) 0) }
+.layers-pop input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--panel), 0 1px 4px rgb(0 0 0 / .6) }
+.layers-pop input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--panel), 0 1px 4px rgb(0 0 0 / .6) }
+/* legends; the weather ones scroll on a short window */
+.map-legend { position: absolute; z-index: 790; left: max(10px, env(safe-area-inset-left, 0px)); bottom: 10px; width: 232px; max-height: calc(100% - 68px); padding: 10px 12px 8px; pointer-events: none;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent }
+.map-legend:has(.wx-fold[open]) { pointer-events: auto } /* folded, it lets the map's hover through */
+.rail:not(.collapsed) ~ .map-legend { left: 342px }
+.legend-bar { height: 6px; border-radius: 3px; box-shadow: 0 0 0 1px rgb(0 0 0 / .3) }
+.legend-words { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 6px; font: 550 var(--fs-xs)/1.2 var(--sans); color: var(--muted); text-align: center }
+.legend-words span:first-child { text-align: left } .legend-words span:last-child { text-align: right } /* under the bar's ends */
+.wx-fold > summary { pointer-events: auto; gap: 5px; margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--line); font: 600 11.5px var(--sans); color: var(--muted) }
+.wx-fold > summary .i { width: 13px; height: 13px }
+#weather-legend > .ps-wx-legend:first-child, #weather-legend:empty + #vessel-legend > .ps-wx-legend { border-top: 0; margin-top: 0 }
+.readout { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted) }
+.readout b { color: var(--ink) }
+/* the ban note: centred over the open map, below the HUD */
+.banner { position: absolute; z-index: 805; top: 60px; left: 342px; right: max(10px, env(safe-area-inset-right, 0px)); width: fit-content; max-width: 560px; margin-inline: auto; display: flex; align-items: center; gap: 10px;
+  padding: 5px 5px 5px 6px; border-color: rgb(255 123 110 / .3); font: 550 12.5px/1.4 var(--sans); animation: pop-in var(--dur) var(--ease) }
+.banner > .i:first-child { box-sizing: content-box; padding: 6px; border-radius: var(--r-sm); background: rgb(255 123 110 / .13); color: var(--bad) } /* the ban sign on a red-tinted tile */
+.stage:is(.has-drawer, .has-brief) .banner { right: 380px } /* clear of the details or the daily brief */
+.toast { position: fixed; z-index: 3000; left: 50%; bottom: 84px; transform: translateX(-50%); padding: 9px 14px; border-radius: var(--r); background: var(--raise-2); border: 1px solid var(--line-2); color: var(--ink);
+  font: 550 12.5px var(--sans); box-shadow: var(--shadow); animation: fade-in var(--dur) }
+.mobile-bar { display: none }
+
+/* ---------- Leaflet skin ---------- */
+.leaflet-container { background: var(--bg); font: var(--fs) var(--sans) }
+/* dim the imagery per tile (drawn once), not the pane (a full-screen pass per frame). The contrast first: the dark sea goes deeper while
+   the land keeps its light, so the coast and relief read; a touch of sepia warms the land off the sea's blue, under the heat's own colours */
+.leaflet-tile-pane .leaflet-tile { filter: contrast(1.28) brightness(.57) saturate(.52) sepia(.06) }
+.leaflet-fade-anim .leaflet-tile { transition: opacity .12s linear }
+/* zoom and locate: glass columns like the panels; hairlines between the buttons */
+.leaflet-bar { border: 1px solid var(--line-2) !important; border-radius: var(--r-lg) !important; overflow: hidden; background: var(--glass); box-shadow: var(--shadow) !important }
+.leaflet-bar a { width: 36px !important; height: 36px !important; line-height: 36px !important; display: grid !important; place-items: center; background: none; color: var(--ink); border-color: var(--line) !important }
+.leaflet-bar a.leaflet-control-zoom-in, .leaflet-bar a.leaflet-control-zoom-out { font: 300 21px/1 var(--sans); text-indent: 0 }
+.leaflet-bar a:hover { background: var(--raise-2) }
+.leaflet-bar a:active { background: var(--raise-3) }
+.leaflet-bar a.leaflet-disabled, .leaflet-bar a.leaflet-disabled:hover { background: none; color: #555; cursor: default }
+.leaflet-container a.btn { color: var(--ink) }
+.leaflet-container a.btn.primary { color: var(--accent-ink) }
+.leaflet-control-attribution { max-width: min(520px, calc(100vw - 20px)); margin: 0 10px 10px 0 !important; padding: 5px 9px !important; border: 1px solid var(--line-2); border-radius: var(--r) !important; background: var(--glass) !important; color: var(--dim) !important;
+  font: 10.5px/1.4 var(--sans); cursor: pointer }
+.leaflet-control-attribution a { color: var(--muted) !important }
+.leaflet-control-attribution.folded { width: 26px; height: 26px; padding: 0 !important; overflow: hidden; font-size: 0; border-radius: var(--r-sm) !important }
+.leaflet-control-attribution.folded::before { content: "i"; display: grid; place-items: center; height: 100%; font: italic 600 12px/1 Georgia, serif; color: var(--muted) }
+.leaflet-control-attribution.folded:hover::before { color: var(--ink) }
+/* round 14 store: "Powered by Esri" on the map while Esri's imagery shows (js/map.js poweredBy) */
+.leaflet-control.powered-by { margin: 0 10px 6px 0; padding: 1px 6px; border-radius: var(--r-sm); background: var(--glass); color: var(--muted); font: 10px/1.5 var(--sans); white-space: nowrap }
+.leaflet-control.powered-by[hidden] { display: none }
+.powered-by a { color: inherit; text-decoration: none }
+/* popups (the card, places, ships) and tooltips: the panels' shell; their content is each module's */
+.leaflet-popup-content-wrapper { padding: 0; overflow: hidden; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); box-shadow: var(--shadow) }
+.leaflet-popup-tip { background: var(--panel); border: 1px solid var(--line-2); box-shadow: none }
+.leaflet-popup-content { width: 280px !important; margin: 0 }
+.leaflet-container a.leaflet-popup-close-button { top: 7px; right: 7px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: var(--r-sm); font: 300 20px/1 var(--sans); color: var(--muted) }
+.leaflet-container a.leaflet-popup-close-button:hover { background: var(--raise-2); color: var(--ink) }
+.leaflet-tooltip { padding: 4px 8px; border-radius: var(--r-sm); border: 1px solid var(--line-2); background: #141414; color: var(--ink); font: 550 var(--fs-sm)/1.3 var(--sans); box-shadow: var(--shadow-sm) }
+.leaflet-tooltip-top:before { border-top-color: var(--line-2) } .leaflet-tooltip-bottom:before { border-bottom-color: var(--line-2) }
+.leaflet-tooltip-left:before { border-left-color: var(--line-2) } .leaflet-tooltip-right:before { border-right-color: var(--line-2) }
+@keyframes pulse { from { transform: scale(.7); opacity: .9 } to { transform: scale(1.6); opacity: 0 } }
+.spot-pop { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px }
+.spot-pop b { font-size: 15px }
+.spot-pop span { font-size: var(--fs-sm); color: var(--muted) }
+
+/* ---------- States: one hover, press and motion language, after the components so it wins ---------- */
+:where(.btn, .icon-btn, .chips button, .seg button, .tabs button, .lang button, .fish-current, .rail-tools button, .top .row, .sc-best, .fish-card, .layers-btn, .fold > summary, .play, .tl-dtabs button) {
+  transition: background-color var(--dur), color var(--dur), border-color var(--dur), box-shadow var(--dur) }
+.btn:hover, .icon-btn:hover, .fish-current:hover, .rail-tools button:hover, .sc-best:hover, .fish-card:hover { background: var(--raise-2) }
+.icon-btn:hover, .chips button:hover, .seg button:hover, .tabs button:hover, .lang button:hover, .fold > summary:hover, .wx-fold > summary:hover, .lp-more > summary:hover, .rail-tools button:hover { color: var(--ink) }
+.top .row:hover { background: var(--raise) }
+.btn:active, .icon-btn:active, .fish-current:active, .rail-tools button:active, .sc-best:active, .fish-card:active, .top .row:active, .chips button:active, .seg button:active { background: var(--raise-3) }
+.btn.primary:hover { background: #fff } .btn.primary:active { background: #dcdcdc }
+.btn.ghost:hover { color: var(--ink); background: var(--raise) }
+.gps-row .btn:hover { background: var(--raise-3) }
+.rail .fish-current:active { background-color: var(--raise-3) } /* the hero keeps its spotlight (a colour, not the shorthand) */

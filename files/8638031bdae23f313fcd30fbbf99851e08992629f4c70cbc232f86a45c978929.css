@@ -1,0 +1,200 @@
+/* Psarema: the Forecast page (js/forecast.js), BiteTime-style, inside whatever holds it (the PsNav page; the stub's panel). Grey and white; the
+   only colour is the fish's chance (dials, the chart's area, window caps) and the conditions' traffic light (css/conditions.css .c-*).
+   Top to bottom: a compact place + fish card, the day's best time (hero card), the hour-by-hour chart you drag along, its windows as chips,
+   the week as compact rows that open for details, then the chosen hour's weather and sea. A container query lays it out: one column on a
+   phone, the day beside the week from 720 px. Reasons are css/spot.css's, the instruments css/instruments.css's. */
+.fp-c { container-type: inline-size; min-width: 0 } /* the page's own width decides its layout (a container cannot query itself) */
+.fp { --fc: var(--card, var(--raise)); --fc2: var(--card-2, var(--raise-2)); display: flex; flex-direction: column; gap: 12px; min-width: 0; font-variant-numeric: tabular-nums }
+.fp p { margin: 0 }
+.fp h3 { display: flex; align-items: center; gap: 10px; margin: 8px 0 0; font: 650 var(--fs-h, 16px)/1.2 var(--sans); color: var(--ink) }
+.fp section { display: flex; flex-direction: column; gap: 8px; min-width: 0 }
+.fp-ctx, .fp-hcard, .fp-chc, .fp-days, .fp-wx { border-radius: var(--r); background: var(--fc); border: 1px solid var(--line); box-shadow: var(--edge) }
+
+/* ---------- Place, fish, method, the spot (one card) ---------- */
+.fp-ctx { display: flex; flex-direction: column; gap: 8px; padding: 8px }
+.fp-top { display: flex; flex-direction: column; gap: 6px }
+.fp-place { position: relative; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 8px; border-radius: var(--r-sm); color: var(--muted) }
+.fp-place:hover { background: var(--fc2) }
+.fp-place select { flex: 1; min-width: 0; height: 40px; padding: 0 22px 0 0; border: 0; background: none; font: 650 16px var(--sans); letter-spacing: -.01em; color: var(--ink); appearance: none; -webkit-appearance: none; cursor: pointer; text-overflow: ellipsis }
+.fp-place::after { content: ""; position: absolute; right: 13px; top: 50%; width: 6px; height: 6px; margin-top: -5px; border: solid var(--muted); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); pointer-events: none }
+.fp-place:focus-within { box-shadow: 0 0 0 2px var(--focus) }
+.fp-place select option, .fp-fish select option { background: var(--panel); color: var(--ink) }
+.fp-who { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: stretch }
+.fp-fish { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; padding: 0 10px 0 4px; border-radius: var(--r-sm); background: var(--raise);
+  box-shadow: inset 0 0 0 1px var(--line-2); color: var(--muted); cursor: pointer }
+.fp-fish:hover { background: var(--raise-2) }
+.fp-fish .pn-cut { width: 52px; height: 30px; object-fit: contain; flex: none }
+.fp-fish b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 650 14px var(--sans); color: var(--ink) }
+.fp-fish select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px } /* the native picker, under the cut-out button */
+.fp-fish:focus-within { box-shadow: inset 0 0 0 1px rgb(255 255 255 / .5), 0 0 0 2px var(--focus) }
+.fp-mode { width: 168px }
+.fp-mode button { min-height: 38px }
+.fp-mode button span:last-child { font-size: 10.5px }
+.fp-spot { display: flex; align-items: center; gap: 8px; padding: 6px 2px 0 8px; border-top: 1px solid var(--line); color: var(--muted) }
+.fp-spot > .i { flex: none; width: 15px; height: 15px }
+.fp-spot > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px }
+.fp-spot .lbl { font-size: 9.5px }
+.fp-spot b { font: 600 13px/1.3 var(--sans); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.fp-spot small { font-size: 11.5px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.fp-spot .btn { flex: none; min-height: 40px; padding: 3px 10px }
+/* the latest real wind nearby (js/obs.js), under the card; empty when no station reported within 3 h */
+.fp-obs { display: flex; align-items: center; gap: 6px; margin: -4px 2px 0 !important; color: var(--muted); font-size: var(--fs-sm) }
+.fp-obs:empty { display: none }
+.fp-obs .i { flex: none; width: 14px; height: 14px; opacity: .8 }
+
+/* ---------- The day: hero card (dial, the best window large), the chart, the windows ---------- */
+.fp-today { gap: 8px }
+.fp-hcard { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px }
+.fp-hero { display: flex; align-items: center; gap: 14px }
+.fp-hero .ring.xl { font: 700 24px var(--sans) }
+.fp-hv { min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.fp-hv .lbl { color: var(--dim) }
+.fp-ht { font: 700 26px/1.15 var(--sans); letter-spacing: -.02em; color: var(--ink) }
+.fp-ht.sm { font-size: 17px; letter-spacing: -.01em }
+.fp-hs { font-size: 12.5px; color: var(--muted) }
+.fp-hs em { font-style: normal; font-weight: 600; color: var(--ink) }
+.fp-ban { display: flex; align-items: center; gap: 5px; margin-top: 2px; font-size: 12px; color: var(--bad) !important }
+
+.fp-chc { position: relative; padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px }
+.fp-chc[hidden] { display: none }
+/* the plot under a 26 px strip for the hour's bubble; the slider takes the whole of it */
+.fp-ch { position: relative; height: 176px; padding-top: 26px; cursor: ew-resize; touch-action: pan-y; user-select: none; -webkit-user-select: none; outline: none; border-radius: var(--r-sm) }
+.fp-ch:focus-visible { box-shadow: 0 0 0 2px var(--focus) }
+.fp-ch svg { position: absolute; inset: 26px 0 0; width: 100%; height: calc(100% - 26px); border-radius: var(--r-sm); background: rgb(255 255 255 / .025); box-shadow: inset 0 0 0 1px var(--line) }
+.fp-night { fill: rgb(0 0 0 / .28) }
+.fp-maj { fill: rgb(255 255 255 / .05) }
+.fp-min { fill: rgb(255 255 255 / .025) }
+.fp-grid { fill: none; stroke: rgb(255 255 255 / .06); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke }
+.fp-fa { fill: url(#fp-heat); opacity: .3 }
+.fp-fl { fill: none; stroke: url(#fp-heat); stroke-width: 2.5; stroke-linejoin: round; vector-effect: non-scaling-stroke }
+.fp-cl { fill: none; stroke: rgb(255 255 255 / .7); stroke-width: 1.25; stroke-dasharray: 4 3; stroke-linejoin: round; vector-effect: non-scaling-stroke }
+.fp-bad { fill: var(--bad) }
+.fp-past { fill: rgb(22 22 22 / .55) }
+.fp-now { stroke: rgb(255 255 255 / .55); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke }
+/* the best windows: a lighter band, a cap in its go's colour and the go on top */
+.fp-wbs { position: absolute; inset: 26px 0 0; pointer-events: none }
+.fp-wb { position: absolute; top: 0; bottom: 0; background: linear-gradient(rgb(255 255 255 / .09), rgb(255 255 255 / .03)); border-top: 2px solid var(--c) }
+/* the chosen hour: a white line with a knob on the fish curve, the hour (or Now) and its go in a bubble above */
+.fp-scrub { position: absolute; top: 26px; bottom: 0; width: 0; border-left: 2px solid #fff; transform: translateX(-1px); pointer-events: none; box-shadow: 0 0 8px rgb(0 0 0 / .5) }
+.fp-scrub i { position: absolute; left: -7px; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgb(0 0 0 / .45) }
+.fp-bub { position: absolute; top: 0; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 4px 0 8px; border-radius: var(--r-sm);
+  background: #fff; color: var(--accent-ink); font: 650 12px var(--sans); white-space: nowrap; pointer-events: none; box-shadow: 0 2px 8px rgb(0 0 0 / .4) }
+.fp-bub b { min-width: 22px; height: 16px; padding: 0 4px; border-radius: 3px; background: var(--c); color: #121212; font: 700 11px/16px var(--sans); text-align: center }
+.fp-ax { position: relative; height: 13px; margin-top: -2px; font-size: 10.5px; color: var(--dim) }
+.fp-ax span { position: absolute; top: 0; transform: translateX(-50%) }
+.fp-read { display: flex; align-items: center; gap: 8px; min-height: 32px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted) }
+.fp-read:empty { display: none }
+.fp-rvs { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px }
+.fp-rvs > span { display: inline-flex; align-items: center; gap: 4px }
+.fp-read .i { width: 13px; height: 13px; color: var(--dim) }
+.fp-read .fp-more { flex: none; min-height: 40px; color: var(--ink) }
+.fp-sun { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 11px; color: var(--dim) }
+.fp-sun > span { display: inline-flex; align-items: center; gap: 4px }
+.fp-sun .i { width: 13px; height: 13px }
+.fp-key i { width: 10px; height: 10px; border-radius: 2px }
+.fp-key .k-f { background: linear-gradient(0deg, rgb(70 228 160), rgb(255 150 30)) }
+.fp-key .k-c { height: 0; border-top: 1.5px dashed rgb(255 255 255 / .8); border-radius: 0 }
+.fp-key .k-w { background: rgb(255 255 255 / .12); border-top: 2px solid var(--muted); border-radius: 0 }
+.fp-key .k-m { background: rgb(255 255 255 / .08); box-shadow: inset 0 0 0 1px var(--line-2) }
+.fp-key .k-u { height: 3px; background: var(--bad) }
+.fp-wins { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 1px }
+.fp-wins::-webkit-scrollbar { display: none }
+.fp-chip { flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 6px 0 10px; border-radius: var(--r-sm); background: var(--raise);
+  box-shadow: inset 0 0 0 1px var(--line-2); font: 600 13px var(--sans); color: var(--ink) }
+.fp-chip:hover { background: var(--raise-2) }
+.fp-chip .i { width: 14px; height: 14px; color: var(--muted) }
+.fp-chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none }
+.fp-chip[aria-pressed="true"] .i { color: var(--accent-ink) }
+.fp-chip[aria-pressed="true"] .ring { background: rgb(0 0 0 / .8); color: var(--ink) }
+.fp-ol { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: 12.5px }
+.fp-ol dt { display: flex; align-items: center; gap: 6px; color: var(--dim) }
+.fp-ol dd { margin: 0; color: var(--ink) }
+.fp-ol .i { width: 13px; height: 13px }
+
+/* ---------- The week: a compact row per day; open: the day's details ---------- */
+.fp-days { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; overflow: hidden }
+.fp-days > li + li { border-top: 1px solid var(--line) }
+.fp-day > summary { display: grid; grid-template-columns: 70px auto minmax(0, 1fr) 16px; align-items: center; column-gap: 8px; min-height: 60px; padding: 8px 10px 8px 12px;
+  list-style: none; cursor: pointer; color: var(--ink) }
+.fp-day > summary::-webkit-details-marker { display: none }
+.fp-day > summary:hover { background: var(--fc2) }
+.fp-day > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px }
+.fp-day[open] > summary { background: var(--fc2) }
+.fp-day:has(.fp-hb[aria-pressed="true"]) > summary { box-shadow: inset 2px 0 0 var(--ink) } /* the day the chart above shows */
+.fp-dn { display: flex; flex-direction: column; gap: 1px; min-width: 0 }
+.fp-dn b { font: 650 14px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.fp-dn small { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--dim); white-space: nowrap }
+.fp-mi { display: inline-flex }
+.fp-day summary > .ring { --sz: 36px; font: 700 13px var(--sans) }
+.fp-dw { display: flex; flex-direction: column; gap: 3px; min-width: 0 }
+.fp-dw > b { font: 650 14px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.fp-dw > b.none { font: 500 12px var(--sans); color: var(--muted); white-space: normal }
+.fp-tag { align-self: flex-start; padding: 1px 6px; border-radius: var(--r-sm); background: rgb(255 255 255 / .09); font: 650 10.5px/1.5 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted) }
+.fp-dr { display: flex; align-items: center; gap: 4px 8px; min-width: 0; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden }
+.fp-dr > span { display: inline-flex; align-items: center; gap: 3px }
+.fp-dr .i { width: 12px; height: 12px; color: var(--dim) }
+.fp-g .i { width: 16px !important; height: 16px !important; color: var(--ink) !important }
+.fp-wd svg { color: var(--ink) }
+.fp-moon { width: 12px; height: 12px; flex: none }
+.fp-moon circle { fill: #3b4048 } .fp-moon path { fill: #ece6d2 }
+.fp-chev { width: 16px; height: 16px; color: var(--dim) }
+.fp-day[open] .fp-chev { transform: rotate(180deg) }
+.fp-dx { display: flex; flex-direction: column; gap: 10px; padding: 4px 12px 12px; background: var(--fc2) }
+.fp-dxh { font-size: 11.5px; color: var(--dim) }
+.fp-dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 0; border-radius: var(--r-sm); background: var(--line); overflow: hidden }
+.fp-dl > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 7px 9px; background: var(--fc) }
+.fp-dl > div:last-child:nth-child(odd) { grid-column: 1 / -1 }
+.fp-dl dt { display: flex; align-items: center; gap: 5px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--dim) }
+.fp-dl dt .i { width: 12px; height: 12px; flex: none }
+.fp-dl dd { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; margin: 0; font: 650 14px/1.25 var(--sans); color: var(--ink) }
+.fp-dl dd small { font: 500 11px var(--sans); color: var(--muted) }
+.fp-dx .fp-wins { flex-wrap: wrap }
+.fp-dx .fp-chip { background: var(--fc) }
+.fp-hb { min-height: 40px; align-self: stretch }
+.fp-hb[aria-pressed="true"] { color: var(--muted) }
+.fp-foot { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px }
+.fp-foot .btn { flex: 1 1 auto; min-height: 44px }
+.fp-foot .hint { flex: 1 1 100% }
+
+/* ---------- Weather and sea at the chosen hour (View more) ---------- */
+.fp-wx { padding: 10px 12px 12px; gap: 10px !important; scroll-margin-top: 56px }
+.fp-wx h3 { margin: 0; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.fp-wx h3 span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.fp-step { display: flex; gap: 2px; margin-right: -6px }
+.fp-step .icon-btn { width: 44px; height: 40px; text-transform: none }
+.fp-now-go { display: flex; align-items: center; gap: 12px }
+.fp-now-go .cond-why { flex: 1; min-width: 0 }
+.fp-gs { flex: none; display: flex; flex-direction: column; align-items: center; gap: 5px; max-width: 76px; text-align: center }
+.fp-gs .lbl { font-size: 9.5px }
+.fp-rd { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--line-2); overflow: hidden }
+.fp-rd > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 8px 9px; background: var(--fc) }
+.fp-rd dt { display: flex; align-items: center; gap: 5px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--dim); overflow-wrap: anywhere }
+.fp-rd dt .i { width: 13px; height: 13px; flex: none }
+.fp-rd dd { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; margin: 0; font: 650 15px/1.2 var(--sans); color: var(--ink) }
+.fp-rd dd small { font: 500 11px var(--sans); color: var(--muted) }
+.fp-today { scroll-margin-top: 56px }
+
+/* the stub's panel on wide screens: room for the day beside the week (the PsNav shell lays out its own pages) */
+#nav-forecast-modal { --pn-w: 980px }
+@container (min-width: 720px) {
+  .fp { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px 22px; align-items: start }
+  .fp-ctx, .fp-obs { grid-column: 1 / -1 }
+  .fp-top { flex-direction: row; align-items: stretch }
+  .fp-place { flex: 1 }
+  .fp-who { flex: 1.3 }
+  .fp-wk { grid-row: span 2 }
+  .fp-wk h3 { margin-top: 0 }
+  .fp-ch { height: 200px }
+}
+@container (max-width: 440px) { .fp-mode { width: 132px } .fp-mode button span:last-child { display: none } } /* icons only (each has its name as a tooltip) */
+@container (max-width: 359px) { .fp-sst { display: none } .fp-day > summary { grid-template-columns: 74px auto minmax(0, 1fr) 14px; column-gap: 6px; padding-inline: 10px 8px } } /* round 16 P: 74 px, "Tomorrow" whole on a 360 px phone (54 cut it) */
+@container (max-width: 520px) { .fp-hero .ring.xl { --sz: 60px; --w: 5px; font-size: 21px } }
+/* round 17 G: the chart's key and the hour's other readings, folded */
+.fp-legend { margin-left: auto }
+.fp-legend > summary { list-style: none; cursor: pointer; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px }
+.fp-legend > summary::-webkit-details-marker { display: none }
+.fp-legend[open] { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin-left: 0 }
+.fp-legend > .fp-key { display: inline-flex; align-items: center; gap: 4px }
+.fp-more { margin-top: 10px }
+.fp-more > summary { min-height: 36px; font-size: 12.5px; color: var(--ink) }
+.fp-more[open] > summary { margin-bottom: 6px }

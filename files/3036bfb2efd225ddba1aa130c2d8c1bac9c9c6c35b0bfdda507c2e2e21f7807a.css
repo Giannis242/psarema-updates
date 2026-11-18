@@ -1,0 +1,67 @@
+/* Psarema round 14, phase 2: accessibility and devices, one place over the component sheets (last in index.html). Tokens only.
+   Tap targets: every control 44 px to the finger. Where the drawn control stays compact (the sheet's head, the timeline, chip rows) an
+   invisible ::after or a margin trick grows its hit area instead, so the look and the map's room do not change. Small grey text: --dim is
+   lighter in tokens.css (4.5:1 up to --raise-2). Larger system text (Android caps it at 130 %), landscape phones, touch tablets and
+   foldables: the sections below. Reduced motion: app.css (CSS) and js/motion.js (the map). Safe areas (notch, home bar): the r14-store branch. */
+
+/* ---------- Tap targets: phones ---------- */
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .mb-chips .seg button, .mb-fish { height: 44px } /* the top bar's chips: as tall as the search pill */
+  .m-grab { height: 44px } /* only the time's text lies under it */
+  /* the timeline's day chips: 44 px to tap, still drawn 28 (their ::before), and no taller in the sheet's head */
+  .tl-dtabs { margin-block: -5px }
+  .tl-dtabs button { min-height: 44px }
+  .tl-dtabs button::before { inset: 8px 0 }
+}
+@media (pointer: coarse) {
+  .play, .tl-btns .btn, .ui-link, .ui-chip { position: relative }
+  .play::after, .tl-btns .btn::after { content: ""; position: absolute; inset: -4px } /* 36 drawn, 44 to tap */
+  .ui-link::after { content: ""; position: absolute; inset: -6px -4px }
+  /* chip rows (calendar, planner): 32 drawn, 44 to tap; the row's padding keeps the grown area inside its scroller */
+  .ui-chips { padding-block: 6px; margin-block: -6px }
+  .ui-chip::after { content: ""; position: absolute; inset: -6px 0 }
+}
+.ab-rest > summary, .spx-acts .btn, .lu-sel select, .fp-place, .fp-place select, .fp-spot .btn, .fp-chip, .fp-read .fp-more { min-height: 44px }
+.fp-place select { height: 44px }
+.fp-mode button { min-height: 44px; min-width: 44px }
+.lu-flt .lu-seg button { min-height: 40px } /* in a 2 px track: 44 */
+.ui-seg > button { min-height: 38px } /* in a 3 px track: 44 */
+.pg-acts .icon-btn { width: 44px; height: 44px }
+
+/* ---------- Tap targets: touch tablets and foldables, which open wide (the rail, the drawer, the Layers panel) ---------- */
+/* the desktop kit's 32 px controls grow to 44 under a finger; a mouse keeps the compact sizes */
+@media (pointer: coarse) and (min-width: 761px) and (min-height: 501px), (pointer: coarse) and (min-width: 961px) {
+  .btn, .chips button, .tabs button, .seg button, .rail-tools button, .layers-btn, .layers-pop label, .lp-more > summary, .fold > summary { min-height: 44px }
+  .icon-btn { width: 44px; height: 44px }
+  .lang button, .rail .lang button { min-width: 44px; min-height: 40px } /* in its 2 px track: 44 */
+  .pss-field { height: 44px }
+  .ps-tabs .nav-plus { width: 44px; height: 44px }
+  .leaflet-bar a { width: 44px !important; height: 44px !important; line-height: 44px !important }
+  .layers-pop input[type=range] { height: 44px }
+}
+
+/* ---------- Small text ---------- */
+.ring.sm { font-size: max(10px, calc(var(--sz) * .37)) } /* a 24 px dial's score was 8.9 px; bigger dials as before */
+.fd-art-lbl { font-size: 10.5px; color: var(--muted) }
+.tl-dtabs button.past .pill { opacity: .72 } /* a past day's score dimmed, still legible (it was .55: 3.5:1) */
+
+/* ---------- Larger system text (Android's font size, up to 130 %: WebView inflates text after a flex row has measured it) ---------- */
+/* The sheet's instrument row and the timeline's hour labels are sized to the pixel: inflated, "SW 10" ran over "km/h" and the hours over
+   the place line. They keep their size; everything else grows (rows wrap, buttons grow). */
+.m-read, .tl-chart { -webkit-text-size-adjust: none; text-size-adjust: none }
+
+/* ---------- Phones on their side ---------- */
+/* a page takes the side panel (css/nav.css): the map keeps the left, as it does beside the panel's own lists (it went blank) */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 960px) and (min-width: 560px) {
+  .stage.paged > :is(#map, .mobile-bar, .hud, .map-legend) { visibility: visible }
+}
+/* the first run's welcome: tighter, its two buttons always in view at the card's foot */
+@media (max-height: 500px) and (max-width: 960px) {
+  #guide.wl .guide-card { gap: 10px; padding-top: 12px; padding-bottom: 0 }
+  #guide.wl .wl-pts { gap: 8px }
+  #guide.wl #guide-title { font-size: 19px }
+  #guide.wl .guide-foot { position: sticky; bottom: 0; z-index: 1; margin: 0 -18px; padding: 8px 18px calc(var(--sb, 0px) + 10px); background: var(--panel); border-top: 1px solid var(--line) }
+}
+
+/* ---------- Focus ---------- */
+.pg-title:focus { outline: none } /* focused when its page opens (js/nav.js), for screen readers: a heading, not a control */

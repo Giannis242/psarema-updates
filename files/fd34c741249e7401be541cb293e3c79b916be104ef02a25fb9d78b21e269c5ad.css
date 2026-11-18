@@ -1,0 +1,61 @@
+/* Psarema: ship traffic (js/vessels.js). Uses css/tokens.css; the legend sits in .map-legend with the css/weather.css legend styles,
+   the drawer fold uses app.css .bar and .hint, the port popup app.css .spot-pop. */
+.vs-tiles canvas { image-rendering: pixelated } /* the 1 km cells stay sharp on high-density screens */
+
+/* Layers popover: type chips (app.css .chips) in small groups under the checkbox */
+.vs-types { display: grid; grid-template-columns: fit-content(96px) minmax(0, 1fr); align-items: center; gap: 4px 8px; margin: 2px 0 8px 24px } /* one label column for all groups, as wide as the longest word needs */
+.vs-types > .chips { grid-column: 1 / -1 }
+.vs-group { display: contents }
+.vs-group small { font-size: 11px; color: var(--dim); line-height: 1.2 }
+.vs-types .chips button { line-height: 1.25 } /* a long Greek type wraps inside its chip */
+.vs-loading .num { animation: vs-pulse .8s ease-in-out infinite alternate } /* data/vessels.js on its way (js/vessels.js ready) */
+@keyframes vs-pulse { to { opacity: .25 } }
+@media (prefers-reduced-motion: reduce) { .vs-loading .num { animation: none; opacity: .5 } }
+
+/* Legend: year, month, play (the play button as the timeline's, css/timeline.css .play) */
+.map-legend .vs-time, .map-legend .vs-hspark { pointer-events: auto }
+#weather-legend:empty + #vessel-legend .ps-wx-legend { margin-top: 0; padding-top: 0; border-top: 0 } /* first in the fold: no rule under the fold's own */
+.vs-time { display: flex; align-items: center; gap: 6px; margin: 2px 0 4px }
+.vs-play { flex: none; width: 30px; height: 30px; border-radius: var(--r-sm); display: grid; place-items: center; background: var(--raise); border: 1px solid var(--line); box-shadow: var(--edge); color: var(--ink); font: 600 11px var(--sans); transition: background-color var(--dur) }
+.vs-play:hover { background: var(--raise-2) }
+.vs-play .i { width: 14px; height: 14px }
+.vs-year { flex: none; max-width: 98px; height: 30px; padding: 0 6px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: rgb(0 0 0 / .24); color: var(--ink); font: 500 12px var(--sans) }
+.vs-month { flex: 1; min-width: 60px; margin: 0; accent-color: #e6e6e6 }
+.vs-when { font-size: 12px; color: var(--muted); margin-bottom: 6px }
+.vs-when b { color: var(--ink); font: 650 13px var(--sans) }
+.vs-unit, .vs-hhead, .vs-hint, .vs-hspark small { font-size: 11px; color: var(--dim) }
+.vs-here { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted) }
+.vs-hhead { margin-bottom: 4px; font-weight: 600; color: var(--muted) }
+.vs-hrows { display: flex; flex-wrap: wrap; gap: 1px 10px }
+.vs-hrows b, .vs-hspark b { color: var(--ink); font-weight: 600 }
+.vs-hspark { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px; margin-top: 4px }
+/* sparkline: grey months on a baseline, the month shown in white (as the selected hour), a dot = no data */
+.vs-spark { display: block }
+.vs-spark rect { fill: var(--dim) }
+.vs-spark rect.vs-cur { fill: var(--ink) }
+.vs-spark rect.vs-base { fill: var(--line-2) }
+.vs-spark rect.vs-na { fill: var(--muted) }
+
+/* "Ship traffic here" in the spot drawer */
+.vs-fold-body { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; font-size: 12.5px }
+/* the types as one grouped list (as css/app.css .ui-list): name, a bar, the number */
+.vs-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; font-size: 12.5px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); overflow: hidden }
+.vs-rows li { display: grid; grid-template-columns: minmax(0, 1fr) 72px 64px; align-items: center; gap: 10px; min-height: 36px; padding: 6px 12px }
+.vs-rows li + li { border-top: 1px solid var(--line) }
+.vs-rows li > :first-child { color: var(--muted) }
+.vs-rows .bar { width: 100% }
+.vs-rows b { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums }
+.vs-fold-body .vs-hspark { font-size: 12.5px; color: var(--muted) }
+
+/* Port popup */
+.vs-port p { margin: 0; font-size: 12.5px }
+.vs-port .vs-calls { color: var(--muted); font-size: 12px; line-height: 1.45 }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) { /* phones: as #weather-legend in css/mobile.css */
+  #vessel-legend { grid-column: 1 / -1; width: 250px }
+  .vs-types { grid-template-columns: fit-content(110px) minmax(0, 1fr) }
+  .vs-group small, .vs-when, .vs-unit, .vs-hspark small, .vs-port .vs-calls { font-size: 12px }
+  .vs-play, .vs-year, .vs-month { height: 44px } .vs-play { width: 44px; border-radius: var(--r) }
+  .vs-year { border-radius: var(--r) }
+  .map-legend .vs-here { display: none } /* a tap on the sea opens the spot, with "Ship traffic here" */
+}

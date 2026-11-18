@@ -1,0 +1,2 @@
+// Psarema fine seabed tiles (scripts/fine/build.mjs): which exist. sub-cells per cell side, cells per tile side.
+window.PSAREMA_FINE_INDEX = {"sub":5,"tile":60,"tiles":["t19_0","t2_4","t3_4","t4_4","t5_4","t2_5","t3_5","t4_5","t12_5","t13_5","t14_5","t2_6","t3_6","t11_6","t12_6","t13_6","t14_6","t3_7","t4_7","t7_7","t8_7","t9_7","t10_7","t11_7","t3_8","t4_8","t5_8","t6_8","t7_8","t8_8","t9_8","t10_8","t6_9","t7_9"]};

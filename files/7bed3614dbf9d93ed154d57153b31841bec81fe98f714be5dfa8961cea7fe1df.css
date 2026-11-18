@@ -1,0 +1,23 @@
+/* Offline areas (js/offline.js), on the panel kit of css/catchlog.css (.pn-*) and the shared .ui-* (css/app.css): what is saved (a grouped
+   list, or an empty state), the space it takes and how long it lasts at sea (a card with a meter), then saving another (a card) */
+.po .ui-sec { margin: 6px 0 -2px }
+.po .ui-sec h3 { margin: 0 }
+.po-ic { background: rgb(79 209 139 / .1); color: var(--good) }
+.po-ic.part { background: rgb(232 166 74 / .1) }
+.po-ic.part, .po .part { color: var(--warn) }
+.po .ui-row .pn-acts { flex: none; flex-wrap: nowrap; gap: 4px }
+.po .ui-row-main small { white-space: normal }
+.po-empty { padding: 18px 16px; border-radius: var(--r); border: 1px dashed var(--line-2) }
+/* the space used and how long the saved forecast lasts: a meter, then its words */
+.po-status { display: flex; flex-direction: column; gap: 8px }
+.po-status small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums }
+.po-status p { display: flex; gap: 8px; align-items: flex-start; margin: 0; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; line-height: 1.45 }
+.po-status p .i { flex: none; margin-top: 2px }
+.po-new { display: flex; flex-direction: column; gap: 12px }
+.po-new [data-po-new] { display: flex; flex-direction: column; align-items: stretch; gap: 10px }
+.po-est { margin: 0; font-size: 12.5px; color: var(--muted) }
+.po-est.bad { color: var(--warn) }
+.po-prog { align-self: stretch; display: grid; grid-template-columns: 1fr auto; gap: 8px 10px; align-items: center }
+.po-bar { grid-column: 1 / -1; height: 6px; background: rgb(0 0 0 / .35); border-radius: 3px; box-shadow: inset 0 0 0 1px var(--line); overflow: hidden } /* the save's progress, and the space used */
+.po-bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--ink); transition: width .2s var(--ease) }
+.po-prog span { font-size: 12.5px; font-variant-numeric: tabular-nums }

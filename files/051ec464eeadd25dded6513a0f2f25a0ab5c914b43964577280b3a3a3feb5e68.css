@@ -1,0 +1,46 @@
+/* Psarema weather legends and spot cards (js/weather.js). Scoped under .ps-weather; tokens.css colours, app.css .facts chips.
+   Legend type follows the fishing legend (app.css .legend-words): 11 px sans, tabular figures; phones 12 px (css/mobile.css). */
+.ps-weather { font: 12px/1.4 var(--sans); color: var(--ink); }
+.ps-weather.ps-wx-legend { background: var(--glass); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 9px 11px; }
+.ps-weather.ps-wx-legend + .ps-weather.ps-wx-legend { margin-top: 6px; }
+/* on the map: flat sections under the fishing legend instead of boxes */
+.map-legend .ps-weather.ps-wx-legend { background: none; border: 0; border-radius: 0; padding: 7px 0 0; margin-top: 7px; border-top: 1px solid var(--line); }
+.ps-weather .ps-wx-ltitle { margin-bottom: 6px; font: 650 11px/1.25 var(--sans); letter-spacing: .01em; color: var(--muted); } /* sentence case, not .lbl's capitals: the titles carry units (km/h, mm/h) */
+.ps-weather .ps-wx-note { color: var(--dim); font-size: 11px; margin-top: 4px; }
+
+/* Gradient bar with ticks */
+.ps-weather .ps-wx-bar { height: 6px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .25); }
+.ps-weather .ps-wx-ticks { position: relative; height: 15px; margin-top: 2px; font-size: 11px; line-height: 15px; color: var(--muted); }
+.ps-weather .ps-wx-ticks span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.ps-weather .ps-wx-ticks span:first-child { transform: none; }
+.ps-weather .ps-wx-ticks span:last-child { transform: translateX(-100%); }
+
+/* Colour cells (wind Beaufort, current speed): the class number, then the km/h it starts at */
+.ps-weather .ps-wx-cells { display: flex; gap: 2px; }
+.ps-weather .ps-wx-cells span { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.ps-weather .ps-wx-cells i { display: block; width: 100%; height: 6px; border-radius: 2px; }
+.ps-weather .ps-wx-cells b { font-size: 11px; font-weight: 650; margin-top: 3px; }
+.ps-weather .ps-wx-cells small { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* Spot card (the hour's weather in the details): one raised group with a hairline, the sea state leading in large type */
+.ps-weather.ps-wx-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: var(--r-lg); background: var(--raise); border: 1px solid var(--line); box-shadow: var(--edge); font-size: 12.5px; }
+.ps-weather .ps-wx-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.ps-weather .ps-wx-head b { font: 650 15px/1.2 var(--sans); letter-spacing: -.01em; }
+.ps-weather .ps-wx-head span { color: var(--muted); }
+.ps-weather .ps-wx-head span:nth-of-type(1) { margin-right: 10px; padding-right: 10px; border-right: 1px solid var(--line-2); }
+.ps-weather .ps-wx-text { margin: 0; color: #dcdcdc; line-height: 1.45; }
+.ps-weather .ps-wx-chips { margin: 0; }
+.ps-weather .facts .ps-wx-chip.ok { color: var(--good); }
+.ps-weather .facts .ps-wx-chip.no { color: var(--bad); }
+.ps-weather .ps-wx-chart { display: block; width: 100%; height: auto; overflow: visible; margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--line); }
+.ps-weather .ps-wx-chart text { font-family: var(--sans); }
+.ps-weather .ps-wx-night { fill: var(--bg); opacity: .75; }
+.ps-weather .ps-wx-day { stroke: var(--line-2); stroke-width: .6; }
+/* chart units: 340 wide, drawn at ~0.9× in the drawer and ~0.96× on phones: 13 here ≈ 12 px on screen */
+.ps-weather .ps-wx-axis { fill: var(--muted); font-size: 13px; }
+.ps-weather .ps-wx-now { fill: var(--ink); font-weight: 600; }
+.ps-weather .ps-wx-label { fill: var(--ink); font-size: 12.5px; paint-order: stroke; stroke: var(--raise); stroke-width: 3px; stroke-linejoin: round; }
+.ps-weather .ps-wx-gust { fill: none; stroke: var(--ink); stroke-width: .9; stroke-dasharray: 2 1.5; opacity: .8; }
+.ps-weather .ps-wx-temp { fill: none; stroke: var(--warn); stroke-width: 1.6; stroke-linejoin: round; }
+.ps-weather .ps-wx-dir { fill: var(--muted); }
+.ps-weather .ps-wx-cursor { stroke: var(--ink); stroke-width: 1; }

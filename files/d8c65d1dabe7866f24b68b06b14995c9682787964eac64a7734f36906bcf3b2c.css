@@ -1,0 +1,141 @@
+/* The first seconds: splash, reveal, skeletons. Tokens: css/tokens.css.
+   Everything here moves with transform/opacity only (the individual translate/scale properties, so nothing fights the transforms
+   js/mobile.js sets inline), runs a set number of times, and is off under reduced motion (app.css; js/app.js then drops the splash at once). */
+
+/* ---------- Splash: painted with the page, before any script runs (index.html, first in <body>; round11/splash/scene.mjs writes both) ----------
+   The story (2.5 s, played through once, js/app.js reveal() waits for its end): the logo's fish, where the native splash leaves it (Android's
+   psarema_bg, the fish small in the middle), swims off and goes down far out; the horizon opens from where it was; an angler on a rock
+   casts there; the line unrolls behind the lure; the lure lands with a splash and rings and the fish turns under them; the name comes up
+   with the fish as its mark. If the app is not ready yet, the last frame breathes: the lure bobs, a ring now and then, the sea drifts.
+   Every moving part is its own element moved by rotate/translate/scale/opacity, so the compositor keeps it smooth while the main thread
+   decodes the grids. The base styles are the last frame (reduced motion: app.css stops every animation). In the Android app (.wait) the
+   story holds its first frame until the native splash has gone (the script in index.html). */
+.splash { --sp-bg: #1b1b1b; --sp-lure: #ff8a3d; --sp-w: min(122vw, 720px, (100vh - 180px) * 4 / 3); position: fixed; inset: 0; z-index: 4000;
+  overflow: hidden; color: #f4f4f4 }
+.splash::before { content: ""; position: absolute; inset: 0; background: var(--sp-bg) } /* its own layer, to fade at the reveal */
+.splash.wait, .splash.wait *, .splash.wait *::before, .splash.wait *::after { animation-play-state: paused !important }
+.sp-scene { position: absolute; left: calc(50% - var(--sp-w) / 2); top: calc(50% - var(--sp-w) * .375); width: var(--sp-w); aspect-ratio: 4 / 3 } /* its middle, the horizon's, is the screen's: where the native splash's fish is */
+.sp-scene svg, .sp-scene div { position: absolute; inset: 0; width: 100%; height: 100% }
+.sp-scene { fill: none; stroke: #f4f4f4; stroke-linecap: round; stroke-linejoin: round } .sp-scene svg { overflow: visible }
+/* every moving part is a div: Chrome runs no animation of an <svg> element itself on the compositor */
+.ss-sea path, .ss-waves path, .ss-win path, .ss-slack path, .ss-ring ellipse, .ss-edge { vector-effect: non-scaling-stroke }
+/* the fish: the native splash's (scripts/icon/make-icons.mjs: R 7% of the long side, cover-cropped to the phone), off to the lure's spot */
+.sp-scene .ss-fish > div { --s: clamp(56px, 18.5vmin, 120px); left: calc(50% - var(--s) * .5076); top: calc(50% - var(--s) * .4875); width: var(--s); height: var(--s);
+  fill: #f4f4f4; stroke: none; transform-origin: 50.76% 48.75%; opacity: 0; animation: ss-fish 2.5s both }
+.ss-fish { translate: 30.25% 6.67%; animation: ss-swim 2.5s both }
+@keyframes ss-swim { 0%, 6% { translate: 0 0; animation-timing-function: cubic-bezier(.5, 0, .2, 1) } 31.2%, 100% { translate: 30.25% 6.67% } }
+@keyframes ss-fish { 0%, 6% { opacity: 1; scale: 1; rotate: 0deg; animation-timing-function: cubic-bezier(.5, 0, .2, 1) } 20% { opacity: 1 }
+  31.2% { opacity: 0; scale: .26; rotate: 7deg } 77.2% { opacity: 0; scale: .26; rotate: 0deg } 81.2% { opacity: .45; scale: .26 }
+  83.6% { scale: .26 .16; animation-timing-function: ease-in-out } 91.6% { opacity: .45; scale: -.26 .26 } 100% { opacity: 0; scale: -.26 .26 } }
+/* the sea: the horizon opens from the middle as the fish leaves, the swell comes up, the rock and the angler */
+.ss-sea { stroke-opacity: .28; stroke-width: 1px; animation: ss-open 1.1s cubic-bezier(.3, 0, .2, 1) .2s backwards }
+.ss-waves { stroke-opacity: .11; stroke-width: 1px; animation: sp-show 1.1s ease-out .5s backwards, ss-drift 6s ease-in-out 2.5s 6 alternate }
+.sp-scene .ss-rock { fill: #171717; stroke: none; animation: sp-show .4s ease-out .3s backwards } .ss-rock :is(.ss-edge, .ss-foam) { stroke: #f4f4f4; fill: none } .ss-edge { stroke-opacity: .5; stroke-width: 1px } .ss-foam { stroke-opacity: .22; stroke-width: .9 }
+.sp-scene :is(.ss-fig, .ss-lim, .ss-stick circle) { fill: #ececec; stroke: none }
+.sp-scene :is(.ss-fig path[stroke-width], .ss-lim path) { stroke: #ececec; fill: none }
+.ss-body { transform-origin: 20.5% 78%; rotate: 3deg; animation: sp-show .35s ease-out .3s backwards, ss-lean 1.1s 0.35s backwards }
+.ss-arm { transform-origin: 21% 49%; animation: ss-arm 1.1s 0.35s backwards }
+.ss-fore { transform-origin: 25.7% 51.28%; animation: ss-fore 1.1s 0.35s backwards }
+.ss-rod { transform-origin: 29.78% 48.74%; animation: ss-wrist 1.1s 0.35s backwards }
+.ss-r2 { transform-origin: 37.95% 38.93%; animation: ss-bend2 1.1s 0.35s backwards } .ss-r3 { transform-origin: 45.01% 30.45%; animation: ss-bend3 1.1s 0.35s backwards } .ss-r4 { transform-origin: 49.84% 24.66%; animation: ss-bend4 1.1s 0.35s backwards }
+.sp-scene .ss-bait { fill: var(--sp-lure); opacity: 0; animation: sp-on 1.17s step-end }
+/* the cast: rest (rod forward, low) > back cast (the arm leads, the rod follows over the shoulder) > a beat > forward (arm, elbow, then the
+   wrist snaps through) > the stop, the lure away; the rod's tip lags each stroke and springs past straight at the stop */
+@keyframes ss-lean { 0% { rotate: 0deg } 7.27% { rotate: 0deg; animation-timing-function: ease-in-out } 41.82% { rotate: -4deg } 50% { rotate: -4deg; animation-timing-function: cubic-bezier(.45, 0, .35, 1) } 74.55% { rotate: 3deg } 100% { rotate: 3deg } }
+@keyframes ss-arm { 0% { rotate: 50deg } 7.27% { rotate: 50deg; animation-timing-function: cubic-bezier(.45, 0, .35, 1) } 39.09% { rotate: -71deg } 48.18% { rotate: -71deg; animation-timing-function: cubic-bezier(.55, 0, .35, 1) } 69.09% { rotate: -6deg; animation-timing-function: ease-out } 74.55% { rotate: 0deg } 100% { rotate: 0deg } }
+@keyframes ss-fore { 0% { rotate: -40deg } 9.09% { rotate: -40deg; animation-timing-function: cubic-bezier(.45, 0, .35, 1) } 40.91% { rotate: 6deg } 50% { rotate: 6deg; animation-timing-function: cubic-bezier(.55, 0, .35, 1) } 70.91% { rotate: -4deg; animation-timing-function: ease-out } 74.55% { rotate: 0deg } 100% { rotate: 0deg } }
+@keyframes ss-wrist { 0% { rotate: 10deg; animation-timing-function: ease-in-out } 9.09% { rotate: 13deg; animation-timing-function: cubic-bezier(.45, 0, .35, 1) } 42.73% { rotate: -5deg; animation-timing-function: ease-in-out } 52.73% { rotate: -9deg; animation-timing-function: cubic-bezier(.6, 0, .4, 1) } 65.45% { rotate: -14deg; animation-timing-function: cubic-bezier(.7, 0, .2, 1) } 74.55% { rotate: 0deg } 100% { rotate: 0deg } }
+@keyframes ss-bend2 { 0% { rotate: 0deg } 7.27% { rotate: 0deg; animation-timing-function: ease-in-out } 25.45% { rotate: 1.5deg; animation-timing-function: ease-in-out } 43.64% { rotate: -2.1deg; animation-timing-function: ease-in-out } 52.73% { rotate: -3deg; animation-timing-function: ease-in } 66.36% { rotate: -6.6deg; animation-timing-function: cubic-bezier(.3, 0, .6, 1) } 74.55% { rotate: 0deg; animation-timing-function: ease-out } 78.18% { rotate: 1.5deg; animation-timing-function: ease-in-out } 83.64% { rotate: -0.75deg; animation-timing-function: ease-in-out } 90% { rotate: 0.3deg; animation-timing-function: ease-in-out } 97.27% { rotate: 0deg } 100% { rotate: 0deg } }
+@keyframes ss-bend3 { 0% { rotate: 0deg } 7.27% { rotate: 0deg; animation-timing-function: ease-in-out } 25.45% { rotate: 1.75deg; animation-timing-function: ease-in-out } 43.64% { rotate: -2.45deg; animation-timing-function: ease-in-out } 52.73% { rotate: -3.5deg; animation-timing-function: ease-in } 66.36% { rotate: -7.7deg; animation-timing-function: cubic-bezier(.3, 0, .6, 1) } 74.55% { rotate: 0deg; animation-timing-function: ease-out } 78.18% { rotate: 1.75deg; animation-timing-function: ease-in-out } 83.64% { rotate: -0.88deg; animation-timing-function: ease-in-out } 90% { rotate: 0.35deg; animation-timing-function: ease-in-out } 97.27% { rotate: 0deg } 100% { rotate: 0deg } }
+@keyframes ss-bend4 { 0% { rotate: 0deg } 7.27% { rotate: 0deg; animation-timing-function: ease-in-out } 25.45% { rotate: 2deg; animation-timing-function: ease-in-out } 43.64% { rotate: -2.8deg; animation-timing-function: ease-in-out } 52.73% { rotate: -4deg; animation-timing-function: ease-in } 66.36% { rotate: -8.8deg; animation-timing-function: cubic-bezier(.3, 0, .6, 1) } 74.55% { rotate: 0deg; animation-timing-function: ease-out } 78.18% { rotate: 2deg; animation-timing-function: ease-in-out } 83.64% { rotate: -1deg; animation-timing-function: ease-in-out } 90% { rotate: 0.4deg; animation-timing-function: ease-in-out } 97.27% { rotate: 0deg } 100% { rotate: 0deg } }
+/* the lure: x eases out (drag), y goes up and comes down; the line is its path, uncovered by a window that moves with x */
+.ss-lx { animation: ss-lx 0.7s cubic-bezier(0.18,0.5,0.42,1) 1.17s backwards }
+.ss-ly { animation: ss-ly 0.7s cubic-bezier(0.42,-1.05,0.72,0.62) 1.17s backwards }
+.sp-scene .ss-lure { fill: var(--sp-lure); stroke: none; animation: sp-off 1.17s step-end, ss-bob 2.4s ease-in-out 2.5s 10 }
+.sp-scene .ss-win { left: calc(55.78% - 100.5%); top: -50%; height: 200%; overflow: hidden; opacity: 0; translate: 26.72% 0;
+  animation: ss-in 0.7s cubic-bezier(0.18,0.5,0.42,1) 1.17s backwards, ss-gone 2.07s linear }
+.sp-scene .ss-win > div { left: calc(100.5% - 55.78%); top: 25%; height: 50%; translate: -26.72% 0; animation: ss-in 0.7s cubic-bezier(0.18,0.5,0.42,1) 1.17s backwards }
+.ss-win path, .ss-slack path { stroke-width: .9px; stroke-opacity: .8 }
+.ss-slack { animation: ss-late 2.07s linear }
+/* the landing: a splash, rings out on the water; then a ring now and then while the app gets ready (the lure bobs) */
+.ss-drops { stroke-width: 1px; stroke-opacity: .8; opacity: 0; transform-origin: 82.5% 54%; animation: ss-drops .45s ease-out 1.87s }
+.ss-ring { stroke-width: 1px; opacity: .35; transform-origin: 82.5% 54.33%; animation: ss-ring 1.3s cubic-bezier(.2, .6, .35, 1) 1.87s both }
+.ss-ring + .ss-ring { opacity: 0; animation-delay: 2.07s } .ss-ring + .ss-ring + .ss-ring { animation: ss-ring 2.4s cubic-bezier(.2, .6, .35, 1) 2.42s 10 both }
+/* the name, with the fish as its mark, rises out of its line as the lure lands; the line under it says what the app is for */
+.sp-word { position: absolute; left: 0; right: 0; bottom: calc(50% + var(--sp-w) * .375 + 14px); margin: 0; display: grid; justify-items: center; text-align: center }
+.sp-word b { display: block; overflow: hidden; padding: .06em .12em .1em; font: 700 clamp(24px, min(7.6vw, 7vh), 40px)/1.1 var(--sans); letter-spacing: -.03em }
+.sp-word i { display: flex; align-items: center; gap: .3em; font-style: normal; animation: sp-up .7s var(--ease) 1.82s backwards }
+.sp-word svg { width: 1.42em; height: .87em; fill: currentColor }
+.sp-word span { display: block; margin-top: 4px; padding: 0 16px; font: 450 13px/1.35 var(--sans); color: rgb(255 255 255 / .52); animation: sp-show .5s ease-out 2.05s backwards }
+.splash[lang="el"] [lang="en"], .splash:not([lang="el"]) [lang="el"] { display: none }
+@keyframes ss-lx { from { translate: -26.72% 0 } }
+@keyframes ss-ly { from { translate: 0 -31.42% } }
+@keyframes ss-in { from { translate: 0 0 } }
+@keyframes ss-gone { 0%, 90.34% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes ss-late { 0%, 90.34% { opacity: 0 } 100% { opacity: 1 } }
+@keyframes ss-ring { 0% { scale: .12; opacity: 0 } 2% { opacity: .75 } 100% { scale: 1.5; opacity: 0 } }
+@keyframes ss-drops { from { opacity: 1; scale: .4 } 60% { opacity: .8 } to { opacity: 0; scale: 1.25; translate: 0 -1.5% } }
+@keyframes ss-bob { 50% { translate: 0 .5% } }
+@keyframes ss-drift { to { translate: 1.5% 0 } }
+@keyframes ss-open { from { scale: 0 1 } }
+@keyframes sp-up { from { translate: 0 105% } }
+@keyframes sp-on { from, to { opacity: 1 } }
+@keyframes sp-off { from, to { opacity: 0 } }
+@keyframes sp-fade { from { opacity: 1 } to { opacity: 0 } }
+
+/* ---------- Reveal (js/app.js reveal: the story is over and the first heat map is drawn) ----------
+   The splash fades; under it the map settles from a slight zoom, the heat blooms in, then the floating pieces slide into place from their
+   own edge, one after another: ~0.9 s in all. A forecast from this device's cache (a repeat visit) gets .quick: ~0.4 s.
+   The rules hold only while the splash is in the page; it is removed when they end (their end state is each piece's own). */
+.splash.out { pointer-events: none }
+.splash.out::before { animation: sp-fade .45s ease-out both }
+.splash.out > * { animation: sp-fade .3s ease-out both }
+.splash.quick::before { animation-duration: .3s } .splash.quick > * { animation-duration: .2s }
+#splash.out ~ .app { --sp-t: .5s; --sp-k: 1 }
+#splash.quick ~ .app { --sp-t: .3s; --sp-k: .25 }
+#splash.out ~ .app #map { animation: sp-settle calc(var(--sp-t) * 1.8) var(--ease) both }
+#splash.out ~ .app .leaflet-heat-pane { animation: sp-show var(--sp-t) ease-out calc(var(--sp-k) * .15s) both }
+#splash.out ~ .app :is(.leaflet-zones-pane, .leaflet-spots-pane, .leaflet-control-container) { animation: sp-show var(--sp-t) ease-out calc(var(--sp-k) * .38s) both }
+#splash.out ~ .app .rail { animation: sp-from-left var(--sp-t) var(--ease) calc(var(--sp-k) * .1s) both }
+#splash.out ~ .app .hud > .strip { animation: sp-from-top var(--sp-t) var(--ease) calc(var(--sp-k) * .18s) both }
+#splash.out ~ .app .layers-wrap { animation: sp-from-top var(--sp-t) var(--ease) calc(var(--sp-k) * .24s) both }
+#splash.out ~ .app .banner { animation: sp-from-top var(--sp-t) var(--ease) calc(var(--sp-k) * .34s) both }
+#splash.out ~ .app > .timeline { animation: sp-from-bottom var(--sp-t) var(--ease) calc(var(--sp-k) * .2s) both }
+#splash.out ~ .app .map-legend { animation: sp-from-bottom var(--sp-t) var(--ease) calc(var(--sp-k) * .3s) both }
+#splash.out ~ #guide > .guide-card { animation: sp-from-bottom var(--sp-t) var(--ease) calc(var(--sp-k) * .4s) both } /* the first-run tour */
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) { /* phones: the fish and the tools drop in, the sheet and the tab bar rise */
+  #splash.out ~ .app .mb-fish { animation: sp-from-top var(--sp-t) var(--ease) calc(var(--sp-k) * .12s) both }
+  #splash.out ~ .app .mb-tools { animation: sp-from-top var(--sp-t) var(--ease) calc(var(--sp-k) * .18s) both }
+  #splash.out ~ .app .map-legend { animation-name: sp-from-top; animation-delay: calc(var(--sp-k) * .26s) } /* it sits under the fish here */
+  #splash.out ~ .app .m-nav { animation: sp-rise-full var(--sp-t) var(--ease) both }
+  #splash.out ~ .app .m-sheet { animation: sp-rise calc(var(--sp-t) * 1.25) var(--ease) calc(var(--sp-k) * .06s) both }
+}
+@keyframes sp-show { from { opacity: 0 } }
+@keyframes sp-settle { from { scale: 1.06 } }
+@keyframes sp-from-left { from { opacity: 0; translate: -18px 0 } }
+@keyframes sp-from-top { from { opacity: 0; translate: 0 -12px } }
+@keyframes sp-from-bottom { from { opacity: 0; translate: 0 14px } }
+@keyframes sp-rise { from { translate: 0 120px } }
+@keyframes sp-rise-full { from { translate: 0 100% } }
+
+/* ---------- Skeletons: the lists' own rows (spot.css .top, conditions.css .area) with grey bars for the words, until the forecast fills them ----------
+   They breathe a few times, top row first, then rest; with the forecast failed they stay still and dim (the status line says why and retries). */
+.sk-bar { display: block; height: 10px; border-radius: var(--r-sm); background: rgb(255 255 255 / .075) }
+.sk-bar + .sk-bar { margin-top: 7px }
+.sk-bar.sm { height: 8px; background: rgb(255 255 255 / .05) }
+:is(.sk-row, .sk > li) { animation: sk-breathe 1.6s ease-in-out calc(var(--i, 0) * .12s) 6 }
+.app.has-error :is(.sk-row, .sk > li, .sk-cap) { animation: none; opacity: .55 }
+@keyframes sk-breathe { 50% { opacity: .35 } }
+/* the caption over them: waiting (or, in When, the lone hint while conditions.js works the areas out) */
+.sk-cap, #areas-body > .hint:only-child { margin: 0; padding: 0 0 8px }
+.where:not(:has(#top > .sk-row)) > .sk-cap { display: none }
+/* Spots: the mini-map's square · name, details, time · an empty dial over the day's line */
+.sk-row .row { cursor: default }
+.sk-mm { background: rgb(255 255 255 / .05) }
+.sk-row .t-side .sk-bar { width: 44px; margin: 0 }
+/* When: the area table's rows (index.html: after #areas-body, shown while it has only its caption: waiting, or conditions.js working the areas out) */
+#areas-fold > .sk { display: none }
+#areas-fold > #areas-body:has(> .hint:only-child) + .sk { display: flex }
+.sk .a-day .sk-bar:first-child { width: 30px; height: 14px }
+.sk .a-day .sk-bar.sm { width: 46px; margin-top: 6px }
+.sk .a-name .sk-bar { height: 12px; margin-block: 3px }

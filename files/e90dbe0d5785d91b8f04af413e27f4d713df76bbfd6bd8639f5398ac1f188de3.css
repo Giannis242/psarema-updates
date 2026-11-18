@@ -1,0 +1,119 @@
+/* Bottom timeline: a dark instrument strip. Play and the hour on the left; the best chance anywhere, hour by hour, as a curve (map.js
+   drawTimeline: coloured by the chance, night darker, the past hatched and grey, now dashed, the hour on the map a white line with a knob);
+   then the hour's tags, Now and ★. Drag or tap the curve, or step it with the arrow keys (the native slider over it). */
+.timeline { display: grid; grid-template-columns: var(--h-lg) auto minmax(0, 1fr) auto; grid-template-areas: "play when main btns"; gap: 16px; align-items: center;
+  padding: 7px max(16px, env(safe-area-inset-right, 0px)) 5px max(16px, env(safe-area-inset-left, 0px)); background: var(--bg); border-top: 1px solid var(--line-2); box-shadow: var(--edge) }
+.tl-now { display: contents } /* its parts are columns of the strip; phones: one row over the chart */
+.play { grid-area: play; width: var(--h-lg); height: var(--h-lg); display: grid; place-items: center; border-radius: var(--r); background: var(--raise); border: 1px solid var(--line-2); box-shadow: var(--edge) }
+.play:hover { background: var(--raise-2) }
+.play:active { background: var(--raise-3) }
+.play .i { width: 15px; height: 15px }
+
+.tl-main { grid-area: main; min-width: 0; position: relative }
+.tl-track { min-height: 104px; padding-bottom: 14px } /* round 17 U: the day cards and the chart, then room for its hours: the strip keeps its height while the forecast loads */
+.tl-cut { flex: none; align-self: center; font: 500 11px var(--sans); color: var(--warn); white-space: nowrap }
+
+/* The chart: an SVG in px (map.js), the playhead over it moved by transform only, the hours under it */
+.tl-chart { position: relative; border-radius: var(--r-sm); background: rgb(255 255 255 / .03) }
+.tl-chart svg { display: block; overflow: visible }
+.tl-night { fill: rgb(0 0 0 / .34) }
+.tl-nowl { stroke: rgb(255 255 255 / .75); stroke-width: 1; stroke-dasharray: 2 2 }
+.tl-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round }
+.tl-ph { position: absolute; top: -2px; bottom: -2px; left: -1px; width: 2px; border-radius: 1px; background: #fff; pointer-events: none; transition: transform .12s var(--ease) }
+.tl-ph b { position: absolute; top: -3px; left: -4px; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2.5px var(--bg), 0 1px 5px rgb(0 0 0 / .6); transition: transform .12s var(--ease) } /* centred on the curve: translateY(y) */
+.tl-chart em { position: absolute; top: 100%; transform: translateX(-50%); padding-top: 3px; font: 500 11px/1 var(--sans); font-style: normal; color: var(--dim); pointer-events: none }
+/* the native slider stays on top for dragging and keyboard use; a hairline thumb keeps its value under the pointer. Its height = tlH() in map.js */
+#hour { position: absolute; left: 0; right: 0; top: 16px; width: 100%; height: 36px; margin: 0; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none }
+#hour::-webkit-slider-thumb { -webkit-appearance: none; width: 2px; height: 36px }
+.tl-main:has(#hour:focus-visible) .tl-chart { outline: 2px solid var(--focus); outline-offset: 3px } /* the keyboard is on the hidden slider: ring the chart it moves */
+
+/* The hour, big, with its day and tags beside it: a fixed width (tabular digits, a fixed tag box), so changing the hour never resizes the chart */
+.tl-when { grid-area: when; display: flex; align-items: flex-start; gap: 12px; min-width: 0 }
+.tl-when b { font: 650 26px/1 var(--sans); font-variant-numeric: tabular-nums; letter-spacing: -.02em } /* the font shorthand resets the digits: a steady width keeps the chart from being rebuilt each hour */
+.tl-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+#when-day { font-size: 11.5px; line-height: 1; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+/* a fixed box: up to three tags (Past · dusk · minor) on one line, two lines in Greek, which runs longer (one 190 px line cut its moon tag) */
+#when-tags { width: 150px; height: 40px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 2px 4px; overflow: hidden }
+.tag { display: inline-flex; align-items: center; gap: 4px; font: 600 11px var(--sans); padding: 2px 8px; border-radius: var(--r-sm); background: var(--raise); color: var(--muted) }
+.tag .i { width: 12px; height: 12px }
+.tag.major { color: var(--accent-ink); background: var(--accent) }
+.tag.minor { color: var(--ink); background: var(--raise-2) }
+.tag.past { color: var(--dim); background: none; box-shadow: inset 0 0 0 1px var(--line-2) }
+.tl-btns { grid-area: btns; display: flex; gap: 6px }
+.tl-btns .btn { min-height: var(--h-lg); padding: 0 12px } /* as tall as the play button: one row of 36 px controls */
+
+/* One day at a time (phones, and wide screens with under 2.5 px an hour): a strip of day chips that scrolls sideways (map.js centres the
+   selected day, then the snap lines a whole chip up with the left edge, so none starts cut in half; past days hatched), then that day's chart.
+   Each chip is 44 px tall to tap and drawn 32 px (::before), so the strip reads compact. The slider covers the chart only. */
+.tl-dtabs { position: relative; display: flex; gap: 4px; padding: 0 20px 0 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 0; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 20px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 20px), transparent) } /* the fade says there are more days, as app.css .scroll-row */
+.tl-dtabs::-webkit-scrollbar { display: none }
+.tl-dtabs button { position: relative; z-index: 0; flex: none; min-height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 9px; color: var(--muted); font: 600 12.5px/1 var(--sans); white-space: nowrap; scroll-snap-align: start }
+.tl-dtabs button::before { content: ""; position: absolute; z-index: -1; inset: 6px 0; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.tl-dtabs button:hover { color: var(--ink) }
+.tl-dtabs button .pill { font-size: 11.5px; line-height: 16px; min-width: 22px; padding: 0 4px }
+.tl-dtabs button.past::before { background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / .06) 0 2px, transparent 2px 6px) }
+.tl-dtabs button.past .pill { opacity: .55 }
+.tl-dtabs button.today { color: var(--ink) }
+.tl-dtabs button[aria-pressed="true"] { color: var(--accent-ink) } /* like the selected Boat/Shore/Spear */
+.tl-dtabs button[aria-pressed="true"]::before { background: var(--accent); box-shadow: none }
+.tl-dtabs .tl-cut { padding: 0 4px }
+.tl-main:has(.one-day) #hour { top: auto; bottom: 14px } /* round 17 U: on the chart, at the track's foot (the cards above it vary in height) */
+
+/* round 17 U: the day cards (map.js drawTimeline). Each: the name (★ the best day), the best chance in the map's colours and the gap to the
+   day picked; its best window and a word only where true (Best day, Calm, Windy, Rough); the sea then, a wind arrow, Beaufort and waves.
+   The day picked: lit grey with a white ring (its curve is under the strip). #tl: over the chips' older rules here and in css/a11y.css. */
+#tl .tl-dtabs { margin: 0 0 4px }
+#tl .tl-dtabs button { flex: 1 0 auto; min-width: 108px; min-height: 0; display: grid; align-content: center; gap: 2px; padding: 5px 9px; color: var(--muted); font: 500 11px/13px var(--sans); font-variant-numeric: tabular-nums }
+#tl .tl-dtabs button::before { inset: 0 }
+#tl .tl-dtabs button[aria-pressed="true"] { color: var(--muted) }
+#tl .tl-dtabs button[aria-pressed="true"]::before { background: var(--raise-3); box-shadow: inset 0 0 0 1.5px var(--accent) }
+.tl-d1, .tl-d2, .tl-d3 { display: flex; align-items: center; gap: 5px; min-width: 0 }
+.tl-d1 b { font: 650 12px/15px var(--sans); color: var(--ink) }
+.tl-d1 .pill { margin-left: auto; font-size: 11px; line-height: 15px; min-width: 24px; padding: 0 4px }
+.tl-df { min-width: 22px; font-weight: 600; text-align: right; color: var(--muted) }
+.tl-df:empty { display: none }
+.tl-star { font-style: normal; margin-right: 3px; color: var(--accent) }
+.tl-dv { margin-left: auto; font-style: normal; font-weight: 650 }
+.tl-dv.best { color: var(--ink) }
+.tl-dv.calm { color: var(--good) }
+.tl-dv.windy { color: var(--warn) }
+.tl-dv.rough { color: var(--bad) }
+.tl-d3 { gap: 3px }
+.tl-d3 svg { flex: none; color: var(--ink) }
+#tl .tl-dtabs button.past .tl-d1 b { color: var(--muted) }
+.tl-same { margin: 0 0 4px; font: 500 11px/14px var(--sans); color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis } /* T's line, once, when no day stands out */
+
+/* Phones: the timeline in the sheet's head (js/mobile.js moves it there; the sheet itself is css/mobile.css). One row: the hour, Now and ★
+   (round 17 G: no play button on a phone: a finger scrubs the day, a flick turns it; wide screens keep it); under it the day chips and the chart. */
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  /* No forecast yet. Loading: the timeline keeps its room ("--:--" over plain placeholder chips and chart) and the readings theirs, so the
+     sheet does not grow when the forecast comes in and the island is fitted once, not twice. An error (Retry, offline): no empty chart, no Now. */
+  .m-head .timeline:has(#hour:disabled) .tl-btns { visibility: hidden } /* Now and ★ would step through no forecast */
+  .m-head #tl:empty { height: 83px; border-radius: var(--r-sm); background: linear-gradient(var(--raise) 0 46px, transparent 0 50px, rgb(255 255 255 / .03) 0 83px, transparent 0) } /* round 17 U: the day cards (46 px), the chart (36) and its hours (15); 20 px short of the drawn strip, as before */
+  .app.has-error .m-sheet .m-head .timeline:has(#hour:disabled) { display: none !important }
+  .m-head .timeline { grid-template-columns: minmax(0, 1fr); grid-template-areas: "now" "main"; gap: 2px 10px; padding: 6px 0 0; background: none; border: 0; box-shadow: none }
+  .m-head .play { display: none }
+  .tl-now { grid-area: now; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; min-width: 0 } /* short of room (a narrow phone at 130% text, Greek): Now and ★ drop under the hour rather than cut it */
+  .tl-when { flex-direction: row; align-items: baseline; gap: 7px; overflow: hidden } /* "16:00 Tue 10 Nov" on one line */
+  .tl-when b { font-size: 22px }
+  #when-day { font-size: 12px }
+  .tl-btns { flex: none; margin-left: auto }
+  #when-tags { display: none } /* night shows in the chart; moon periods and day weather are in the spot details */
+  .tl-btns .btn { min-height: 36px; padding: 0 11px; font-size: 13px }
+  .tl-dtabs button { min-height: 34px }
+  .tl-dtabs button::before { inset: 3px 0 }
+  #best-btn { background: var(--raise-2); border-color: var(--line-2); color: var(--ink); box-shadow: var(--edge) } /* the best time is a shortcut, not the main action: no glaring white */
+  .m-head .tl-dtabs { touch-action: pan-x } /* the days scroll sideways; up and down drags the sheet */
+  .tl-track { min-height: 52px; padding-bottom: 15px } /* round 17 U: a spot open hides the cards (css/mobile.css): no room kept for them */
+  .tl-chart em { padding-top: 2px; font-size: 12px }
+  #hour, .tl-main:has(.one-day) #hour { height: 36px }
+  .tl-main:has(.one-day) #hour { bottom: 15px } /* round 17 U */
+  #tl .tl-dtabs { margin: 0 0 4px } /* round 17 U: the cards, 46 px drawn and tapped, sized to their words */
+  #tl .tl-dtabs button { flex: none; min-width: 0; min-height: 44px; gap: 1px; padding: 3px 7px; line-height: 12px }
+  .tl-d1, .tl-d2 { gap: 4px }
+  .tl-d1 b, .tl-d1 .pill { line-height: 14px }
+  #tl .tl-dtabs button::before { inset: 0 }
+  .m-sheet:is([data-spot=card], [data-spot=detail]) .m-head .tl-same { display: none } /* with the cards: the chart at the top (css/mobile.css) */
+  #hour::-webkit-slider-thumb { height: 36px }
+}

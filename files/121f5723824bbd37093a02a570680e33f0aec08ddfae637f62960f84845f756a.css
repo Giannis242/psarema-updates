@@ -1,0 +1,93 @@
+/* Psarema: the top-level pages and the tab bar (js/nav.js) - shell agent.
+   #ps-tabs, the five places (Map · Forecast · + · Feed · Me): white = where you are, its icon on a soft grey pill; the + (log a catch) a white disc.
+   Wide screens: a row under the rail's head, icon over a short name; a page fills the rail under it (.rail.paged).
+   Phones: the tab bar at the screen's foot (in #m-nav), the + raised out of it; pages are full-screen layers over the map and the sheet,
+   under the tab bar. A tab page (.pg.big) opens on a large title (the body's ::before, so a page's own innerHTML never removes it) with its
+   actions on the same line; scrolled past it (.pg.scrolled) a compact bar fades in. A pushed page: a compact bar with back, title, actions. */
+.ps-tabs { display: grid; grid-template-columns: repeat(2, minmax(min-content, 1fr)) auto repeat(2, minmax(min-content, 1fr)); /* round 11: the + its disc, the names the rest (Πρόγνωση was cut in the rail) */ align-items: center; gap: 2px; padding: 0 8px 8px }
+.ps-tabs button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: 46px; padding: 5px 2px 4px;
+  border-radius: var(--r-sm); font: 600 var(--fs-xs)/1.15 var(--sans); color: var(--muted) }
+.ps-tabs button > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ps-tabs button > span:first-child { display: grid; place-items: center }
+.ps-tabs .i { width: 19px; height: 19px }
+.ps-tabs button[aria-current] { color: var(--ink); background: var(--raise-2); box-shadow: var(--edge) }
+.ps-tabs .nav-plus { justify-self: center; width: 40px; min-height: 0; height: 40px; padding: 0; border-radius: var(--r-full); background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 1px 0 rgb(255 255 255 / .6) inset, 0 2px 10px rgb(0 0 0 / .35) }
+.ps-tabs .nav-plus .i { width: 22px; height: 22px; stroke-width: 2.25 }
+@media (hover: hover) {
+  .ps-tabs button:not(.nav-plus):hover { color: var(--ink); background: var(--raise) }
+  .ps-tabs button[aria-current]:hover { background: var(--raise-2) }
+  .ps-tabs .nav-plus:hover { background: #fff }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-tabs button { transition: color var(--dur), background-color var(--dur), scale .34s var(--spring, var(--ease)) }
+  .ps-tabs button:active { scale: .92; transition-duration: var(--dur), var(--dur), .07s }
+  .ps-tabs button > span:first-child { transition: background-color var(--dur), scale .34s var(--spring, var(--ease)) }
+}
+
+/* The phone top bar's search slot (#m-search): its stand-in, a floating field that opens the fish picker, until js/search.js puts the real one in */
+.m-search { min-width: 0 }
+.m-search:has(> :not(.srch-ph)) > .srch-ph { display: none }
+.srch-ph { width: 100%; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 14px; font: 500 14px var(--sans); color: var(--dim); text-align: left; white-space: nowrap; overflow: hidden }
+.srch-ph .i { width: 18px; height: 18px; color: var(--muted) }
+
+/* Wide screens: the page fills the rail (wider, full height) under the row; the rail's own body steps aside until the map is back */
+.rail.paged { width: 400px; height: calc(100% - 20px) }
+.rail.paged > :is(.status, .rail-body, .rail-tools), .rail.collapsed > .pages { display: none }
+.rail.paged ~ :is(.hud, .banner, .map-legend) { left: 422px } /* app.css: 342 px, beside the narrower rail */
+.pages { position: relative; flex: 1; min-height: 0; overflow: hidden; border-top: 1px solid var(--line) }
+.pg { --pg-x: 14px; position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--page) }
+.pg-head { position: relative; z-index: 3; flex: none; display: flex; align-items: center; gap: 2px; min-height: 48px; padding: 4px 6px 4px var(--pg-x); background: var(--page);
+  border-bottom: 1px solid var(--line); transition: background-color var(--dur), border-color var(--dur) }
+.pg-back { margin-left: -8px; color: var(--ink) }
+.pg-back .i { width: 22px; height: 22px }
+.pg-title { flex: 1; min-width: 0; font: 650 var(--fs-lg)/1.2 var(--sans); letter-spacing: -.015em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity var(--dur), translate var(--dur) }
+.pg-back:not([hidden]) + .pg-title { margin-left: 2px }
+.pg-acts { flex: none; display: flex; align-items: center; gap: 2px }
+.pg-acts .icon-btn { width: 40px; height: 40px; color: var(--ink) }
+.pg-acts .icon-btn .i { width: 20px; height: 20px }
+.pg-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px var(--pg-x); scrollbar-width: thin; scrollbar-color: var(--line-2) transparent }
+/* a tab page: the bar lies over the body, clear until scrolled; the large title is the body's first line, its actions beside it */
+.pg.big > .pg-head { position: absolute; top: 0; left: 0; right: 0; background: transparent; border-bottom-color: transparent; pointer-events: none }
+.pg.big > .pg-head > * { pointer-events: auto }
+.pg.big > .pg-head .pg-title { opacity: 0; translate: 0 6px }
+.pg.big.scrolled > .pg-head { background: var(--page); border-bottom-color: var(--line) }
+.pg.big.scrolled > .pg-head .pg-title { opacity: 1; translate: none }
+.pg.big > .pg-body { padding-top: 0 }
+.pg.big > .pg-body::before { content: attr(data-title); display: block; box-sizing: content-box; height: 48px; margin-bottom: 2px; padding-right: var(--pg-acts-w, 0px);
+  font: 700 var(--fs-title)/48px var(--sans); letter-spacing: -.03em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .12s }
+.pg.big.scrolled > .pg-body::before { opacity: 0 }
+.ui-bleed { margin-inline: calc(-1 * var(--pg-x, 14px)) }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  :root { --m-nav: calc(56px + var(--sb)) } /* the tab bar, with the gesture bar under it (css/mobile.css: 50 px before) */
+  /* the tab bar: icon over name; the one showing white, its icon on a grey pill; the + a white disc raised out of the bar, ringed in the bar's grey */
+  .m-nav { background: var(--panel); border-top: 1px solid var(--line-2); box-shadow: 0 -6px 18px rgb(0 0 0 / .28) }
+  .m-nav .ps-tabs { height: 100%; padding: 0 6px; gap: 0; grid-template-columns: repeat(2, minmax(min-content, 1fr)) 56px repeat(2, minmax(min-content, 1fr)) } /* round 11: the + needs its disc only, the names the rest; a long one (Πρόγνωση at 130% text) takes room from a short one */
+  .m-nav .ps-tabs button { gap: 3px; min-height: 52px; padding: 0 2px; background: none; box-shadow: none; font: 600 10.5px/1.15 var(--sans); letter-spacing: 0; color: var(--dim) }
+  .m-nav .ps-tabs button > span:first-child { width: 52px; height: 28px; border-radius: var(--r) }
+  .m-nav .ps-tabs .i { width: 21px; height: 21px }
+  .m-nav .ps-tabs button[aria-current] { color: var(--ink) }
+  .m-nav .ps-tabs button[aria-current] > span:first-child { background: var(--raise-2); box-shadow: var(--edge) }
+  .m-nav .ps-tabs button[aria-current] .i { stroke-width: 2 }
+  .m-nav .ps-tabs .nav-plus { width: 50px; height: 50px; translate: 0 -12px; border-radius: var(--r-full); background: var(--accent); color: var(--accent-ink);
+    box-shadow: 0 1px 0 rgb(255 255 255 / .7) inset, 0 0 0 5px var(--panel), 0 -1px 0 5.5px var(--line-2), 0 8px 18px rgb(0 0 0 / .45) }
+  .m-nav .ps-tabs .nav-plus > span:first-child { width: auto; height: auto; background: none }
+  .m-nav .ps-tabs .nav-plus .i { width: 24px; height: 24px; stroke-width: 2.4 }
+
+  /* pages: over the map, the top bar and the sheet (825–850), under the tab bar (870); a panel opened from a page (catches, calendar…) lies over it */
+  .pages { position: absolute; z-index: 860; inset: 0 0 var(--m-nav); border: 0 }
+  .stage.paged .m-sheet[data-spot=html] { z-index: 865 }
+  /* under a page the map screen is neither seen nor reachable (taps, screen readers) and the map stops painting: once the page has risen over it */
+  .stage.paged > :not(.m-nav, .pages, .m-sheet[data-spot=html]) { visibility: hidden; transition: visibility 0s .22s }
+  .pg { --pg-x: 12px }
+  .pg-head { min-height: calc(var(--st) + 48px); padding: var(--st) calc(var(--sr) + 4px) 0 calc(var(--sl) + var(--pg-x)) }
+  .pg-title { font-size: 17px }
+  .pg-body { padding: 10px calc(var(--sr) + var(--pg-x)) 28px calc(var(--sl) + var(--pg-x)) }
+  .pg.big > .pg-body { padding-top: 0 }
+  .pg.big > .pg-body::before { padding-top: var(--st) }
+}
+/* a phone on its side: pages take the side panel's place (css/mobile.css --m-side), the map keeps the left */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 960px) and (min-width: 560px) {
+  .pages { left: auto; width: var(--m-side); border-left: 1px solid var(--line-2) }
+}

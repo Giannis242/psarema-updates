@@ -1,0 +1,121 @@
+/* Instruments (js/instruments.js): the details' Conditions grid and the readings strip's mini instruments. A yacht's instrument panel in
+   grey and white: hairline bezels and ticks, white needles; the method's limits in the meaning colours (css/conditions.css .c-good, .c-fair,
+   .c-unsafe set --c); only the sun is gold. Needles glide on transform, arcs on the registered --igv; when the panel appears its needles
+   sweep in from north and its arcs fill, once, never on an hour step. Reduced motion: none of it (app.css). */
+@property --igv { syntax: '<number>'; inherits: false; initial-value: 0 }
+@keyframes ig-fill { from { --igv: 0 } }
+@keyframes ig-swing { from { transform: rotate(0deg) } }
+@keyframes ig-slide { from { transform: translateX(0) } }
+@keyframes ig-grow { from { transform: scaleX(0) } }
+
+/* The details' grid: a card per instrument. Wind | waves | sea over rain; then the sun's day and the moon in one card across (round 17 G) */
+.ig { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.ig-c, .ig-g { border-radius: var(--r); background: var(--card); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.ig-c { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 6px 10px }
+.ig-c > .lbl, .ig-g > .lbl { align-self: stretch; padding-left: 2px }
+.ig-sky { grid-column: 1 / -1 }
+.ig-skyin { align-self: stretch; display: flex; align-items: center; gap: 10px }
+.ig-day { flex: 2; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px }
+.ig-moon { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-left: 10px; border-left: 1px solid var(--line) }
+.ig-col { padding: 0; gap: 8px; background: none; box-shadow: none } /* sea over rain */
+.ig-g { flex: 1; align-self: stretch; display: flex; flex-direction: column; gap: 3px; padding: 9px 8px 8px }
+.ig-g > .lbl { padding-left: 0 }
+.ig-big { font: 650 18px/1.1 var(--sans); letter-spacing: -.01em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap }
+.ig-g small { font-size: 11px; line-height: 1.3; color: var(--muted) }
+.ig-g small:empty, .ig-cap small:empty { display: none }
+.ig-cap { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; text-align: center }
+.ig-cap b { font: 600 12px/1.25 var(--sans); color: var(--ink); font-variant-numeric: tabular-nums }
+.ig-cap small { font-size: 11px; line-height: 1.3; color: var(--muted) }
+.ig-sol { margin-top: 2px }
+.ig-sol.on { padding: 1px 6px; border-radius: var(--r-sm); background: var(--raise-2); color: var(--ink); font-weight: 600 } /* a solunar period now: as the timeline's tags, a major one white */
+.ig-sol.on.major { background: var(--accent); color: var(--accent-ink) }
+
+/* Dials: wind and waves (108 user units across) */
+.ig-dial { display: block; width: 100%; max-width: 108px; height: auto; overflow: visible }
+.ig-tk { stroke: rgb(255 255 255 / .2); stroke-width: 1.2 }
+.ig-tk.c { stroke: rgb(255 255 255 / .5); stroke-width: 1.6 }
+.ig-n { fill: var(--ink); font: 700 9.5px var(--sans); text-anchor: middle; dominant-baseline: central }
+.ig-zone { fill: none; stroke: var(--c); stroke-width: 2; opacity: .6 }
+.ig-trk { fill: none; stroke: rgb(255 255 255 / .08); stroke-width: 5 }
+.ig-arc { fill: none; stroke: var(--c, var(--ink)); stroke-width: 5; stroke-dasharray: calc(var(--igv) * 1px) 200px; transition: --igv .6s var(--ease); animation: ig-fill 1s var(--ease) }
+.ig-arc.pk { opacity: .35 } /* on to the gusts */
+.ig-bug { fill: var(--ink); transform-box: view-box; transform-origin: 0 0; transition: transform .6s var(--ease); animation: ig-swing 1.2s var(--ease) }
+.ig-tail { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; opacity: .5 } /* where it comes from */
+.ig-num { fill: var(--ink); font: 650 25px var(--sans); letter-spacing: -.03em; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums }
+.ig-unit { fill: var(--dim); font: 500 9.5px var(--sans); text-anchor: middle }
+.ig-gap { fill: var(--muted); font: 600 10px var(--sans); text-anchor: middle }
+.ig-sea { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round }
+
+/* Sea and rain: a scale with the fish's range (tolerated, liked) and a marker; the rain's share of 10 mm/h (square root) */
+.ig-bar { display: block; width: 100%; height: 12px; margin: 2px 0 1px; overflow: visible }
+.ig-bt { fill: rgb(255 255 255 / .1) }
+.ig-band { fill: rgb(255 255 255 / .14) }
+.ig-band.in { fill: rgb(255 255 255 / .34) }
+.ig-mk { fill: var(--ink); transition: transform .6s var(--ease); animation: ig-slide 1s var(--ease) }
+.ig-fill { fill: var(--muted); transform-box: view-box; transform-origin: 0 0; transition: transform .6s var(--ease); animation: ig-grow 1s var(--ease) }
+.ig-fill.c-unsafe { fill: var(--bad) }
+.ig-rain small.c-unsafe { color: var(--bad); font-weight: 600 } /* thunder */
+
+/* The sun's day: altitude over the horizon, dawn and dusk gold, the sun at the hour */
+.ig-sun { display: block; width: 100%; max-width: 280px; height: auto; overflow: hidden }
+.ig-hz { stroke: rgb(255 255 255 / .28); stroke-width: 1 }
+.ig-sun .ig-tk { stroke: rgb(255 255 255 / .28); stroke-width: 1 }
+.ig-curve { fill: none; stroke-width: 1.5; stroke-linejoin: round }
+.ig-gold { fill: none; stroke: #f3c25d; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round }
+.ig-rs { stroke: #f3c25d; stroke-width: 1.5 }
+.ig-peak { fill: var(--dim); font: 500 8.5px var(--sans); text-anchor: middle; font-variant-numeric: tabular-nums } /* the day's highest altitude */
+.ig-sunat { transition: transform .6s var(--ease) }
+.ig-glow { fill: #f3c25d; opacity: .2 }
+.ig-disc { fill: #ffd879 }
+.ig-sunat.down .ig-glow { opacity: 0 }
+.ig-sunat.down .ig-disc { fill: var(--card); stroke: var(--muted); stroke-width: 1.4 }
+.ig-row { align-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 2px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums }
+.ig-row > span { display: inline-flex; align-items: center; gap: 4px }
+.ig-row b { font-weight: 600; color: var(--ink) }
+.ig-row .i { width: 14px; height: 14px; color: var(--dim) }
+.ig-per { text-align: center }
+.ig-row .ig-per.gold { color: #f3c25d } /* dawn and dusk: the fish's prime times */
+
+/* The moon: phase and tilt as seen from the spot; dimmed below the horizon */
+.ig-mo { display: block; width: 52px; height: 52px; margin: 6px 0 4px }
+.ig-mb { fill: #2b2b2b }
+.ig-lit { fill: #efe8cf; transform-box: view-box; transform-origin: 0 0; transition: transform .6s var(--ease) }
+.ig-rim { fill: none; stroke: rgb(255 255 255 / .14); stroke-width: 1 }
+.ig-mo.down { opacity: .55 } /* the strip's moon stays bright: its title names the phase */
+
+/* The readings strip: a 20–22 px instrument before each reading; grey while calm, the meaning colour past what is comfortable */
+:is(#strip, #pk-read .strip) .mi { flex: none; width: 22px; height: 22px; overflow: visible }
+:is(#strip, #pk-read .strip) .mi-th { width: 11px }
+:is(#strip, #pk-read .strip) .mi-sun { width: 30px; height: 19px }
+:is(#strip, #pk-read .strip) small:empty { display: none }
+/* An hour step rewrites the readings: digits all one width and room kept for the widest wind ("NW 88", "km/h · gusts 88") and wave
+   period ("18 s"), so the chips after them stay put instead of twitching sideways as the numbers change */
+:is(#strip, #pk-read .strip) .chip, :is(#strip, #pk-read .strip) small { font-variant-numeric: tabular-nums } /* on the chips: their font shorthand resets it */
+:is(#strip, #pk-read .strip) .chip:nth-child(2) > span { min-width: 3.3em }
+:is(#strip, #pk-read .strip) .chip:nth-child(2) small { min-width: 7.5em }
+:is(#strip, #pk-read .strip) .chip:nth-child(3) small { min-width: 2.15em }
+.mi-ring { fill: none; stroke: rgb(255 255 255 / .32); stroke-width: 1.3 }
+.mi.c-fair .mi-ring, .mi.c-unsafe .mi-ring { stroke: var(--c); stroke-width: 1.6 }
+.mi-n { fill: var(--ink) }
+.mi-ndl { fill: var(--ink); transform-box: view-box; transform-origin: 0 0; transition: transform .4s var(--ease) }
+.mi-tail { stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; opacity: .45 }
+.mi-trk { fill: none; stroke: rgb(255 255 255 / .16); stroke-width: 2.4 }
+.mi-arc { fill: none; stroke: var(--c, var(--ink)); stroke-width: 2.4; stroke-dasharray: calc(var(--igv) * 1px) 200px; transition: --igv .4s var(--ease) }
+.mi-trk2 { fill: rgb(255 255 255 / .16) }
+.mi-bulb, .mi-lvl { fill: var(--muted) }
+.mi-lvl { transform-box: view-box; transform-origin: 0 5px; transition: transform .4s var(--ease) }
+.mi-hz { stroke: rgb(255 255 255 / .32); stroke-width: 1.2 }
+.mi-day { fill: none; stroke: rgb(255 255 255 / .3); stroke-width: 1.2; stroke-dasharray: 2 1.6 }
+.mi-s { fill: #ffd879; transition: transform .4s var(--ease) }
+.mi-sun.down .mi-s { fill: var(--panel); stroke: var(--muted); stroke-width: 1.2 }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) { /* phones */
+  .ig-big { font-size: 19px }
+  .ig-cap b, .ig-row { font-size: 12.5px }
+  .ig-cap small, .ig-g small { font-size: 11.5px }
+  .m-read :is(#strip, .strip) .mi { width: 20px; height: 20px } /* the readings row keeps its 24 px */
+  .m-read :is(#strip, .strip) .mi-th { width: 10px }
+}
+/* round 16 P: the sea and rain gauges size their number to their column: "0.0 mm/h" whole on a 360-390 px phone (it was cut at the right) */
+.ig-g { container-type: inline-size }
+.ig-g > .ig-big { font-size: min(19px, 20cqi) }

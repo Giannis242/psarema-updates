@@ -1,0 +1,65 @@
+/* Psarema: the fishing calendar (js/calendar.js), on the panel kit of css/catchlog.css (.pn-*) and the shared .ui-chips / .ui-seg (css/app.css),
+   in the app's own parts: the day cells are the timeline's day chips (css/timeline.css .tl-dtabs: a raised tile, the score as core.js's pill),
+   the picked day reads as the spot details' head (the rating in its colour, a quiet tag) over the Forecast tab's tiles (css/forecast.css .fp-dl).
+   Forecast days: a raised tile, a solid pill; outlook days (moon and season only): a flat tile, an outlined pill; past days hatched, as the
+   timeline's past. Today's date on white, the picked day ringed in white, the best days starred, the moon only on its phase days. */
+.cal-tools { display: flex; flex-direction: column; gap: 8px; min-width: 0 }
+.cal-tools .ui-seg { max-width: 420px }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 2px 0 -4px; font: 650 14px var(--sans); color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums }
+.cal-nav .icon-btn { width: 40px; height: 40px }
+.cal-nav .icon-btn:disabled { opacity: .3; cursor: default }
+
+.cal-main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start }
+.cal-month { display: flex; flex-direction: column; gap: 10px; min-width: 0 }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px }
+.cal-wd { padding-bottom: 2px; text-align: center; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--dim) }
+.cal-d { min-height: 56px; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; min-width: 0; padding: 5px 5px 6px; border-radius: var(--r-sm);
+  background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line); text-align: left; color: var(--ink); transition: box-shadow var(--dur), background-color var(--dur) }
+.cal-d:not(.past):hover { background: var(--raise-2) }
+.cal-d.ol { background: none; box-shadow: inset 0 0 0 1px var(--line) }
+.cal-d.past { background: repeating-linear-gradient(135deg, rgb(255 255 255 / .05) 0 2px, transparent 2px 6px); box-shadow: none; opacity: .45; cursor: default }
+.cal-d[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ink), 0 4px 14px rgb(0 0 0 / .45) }
+.cal-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2px; min-width: 0; font: 600 12px/1.2 var(--sans); color: var(--muted); font-variant-numeric: tabular-nums }
+.cal-n { display: flex; flex-direction: column; align-items: flex-start; min-width: 0 }
+.cal-n small { font: 650 9px/1.2 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--dim); white-space: nowrap }
+.cal-d.today .cal-n { padding: 0 4px; border-radius: 3px; background: var(--accent); color: var(--accent-ink) }
+.cal-d.today .cal-n small { color: inherit }
+.cal-top > span[title] { display: flex; flex: none }
+.cal-moon { flex: none; display: block; margin-top: 1px }
+.cal-v { display: flex; align-items: center; gap: 3px; min-height: 18px }
+.cal-v .pill { min-width: 24px; padding: 0 4px; font-size: 12px; line-height: 17px; font-variant-numeric: tabular-nums }
+.pill.ol { background: none; color: var(--c); box-shadow: inset 0 0 0 1.5px var(--c) } /* the outlook: the same colour, quieter */
+.cal-star { font-size: 10px; line-height: 1; color: var(--ink) }
+
+/* the key, under the grid */
+.cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0; font-size: 11.5px; line-height: 1.35; color: var(--muted) }
+.cal-key { display: inline-flex; align-items: center; gap: 6px }
+.cal-key .pill { min-width: 18px; height: 11px; padding: 0 }
+.cal-key .cal-star { font-size: 11px }
+
+/* the picked day: the details' head, then the Forecast tab's tiles */
+.cal-det { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); box-shadow: var(--edge) }
+.cal-dh { display: flex; align-items: center; gap: 12px }
+.cal-dt { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.cal-q { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.cal-kind { padding: 1px 5px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px var(--line-3); font-weight: 600; letter-spacing: .04em; color: var(--muted) } /* as the details' confidence chip */
+.cal-det h4 { margin: 0; font: 650 17px/1.25 var(--sans); letter-spacing: -.01em; color: var(--ink) }
+.cal-dt > small { font-size: 12.5px; line-height: 1.35; color: var(--muted) }
+.cal-dl { --fc: var(--raise) } /* the tiles' fill (css/forecast.css sets it inside .fp only) */
+.cal-dl dd .i { width: 13px; height: 13px; margin-right: 2px; vertical-align: -2px; color: var(--muted) }
+.cal-dl dd > .i:not(:first-child) { margin-left: 8px }
+.cal-win { display: flex; flex-direction: column; gap: 1px }
+.cal-win > span { font-weight: 500; color: var(--muted) }
+.cal-win > .cal-hit { font-weight: 650; color: var(--ink) } /* a feeding window at dawn or dusk */
+.cal-det .hint { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--dim) }
+.cal-det .pn-acts .btn { flex: 1 1 auto; min-height: 44px; white-space: normal; text-align: center }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .cal-main { grid-template-columns: minmax(0, 1fr) }
+  .cal-tools .ui-seg { max-width: none }
+  .cal-nav .icon-btn { width: 44px; height: 44px }
+  .cal-grid { gap: 3px }
+  .cal-d { min-height: 50px; padding: 4px 3px 5px 4px }
+  .cal-v .pill { min-width: 0; width: 100%; max-width: 30px; padding: 0 2px; font-size: 11.5px }
+  .cal-moon { width: 10px; height: 10px }
+}

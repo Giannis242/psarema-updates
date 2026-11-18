@@ -1,0 +1,67 @@
+/* Psarema design tokens: neutral grey, white text, slightly rounded corners. Every stylesheet in the app uses these.
+   The one colour in the chrome is the fish's chance (the heat scale, core.js solid() / ring()); everything else is grey and white. */
+@font-face { font-family: 'Inter'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(../assets/fonts/inter-latin-wght-normal.woff2) format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD }
+@font-face { font-family: 'Inter'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(../assets/fonts/inter-greek-wght-normal.woff2) format('woff2-variations');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF } /* Inter, OFL (assets/fonts/Inter-OFL.txt) */
+:root {
+  /* surfaces, darkest to lightest */
+  --bg: #121212;          /* page and map background */
+  --panel: #1c1c1c;       /* panels, sheets, popups */
+  --glass: rgb(28 28 28 / .97); /* floating chrome over the map (no blur: every pan would re-blur the map) */
+  --page: #161616;        /* a page's background (css/nav.css .pg): cards sit a step lighter on it */
+  --card: #202020;        /* cards and list groups on a page (app.css .ui-card, .ui-list) */
+  --card-2: #2a2a2a;      /* a card pressed or hovered */
+  --raise: #252525;       /* inputs, list rows, chips */
+  --raise-2: #2f2f2f;     /* hover, selected */
+  --raise-3: #3a3a3a;     /* pressed, hover on a selected control */
+  --line: rgb(255 255 255 / .07);   /* dividers */
+  --line-2: rgb(255 255 255 / .11); /* borders */
+  --line-3: rgb(255 255 255 / .18); /* strong borders, spinners (css/area3d.css) */
+  --scrim: rgb(0 0 0 / .6); /* behind modals */
+  /* text */
+  --ink: #f5f5f5;         /* main text */
+  --muted: #a6a6a6;       /* secondary text */
+  --dim: #9a9a9a;         /* hints and micro labels (≥4.5:1 on every surface up to --raise-2; round 14: was #8e8e8e, 4.1:1 on --raise-2) */
+  --accent: #f5f5f5;      /* selected / primary control: white on grey */
+  --accent-ink: #121212;  /* text on --accent */
+  --accent-lo: #d4d4d4;   /* --accent pressed */
+  /* the score scale, the same stops as core.js HEAT (map.js checks they match): cyan, teal, green, yellow, orange, red at the top */
+  --heat-35: rgb(0 170 210); --heat-45: rgb(0 205 225); --heat-55: rgb(70 228 160); --heat-65: rgb(246 232 80);
+  --heat-75: rgb(255 150 30); --heat-85: rgb(255 95 45); --heat-95: rgb(255 35 35);
+  --focus: #8ab4ff;       /* keyboard focus ring */
+  /* meaning */
+  --warn: #e8a64a;        /* caution */
+  --bad: #ff7b6e;         /* danger, bans */
+  --good: #4fd18b;        /* ok, live */
+  --you: #5aa9ff;         /* the user's location */
+  /* shape */
+  --r-lg: 12px;           /* sheets, popups, panels, the + button */
+  --r: 8px;               /* cards, list groups, segmented tracks */
+  --r-sm: 6px;            /* buttons, chips, inputs, badges */
+  --r-full: 999px;        /* only avatars, dots, switches */
+  --edge: inset 0 1px 0 rgb(255 255 255 / .045); /* the lit top edge of a raised surface */
+  --shadow: 0 1px 0 rgb(255 255 255 / .04) inset, 0 16px 40px rgb(0 0 0 / .5), 0 2px 6px rgb(0 0 0 / .3);
+  --shadow-sm: 0 2px 8px rgb(0 0 0 / .4);
+  /* spacing: a 4 px grid */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px;
+  /* type: Inter; numbers tabular; micro labels uppercase and tracked (.lbl) */
+  --fs-label: 10.5px;     /* section micro labels */
+  --fs-xs: 11px;          /* badges, axis labels */
+  --fs-sm: 12px;          /* secondary lines, hints, chips */
+  --fs: 13px;             /* body */
+  --fs-md: 14px;          /* card titles */
+  --fs-lg: 16px;          /* panel titles */
+  --fs-xl: 22px;          /* the hour */
+  --fs-2xl: 32px;         /* a spot's score */
+  --fs-h: 16px;           /* section headings (.ui-sec) */
+  --fs-title: 26px;       /* a page's large title (css/nav.css) */
+  /* control heights */
+  --h-sm: 26px; --h: 32px; --h-lg: 36px; --h-xl: 44px; /* xl: the big tap targets (.btn.lg, .ui-input) */
+  /* motion: short, and none when the system asks for less (app.css) */
+  --dur: .16s;
+  --ease: cubic-bezier(.2, .8, .25, 1);
+  --sans: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', 'Noto Sans', Roboto, Arial, sans-serif; /* all cover Greek */
+  --mono: 'Cascadia Mono', Consolas, ui-monospace, 'SF Mono', Menlo, monospace;
+  color-scheme: dark;
+}

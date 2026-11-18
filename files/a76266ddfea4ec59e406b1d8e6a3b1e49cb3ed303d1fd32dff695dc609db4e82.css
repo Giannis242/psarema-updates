@@ -1,0 +1,454 @@
+/* The panel kit (js/catchlog.js PsPanel) that My catches, the calendar, Plan a trip and Offline areas share: a sheet over the map on wide
+   screens, the bottom sheet's content on phones (#m-spot, whose own × closes it). One header (icon tile, title, .lbl line, ×), one form
+   row, one grouped list (rows split by hairlines on one --raise fill), one action row; app.css's .btn, .chips, .seg, .ring, .lbl, .empty.
+   Tokens: css/tokens.css only. Each panel's own parts follow in its own file. */
+.pn-modal .sheet { width: min(var(--pn-w, 640px), 100%); height: auto; max-height: 100%; background: var(--panel) }
+#cal-modal { --pn-w: 960px } #pl-modal { --pn-w: 720px } #po-modal { --pn-w: 540px }
+.pn { display: flex; flex-direction: column; gap: 14px; min-width: 0; color: var(--ink); font-size: var(--fs); line-height: 1.4 }
+.pn > * { flex: none } /* the panel scrolls as a whole: its parts keep their height */
+.pn p { margin: 0 }
+.pn-modal .pn { min-height: 0; overflow-y: auto; padding: 0 20px 20px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent }
+/* the header: an icon tile, the title with a micro-label line under it, ×; it stays at the top while the sheet scrolls */
+.pn-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line) }
+.pn-modal .pn-head { position: sticky; top: 0; z-index: 3; margin: 0 -20px; padding: 16px 12px 14px 20px; background: var(--panel) }
+.pn-ic { width: 38px; height: 38px; display: grid; place-items: center; border-radius: var(--r); background: var(--raise); border: 1px solid var(--line-2); box-shadow: var(--edge); color: var(--ink) }
+.pn-ic .i { width: 19px; height: 19px }
+.pn-ttl { min-width: 0; display: flex; flex-direction: column; gap: 4px }
+.pn-head h2 { margin: 0; font: 650 18px/1.2 var(--sans); letter-spacing: -.012em; color: var(--ink); overflow-wrap: anywhere }
+.pn-sub { line-height: 1.35 }
+#m-spot .pn-x { display: none } /* the sheet has its own × */
+#m-spot .pn-head { padding-right: 40px }
+/* a section: its micro label and a hairline to the edge */
+.pn h3 { display: flex; align-items: center; gap: 10px; margin: 4px 0 -4px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.pn h3::after { content: ""; flex: 1 1 12px; height: 1px; background: var(--line) }
+.pn-note { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.45; color: var(--dim) } /* what a panel is for, under its header */
+.pn-note .i { flex: none; margin-top: 1px }
+/* the form: a micro label, then its control (beside it on wide screens); one sunken look for every select and input */
+.pn-row { display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: center; gap: 12px }
+.pn-row > .k { font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.pn-indent { padding-left: 112px } /* a note under a row's control */
+.pn :is(select, input[type=number], input[type=text], input[type=datetime-local]) { min-width: 0; max-width: 100%; min-height: 36px; padding: 6px 11px; border-radius: var(--r);
+  background-color: rgb(0 0 0 / .24); border: 1px solid var(--line-2); box-shadow: inset 0 1px 2px rgb(0 0 0 / .25); color: var(--ink); font: 500 13px var(--sans); outline: none;
+  transition: border-color var(--dur), box-shadow var(--dur) }
+.pn :is(select, input):hover { border-color: rgb(255 255 255 / .18) }
+.pn :is(select, input):focus-visible { border-color: rgb(255 255 255 / .5); box-shadow: inset 0 1px 2px rgb(0 0 0 / .25), 0 0 0 3px rgb(255 255 255 / .07) }
+.pn select { appearance: none; -webkit-appearance: none; padding-right: 32px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 14px }
+.pn select option { background: var(--panel) }
+.pn input::placeholder { color: var(--dim) }
+.pn-row > select { justify-self: start }
+.pn-check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer }
+.pn-check input { flex: none; width: 16px; height: 16px; margin: 1px 0 0; accent-color: var(--accent) }
+.pn-check small { display: block; margin-top: 1px; color: var(--dim); font-size: 11.5px }
+/* choices: .seg for one of a few (icon and word side by side), .chips for filters and longer lists, .pn-tabs for a panel's views */
+.pn .seg { display: flex }
+.pn .seg button { flex: 1 1 0; flex-direction: row; gap: 6px; min-height: 32px; padding: 5px 8px; font-size: 12.5px }
+.pn .seg .i { width: 15px; height: 15px }
+.pn .chips button { min-height: 30px }
+.pn .chips .i { width: 14px; height: 14px }
+.pn-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line) }
+.pn-tabs::-webkit-scrollbar { display: none }
+.pn-tabs button { flex: 1 0 auto; min-height: 36px; padding: 0 10px; margin-bottom: -1px; border-bottom: 2px solid transparent; font: 600 12.5px var(--sans); color: var(--muted); white-space: nowrap;
+  transition: color var(--dur), border-color var(--dur) }
+.pn-tabs button:hover { color: var(--ink) }
+.pn-tabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink) }
+.pn .btn .i { width: 14px; height: 14px }
+.pn .btn[disabled] { opacity: .45; pointer-events: none }
+.pn .btn.ghost { box-shadow: none }
+.pn .btn.ib { width: var(--h); padding: 0 } /* an icon-only action: its words in aria-label and the tooltip */
+.pn-acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+/* the one list: rows on one raised group, split by hairlines; a row leads with a picture or a dial, then what and where, then a score */
+.pn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-radius: var(--r-lg); background: var(--raise); border: 1px solid var(--line); box-shadow: var(--edge); overflow: hidden }
+.pn-item { min-width: 0 }
+.pn-item + .pn-item { border-top: 1px solid var(--line) }
+.pn-line { width: 100%; min-height: 56px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px;
+  text-align: left; list-style: none; cursor: pointer; transition: background-color var(--dur) }
+.pn-line::-webkit-details-marker { display: none }
+.pn-line:hover, .pn-item[open] > .pn-line { background: var(--raise-2) }
+.pn-line:active { background: var(--raise-3) }
+div.pn-line { cursor: default } div.pn-line:hover { background: none }
+.pn-main { min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.pn-main b { font: 650 14px/1.3 var(--sans); letter-spacing: -.005em }
+.pn-main small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pn-main .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pn-body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; border-top: 1px solid var(--line); background: rgb(0 0 0 / .14) }
+.pn .reasons { font-size: 12.5px; gap: 3px }
+/* a fish as a cut-out (PsPanel.fish): the picture floats on the row, no box */
+.pn-cut { display: block; max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 3px 5px rgb(0 0 0 / .5)) }
+/* nothing yet: an icon over a line, on a dashed outline */
+.pn .empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 18px; border: 1px dashed var(--line-2); background: none; color: var(--muted) }
+.pn .empty > .i { width: 26px; height: 26px; color: var(--dim) }
+
+.pn textarea { width: 100%; min-height: 64px; padding: 9px 11px; resize: vertical; border-radius: var(--r); background-color: rgb(0 0 0 / .24); border: 1px solid var(--line-2);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / .25); color: var(--ink); font: 500 13px/1.4 var(--sans); outline: none }
+.pn textarea:focus-visible { border-color: rgb(255 255 255 / .5) }
+
+/* My catches: the logbook */
+.ct-tools .btn.primary { flex: 1 1 auto; max-width: 240px }
+.ct-tools label.btn { cursor: pointer }
+.ct-tools input[type=checkbox] { width: 15px; height: 15px; margin: 0; accent-color: var(--accent) }
+.ct-filter { align-self: flex-start; min-width: 180px }
+.ct-thumb { width: 64px; height: 48px; display: grid; place-items: center; color: var(--dim) }
+.ct-thumb img:not(.pn-cut) { width: 48px; height: 48px; object-fit: cover; border-radius: var(--r-sm); box-shadow: 0 0 0 1px var(--line-2) } /* your photo */
+.ct-thumb .i { width: 22px; height: 22px }
+button.pn-line { font: inherit; color: inherit; background: none; border: 0 }
+.ct-item.blank .pn-cut { filter: grayscale(1) brightness(.55) drop-shadow(0 3px 5px rgb(0 0 0 / .5)) } /* a blank trip: the fish you went for, greyed */
+.ct-item.blank .pn-main b { color: var(--muted) }
+.ct-big { font: 700 15px var(--sans); font-variant-numeric: tabular-nums; white-space: nowrap }
+.ct-note { white-space: pre-wrap; padding-left: 10px; border-left: 2px solid var(--line-2); color: #dcdcdc }
+.ct-scroll { overflow-x: auto; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--raise) }
+.ct-table { width: 100%; border-collapse: collapse; font-size: 12.5px }
+.ct-table th { padding: 9px 10px 7px; text-align: left; white-space: nowrap; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.ct-table td { padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top }
+.ct-table .n { text-align: right; font-variant-numeric: tabular-nums }
+.ct-table tr.ready td:last-child { color: var(--ink) }
+.ct-table tr.on td:last-child { color: var(--good) }
+.ct-table tr:not(.ready, .on) td:last-child { color: var(--dim) }
+.ct-sec { display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.ct-sec h3, .ct-sec h4 { margin-bottom: 4px }
+.ct-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; padding: 3px 0 } /* label · count, the bar under both: bars line up at any width */
+.ct-bl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ct-track { grid-column: 1 / -1; grid-row: 2; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .07); overflow: hidden }
+.ct-track i { display: block; height: 100%; border-radius: 2px; background: var(--ink); transform-origin: left; animation: ct-grow-x .5s var(--ease) both }
+.ct-bn { color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap }
+.ct-bn em { font-style: normal; color: var(--dim) }
+.ct-bn em.up { color: var(--good) }
+.ct-bn em.down { color: var(--warn) }
+.ct-warn { display: flex; gap: 8px; align-items: flex-start; color: var(--warn) }
+.ct-warn .i { flex: none; margin-top: 2px }
+.ct-switch { align-items: center; padding: 12px 14px; border-radius: var(--r-lg); background: var(--raise); border: 1px solid var(--line); box-shadow: var(--edge) }
+.ct-switch input { width: 18px; height: 18px; margin: 0 }
+.ct-switch span { display: flex; flex-direction: column; gap: 2px }
+/* round 15: Share catches for science (js/catchlog.js PsShare): what is shared, one line each, then the switch and the export */
+.cs-what { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px }
+.cs-what li { display: flex; gap: 8px; align-items: flex-start; line-height: 1.4 }
+.cs-st { font-size: 12px; color: var(--dim) }
+.cs-what .i { flex: none; margin-top: 2px; color: var(--muted) }
+.cs-exp { display: flex; flex-direction: column; align-items: flex-start; gap: 6px }
+/* stats: four numbers, the months (one grey series, this month white, the peak labelled), personal bests, what works */
+.ct-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px }
+.ct-kpis > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: var(--r); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line), var(--edge) }
+.ct-kpis b { font: 700 24px/1 var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums }
+.ct-kpis .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ct-months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; height: 112px; padding-top: 4px; border-bottom: 1px solid var(--line-2) }
+.ct-months > div { min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; position: relative; padding-bottom: 20px }
+.ct-months i { width: 100%; max-width: 26px; height: calc(var(--v) * 76px); min-height: 2px; border-radius: 4px 4px 0 0; background: rgb(255 255 255 / .42);
+  transform-origin: bottom; animation: ct-grow-y .5s var(--ease) both }
+.ct-months .zero i { background: rgb(255 255 255 / .1) }
+.ct-months .now i { background: var(--ink) }
+.ct-mn { font: 650 11px var(--sans); font-variant-numeric: tabular-nums; color: var(--ink) }
+.ct-ml { position: absolute; bottom: 2px; font: 600 9.5px var(--sans); color: var(--dim); white-space: nowrap }
+.ct-months .now .ct-ml { color: var(--ink) }
+.ct-works { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 22px }
+.pn h3 .i, .ct-page h3 .i { width: 13px; height: 13px; margin-right: -4px }
+@keyframes ct-grow-y { from { transform: scaleY(0) } }
+@keyframes ct-grow-x { from { transform: scaleX(0) } }
+
+/* My catches: logging one (js/catchlog.js #ct-flow). A layer of its own: full screen on phones (over the tab bar), a tall card over a scrim on
+   wide screens. A progress bar on top, the step scrolling under it, Back and Next at the foot under the thumb. 1 photo, 2 fish, 3 details,
+   4 where and when, then "Catch logged". */
+.ctf { position: fixed; inset: 0; z-index: 2500; display: grid; place-items: center; padding: 20px; background: var(--scrim); animation: fade-in var(--dur) }
+.ctf[hidden] { display: none }
+.ctf-card { position: relative; width: min(480px, 100%); height: min(840px, 100%); display: flex; flex-direction: column; overflow: hidden; border-radius: var(--r-lg);
+  background: var(--panel); box-shadow: var(--shadow); color: var(--ink); font-size: var(--fs); line-height: 1.4 }
+.ctf p { margin: 0 }
+.ctf label.btn { cursor: pointer }
+.ctf-top { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 52px; padding: 4px 14px 4px 6px }
+.ctf-x { width: 44px; height: 44px; color: var(--ink) }
+.ctf-prog { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px }
+.ctf-prog i { position: relative; height: 4px; overflow: hidden; border-radius: 2px; background: rgb(255 255 255 / .12) }
+.ctf-prog i.on { background: var(--ink) }
+.ctf-prog i.now::after { content: ""; position: absolute; inset: 0; background: var(--ink); transform-origin: left; animation: ctf-fill .4s var(--ease) both }
+.ctf-top .ctf-save { min-height: 32px; padding: 0 14px }
+.ctf-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 4px 16px 20px; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: var(--line-2) transparent }
+.ctf-body > * { flex: none }
+.ctf-card.in .ctf-body { animation: ctf-in .26s var(--ease) both }
+.ctf-card.in-back .ctf-body { animation: ctf-in-back .26s var(--ease) both }
+.ctf-h { margin: 2px 0 0; font: 700 24px/1.2 var(--sans); letter-spacing: -.02em; color: var(--ink); outline: none }
+.ctf-sub { margin-top: -8px !important; color: var(--muted); font-size: 13.5px; line-height: 1.45 }
+.ctf h3 { display: flex; align-items: center; gap: 10px; margin: 4px 0 0; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.ctf h3::after { content: ""; flex: 1 1 12px; height: 1px; background: var(--line) }
+.ctf-foot { flex: none; display: flex; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--line); background: var(--panel) }
+.ctf-foot .btn { min-height: 48px; font-size: 15px; border-radius: var(--r) }
+.ctf-foot .btn .i { width: 16px; height: 16px }
+.ctf-prev { flex: none; padding-inline: 14px 18px }
+.ctf-next { flex: 1 }
+.ctf-foot .btn[disabled] { opacity: .4; pointer-events: none }
+.ctf-foot.col { flex-direction: column }
+.ctf-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px }
+.ctf-two .btn { min-height: 48px }
+@keyframes ctf-in { from { opacity: 0; transform: translateX(28px) } }
+@keyframes ctf-in-back { from { opacity: 0; transform: translateX(-28px) } }
+@keyframes ctf-fill { from { transform: scaleX(0) } }
+
+/* 1 the photo: one big camera target filling the step, the gallery under it */
+.ctf-body > .ctf-shot { flex: 1 0 220px; max-height: 460px }
+.ctf-shot { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin: 0; padding: 24px 20px;
+  border-radius: var(--r-lg); border: 1px dashed rgb(255 255 255 / .2); background: radial-gradient(circle at 50% 42%, #2e2e2e, var(--raise) 72%); color: var(--ink);
+  text-align: center; cursor: pointer; transition: border-color var(--dur), background-color var(--dur) }
+.ctf-shot:hover { border-color: rgb(255 255 255 / .38) }
+.ctf-shot:active { background: var(--raise-2) }
+.ctf-shot > .i { box-sizing: content-box; width: 32px; height: 32px; padding: 20px; border-radius: var(--r-lg); background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 6px 20px rgb(0 0 0 / .45); transition: transform var(--dur) var(--ease) }
+.ctf-shot:active > .i { transform: scale(.94) }
+.ctf-shot b { font: 650 18px/1.2 var(--sans); letter-spacing: -.01em }
+.ctf-shot small { color: var(--muted); font-size: 12.5px }
+.ctf-shot:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px }
+.ctf-shot.busy { cursor: progress } .ctf-shot.busy > .i { opacity: .5; animation: ctf-breathe 1.2s ease-in-out infinite alternate }
+.ctf-shot.has { padding: 0; border: 0; overflow: hidden; background: #0e0e0e; box-shadow: 0 0 0 1px var(--line-2); cursor: default; animation: ct-in .26s var(--ease) both }
+.ctf-shot.has img { display: block; width: 100%; height: 100%; max-height: 60vh; object-fit: cover }
+.ctf-gal { min-height: 48px; border-radius: var(--r) }
+.ctf-blank { min-height: 48px; border-radius: var(--r) } /* round 18 A: "Fished here, caught nothing", a full button under the gallery's */
+@keyframes ctf-breathe { to { opacity: .9 } }
+
+/* 2 the fish: the search stays on top; the likeliest here and now as big tiles, two a row, then every fish */
+.ctf-stick { position: sticky; top: -4px; z-index: 2; display: flex; flex-direction: column; gap: 12px; margin: -4px -16px 0; padding: 4px 16px 10px; background: var(--panel) }
+.ct-find { display: flex; gap: 8px; align-items: center }
+.ct-find img { width: 48px; height: 48px; flex: none; object-fit: cover; border-radius: var(--r); box-shadow: 0 0 0 1px var(--line-2) }
+.ct-q { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: var(--r); background: var(--raise); border: 1px solid var(--line-2); color: var(--dim); cursor: text }
+.ct-q:focus-within { border-color: rgb(255 255 255 / .5) }
+.ct-q input { flex: 1; min-width: 0; min-height: 46px; padding: 0; border: 0; background: none; color: var(--ink); font: 500 16px var(--sans); outline: none }
+.ct-q input::placeholder { color: var(--dim) }
+.ct-likely[hidden], .ct-fc[hidden] { display: none }
+.ct-likely, .ct-allf { display: flex; flex-direction: column; gap: 10px }
+.ct-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.ct-grid.big { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+.ct-fc { position: relative; min-width: 0; min-height: 108px; display: grid; grid-template-rows: 60px auto; justify-items: center; align-items: center; gap: 6px; padding: 10px 6px 12px;
+  border-radius: var(--r); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line), var(--edge); color: var(--ink); font: 600 12.5px/1.25 var(--sans); text-align: center;
+  transition: background-color var(--dur), transform var(--dur) var(--ease), box-shadow var(--dur) }
+.ct-fc:hover { background: var(--raise-2) }
+.ct-fc:active { background: var(--raise-3); transform: scale(.97) }
+.ct-fc.on { background: var(--raise-2); box-shadow: inset 0 0 0 2px var(--accent) }
+.ct-fpic { width: 100%; height: 60px; display: grid; place-items: center; color: var(--dim) }
+.ct-fpic .pn-cut { max-height: 56px }
+.ct-fpic > .i { width: 28px; height: 28px }
+.ct-fn { max-width: 100%; overflow-wrap: anywhere; hyphens: auto }
+.ct-fc .ring { position: absolute; top: 6px; right: 6px; font-size: 9.5px }
+.ct-grid.big .ct-fc { min-height: 138px; grid-template-rows: 84px auto; padding: 12px 10px 14px; font-size: 14px }
+.ct-grid.big .ct-fpic { height: 84px }
+.ct-grid.big .ct-fpic .pn-cut { max-height: 80px; width: 92% }
+.ct-grid.big .ring { --sz: 34px; font-size: 11px }
+.ctf .hint { color: var(--dim); font-size: 12px }
+.ctf .ct-none { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 18px; border: 1px dashed var(--line-2); border-radius: var(--r); color: var(--muted) }
+.ctf .ct-none[hidden] { display: none }
+
+/* 3 the details: big number fields, a stepper, the methods as three tiles, a switch for released */
+.ct-sum { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px; border-radius: var(--r-lg); background: var(--raise);
+  box-shadow: inset 0 0 0 1px var(--line), var(--edge) }
+.ct-sumpic { width: 56px; height: 56px; display: grid; place-items: center; overflow: hidden; border-radius: var(--r); background: rgb(0 0 0 / .3) }
+.ct-sumpic img:not(.pn-cut) { width: 100%; height: 100%; object-fit: cover }
+.ct-sumacts { display: flex; gap: 4px }
+.ct-sumacts .btn { min-height: 40px; cursor: pointer }
+.ct-sumacts .btn.ib { width: 40px; padding: 0 }
+.ctf-k { font: 600 12px/1.2 var(--sans); color: var(--muted) }
+.ctf-fld, .ctf-num { min-width: 0; display: flex; flex-direction: column; gap: 7px }
+.ctf-nums { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px }
+.ctf-numin { position: relative; display: block }
+.ctf-numin input { width: 100%; height: 64px; padding: 0 46px 0 14px; border-radius: var(--r); background: var(--raise); border: 1px solid var(--line-2); box-shadow: var(--edge);
+  color: var(--ink); font: 700 26px var(--sans); font-variant-numeric: tabular-nums; letter-spacing: -.01em; outline: none; transition: border-color var(--dur) }
+.ctf-numin input::placeholder { color: rgb(255 255 255 / .2) }
+.ctf-numin i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--dim); font: 600 14px var(--sans); font-style: normal; pointer-events: none }
+.ctf :is(.ctf-numin input, .ctf-in):focus-visible { border-color: rgb(255 255 255 / .55); box-shadow: 0 0 0 3px rgb(255 255 255 / .07) }
+.ctf-line { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 6px 6px 6px 14px; border-radius: var(--r); background: var(--raise); border: 1px solid var(--line); box-shadow: var(--edge) }
+.ctf-line > .ctf-k { flex: 1; font-size: 14px; color: var(--ink) }
+.ctf-stepper { display: flex; align-items: center; gap: 2px }
+.ctf-stepper .icon-btn { width: 44px; height: 44px; border-radius: var(--r-sm); background: var(--raise-2); color: var(--ink) }
+.ctf-stepper .icon-btn:active { background: var(--raise-3) }
+.ctf-stepper input { width: 50px; height: 44px; padding: 0; border: 0; background: none; color: var(--ink); text-align: center; font: 700 20px var(--sans); font-variant-numeric: tabular-nums;
+  outline: none; -moz-appearance: textfield; appearance: textfield }
+.ctf-stepper input::-webkit-inner-spin-button, .ctf-stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0 }
+.ctf-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.ctf-opts button { min-width: 0; min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px 4px; border-radius: var(--r);
+  background: var(--raise); border: 1px solid var(--line); color: var(--muted); font: 600 13px/1.2 var(--sans); text-align: center; transition: background-color var(--dur), color var(--dur), transform var(--dur) var(--ease) }
+.ctf-opts button:hover { color: var(--ink) }
+.ctf-opts button:active { transform: scale(.97) }
+.ctf-opts .i { width: 24px; height: 24px }
+.ctf-opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.ctf-in { width: 100%; min-height: 48px; padding: 10px 12px; border-radius: var(--r); background-color: var(--raise); border: 1px solid var(--line-2); color: var(--ink); font: 500 16px/1.35 var(--sans);
+  outline: none; transition: border-color var(--dur) }
+textarea.ctf-in { resize: vertical; min-height: 84px }
+select.ctf-in { appearance: none; -webkit-appearance: none; padding-right: 36px; cursor: pointer; background-repeat: no-repeat; background-position: right 12px center; background-size: 15px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") }
+select.ctf-in option { background: var(--panel) }
+.ctf-in::-webkit-calendar-picker-indicator { filter: invert(.8) }
+.ctf-rel { cursor: pointer; padding-right: 12px }
+.ctf-rel > .i { width: 22px; height: 22px; color: var(--muted) }
+.ctf-lm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px }
+.ctf-lm b { font: 600 14px var(--sans) }
+.ctf-lm small { color: var(--muted); font-size: 12px }
+.ctf-sw { flex: none; position: relative; width: 46px; height: 28px; margin: 0; border-radius: var(--r-full, 999px); background: var(--raise-3); appearance: none; -webkit-appearance: none; cursor: pointer;
+  transition: background-color var(--dur) }
+.ctf-sw::before { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); transition: transform var(--dur) var(--ease), background-color var(--dur) }
+.ctf-sw:checked { background: var(--accent) }
+.ctf-sw:checked::before { transform: translateX(18px); background: var(--accent-ink) }
+.ctf-sw:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+
+/* 4 where and when: the map takes the room, the pin in its middle */
+.ct-mm-box { position: relative; height: 180px; border-radius: var(--r-lg); overflow: hidden; background: #0b1620; box-shadow: 0 0 0 1px var(--line-2) }
+.ctf-body > .ctf-map { flex: 1 0 260px; height: auto; max-height: 520px }
+.ct-mm { position: absolute; inset: 0; z-index: 0; background: #0b1620 }
+.ct-mm-pin { position: absolute; left: 50%; top: 50%; z-index: 1; transform: translate(-50%, -88%); pointer-events: none; color: #fff; filter: drop-shadow(0 2px 3px rgb(0 0 0 / .7)) }
+.ct-mm-pin .i { width: 38px; height: 38px; stroke-width: 2.2; fill: rgb(18 18 18 / .55) }
+.ct-mm-box::after { content: ""; position: absolute; left: 50%; top: 50%; z-index: 1; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px #121212; pointer-events: none }
+.ctf-where { display: flex; gap: 8px; align-items: flex-start; margin-top: -4px !important; font-weight: 600; color: var(--ink) }
+.ctf-where .i { flex: none; margin-top: 2px; color: var(--muted) }
+.ctf-places { display: flex; flex-wrap: wrap; gap: 6px }
+.ctf-places button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: var(--r-sm); background: var(--raise); border: 1px solid var(--line-2);
+  color: var(--muted); font: 600 13px var(--sans); transition: background-color var(--dur), color var(--dur) }
+.ctf-places button:hover { color: var(--ink) }
+.ctf-places button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.ctf-places button[disabled] { opacity: .6 }
+.ctf-when { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px }
+.ctf-when .btn { min-height: 48px; border-radius: var(--r) }
+
+/* Logged: the catch big, a little burst, what it was; share it, see it, or log another */
+.ctf-body.ctf-done { align-items: center; justify-content: center; gap: 12px; text-align: center }
+.ctf-hero { position: relative; width: min(250px, 68%); aspect-ratio: 1; display: grid; place-items: center; margin: 18px 0 10px; border-radius: var(--r-lg);
+  background: radial-gradient(circle at 50% 45%, #3a3a3a, #1e1e1e 70%); box-shadow: 0 0 0 1px var(--line), 0 18px 40px rgb(0 0 0 / .45); animation: ctf-pop .55s var(--ease) both }
+.ctf-hero > img:not(.pn-cut) { width: 100%; height: 100%; object-fit: cover; border-radius: inherit }
+.ctf-hero .pn-cut { width: 88%; max-height: 72%; filter: drop-shadow(0 10px 16px rgb(0 0 0 / .6)) }
+.ctf-hero > .i { width: 56px; height: 56px; color: var(--dim) }
+.ctf-hero.blank .pn-cut { filter: grayscale(1) brightness(.55) drop-shadow(0 10px 16px rgb(0 0 0 / .6)) }
+.ctf-tick { position: absolute; right: -12px; bottom: -12px; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 0 0 4px var(--panel); animation: ctf-pop .4s var(--ease) .25s both }
+.ctf-tick .i { width: 26px; height: 26px; stroke-width: 2.6 }
+.ctf-burst { position: absolute; inset: 0; pointer-events: none }
+.ctf-burst i { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: var(--ink); opacity: 0;
+  animation: ctf-burst 1s var(--ease) .2s both }
+.ctf-burst i:nth-child(even) { width: 5px; height: 5px; margin: -2.5px; background: var(--muted); animation-delay: .3s }
+.ctf-burst i:nth-child(1) { --a: 0deg } .ctf-burst i:nth-child(2) { --a: 30deg } .ctf-burst i:nth-child(3) { --a: 60deg } .ctf-burst i:nth-child(4) { --a: 90deg }
+.ctf-burst i:nth-child(5) { --a: 120deg } .ctf-burst i:nth-child(6) { --a: 150deg } .ctf-burst i:nth-child(7) { --a: 180deg } .ctf-burst i:nth-child(8) { --a: 210deg }
+.ctf-burst i:nth-child(9) { --a: 240deg } .ctf-burst i:nth-child(10) { --a: 270deg } .ctf-burst i:nth-child(11) { --a: 300deg } .ctf-burst i:nth-child(12) { --a: 330deg }
+.ctf-done .ctf-h { font-size: 26px }
+.ctf-dname { font: 650 17px/1.3 var(--sans); color: var(--ink) }
+.ctf-done .ct-facts { justify-content: center }
+.ctf-pb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink); font: 650 13px var(--sans) }
+.ctf-pb .i { width: 15px; height: 15px }
+.ctf-done .ctf-sub { margin-top: 0 !important; max-width: 34ch; font-size: 12.5px; color: var(--dim) }
+.ctf-again { align-self: center; min-height: 40px; color: var(--muted) }
+@keyframes ctf-pop { from { opacity: 0; transform: scale(.82) } 60% { transform: scale(1.03) } }
+@keyframes ctf-burst { 0% { opacity: 0; transform: rotate(var(--a)) translateY(0) scale(.5) } 25% { opacity: 1 } 100% { opacity: 0; transform: rotate(var(--a)) translateY(-175px) scale(1) } }
+.ct-facts { display: flex; flex-wrap: wrap; gap: 6px }
+.ct-facts span { padding: 5px 10px; border-radius: var(--r-sm); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); font: 650 13.5px var(--sans); font-variant-numeric: tabular-nums }
+
+/* My catches: the grid of picture tiles (the photo, or the fish's cut-out), the fish and its size over the foot */
+.ct-tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 3px; overflow: hidden; border-radius: var(--r) }
+.ct-tile-c { position: relative; aspect-ratio: 1; min-width: 0; display: block; overflow: hidden; padding: 0; border: 0; background: radial-gradient(circle at 50% 38%, #343434, #1c1c1c 78%);
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer }
+.ct-tile-c:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px }
+.ct-tpic { position: absolute; inset: 0; display: grid; place-items: center; color: var(--dim) }
+.ct-tpic > img:not(.pn-cut) { width: 100%; height: 100%; object-fit: cover; transition: transform .3s var(--ease) }
+.ct-tile-c:hover .ct-tpic > img:not(.pn-cut) { transform: scale(1.04) }
+.ct-tpic .pn-cut { width: 84%; max-height: 52%; margin-top: -22% }
+.ct-tpic > .i { width: 28px; height: 28px; margin-top: -20% }
+.ct-tcap { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 1px; padding: 20px 8px 7px; background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / .78)) }
+.ct-tile-c:not(.photo) .ct-tcap { background: none }
+.ct-tcap b, .ct-tcap small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ct-tcap b { font: 650 12.5px/1.25 var(--sans) }
+.ct-tcap small { font: 600 12px var(--sans); font-variant-numeric: tabular-nums; color: #d6d6d6 }
+.ct-tpb { position: absolute; left: 6px; top: 6px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 2px 6px rgb(0 0 0 / .4) }
+.ct-tpb .i { width: 14px; height: 14px }
+.ct-tile-c.blank .pn-cut { filter: grayscale(1) brightness(.5) drop-shadow(0 3px 5px rgb(0 0 0 / .5)) }
+.ct-tile-c.blank b { color: var(--muted) }
+@keyframes ct-in { from { opacity: 0; transform: scale(.98) } }
+
+/* A catch's page (js/nav.js 'catch'): styled on its own, so it reads the same in the panel shell and in a full-screen page */
+.ct-page { container-type: inline-size; display: flex; flex-direction: column; gap: 14px; min-width: 0; color: var(--ink); font-size: var(--fs); line-height: 1.4 }
+.ct-page p { margin: 0 }
+.ct-page h3 { display: flex; align-items: center; gap: 10px; margin: 4px 0 -4px; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.ct-page h3::after { content: ""; flex: 1 1 12px; height: 1px; background: var(--line) }
+.ct-hero { position: relative; margin: 0; aspect-ratio: 4 / 3; max-height: 62vh; overflow: hidden; border-radius: var(--r-lg); background: #0e0e0e; box-shadow: 0 0 0 1px var(--line);
+  animation: ct-in .3s var(--ease) both }
+.ct-hero.ui-bleed { border-radius: 0; box-shadow: none } /* full width in a page (app.css .ui-bleed) */
+.ct-page > .ct-hero.ui-bleed:first-child { margin-top: -10px } /* up to the page's bar */
+.ct-hero > img { display: block; width: 100%; height: 100%; object-fit: cover }
+.ct-hero.cut { aspect-ratio: 16 / 11; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #363636, #1c1c1c 62%, #141414) }
+.ct-hero.cut .pn-cut { width: 72%; height: 56%; margin-top: -9%; filter: drop-shadow(0 10px 18px rgb(0 0 0 / .6)) }
+.ct-hero.cut > .i { width: 56px; height: 56px; color: var(--dim) }
+.ct-page.blank .ct-hero .pn-cut { filter: grayscale(1) brightness(.55) drop-shadow(0 10px 18px rgb(0 0 0 / .6)) }
+.ct-pb { position: absolute; left: 10px; top: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: var(--r-sm); background: var(--accent);
+  color: var(--accent-ink); font: 650 11.5px var(--sans); box-shadow: 0 2px 8px rgb(0 0 0 / .4) }
+.ct-pb .i { width: 13px; height: 13px }
+.ct-ph { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 48px 14px 12px;
+  background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / .78)) } /* the fish over the picture's foot */
+.ct-hero.cut .ct-ph { background: none }
+.ct-ph > div { min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.ct-ph h2 { margin: 0; font: 700 24px/1.15 var(--sans); letter-spacing: -.018em; color: #fff; overflow-wrap: anywhere; text-shadow: 0 1px 8px rgb(0 0 0 / .5) }
+.ct-ph i { color: #cfcfcf; font-size: 12.5px }
+.ct-ph .ring { background: rgb(18 18 18 / .7) }
+.ct-stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); overflow: hidden; border-radius: var(--r); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line), var(--edge) }
+.ct-stats > div { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 11px 12px }
+.ct-stats > div + div { border-left: 1px solid var(--line) }
+.ct-stats b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 20px/1.1 var(--sans); letter-spacing: -.015em; font-variant-numeric: tabular-nums }
+.ct-stats b.ct-sm { display: flex; align-items: center; gap: 6px; font-size: 15px; line-height: 20px }
+.ct-stats b .i { flex: none; width: 17px; height: 17px; color: var(--muted) }
+.ct-meta { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; color: var(--muted) }
+.ct-meta li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0 }
+.ct-meta li + li { border-top: 1px solid var(--line) }
+.ct-meta .i { flex: none; width: 16px; height: 16px; margin-top: 1px; color: var(--dim) }
+.ct-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 6px }
+.ct-tile { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; border-radius: var(--r); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line), var(--edge) }
+.ct-tile .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ct-tv { display: flex; align-items: center; gap: 7px; min-width: 0 }
+.ct-tv > .i, .ct-tv > svg { flex: none; width: 18px; height: 18px; color: var(--muted) }
+.ct-tv b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 650 16px var(--sans); font-variant-numeric: tabular-nums }
+.ct-tile small { color: var(--muted); font-size: 11.5px }
+.ct-arw path { fill: var(--ink) }
+.ct-moon circle { fill: #3a3a3a } .ct-moon path { fill: #ececec }
+.ct-obs { display: flex; gap: 6px; align-items: flex-start } .ct-obs .i { flex: none; margin-top: 2px }
+.ct-page .reasons { font-size: 12.5px; gap: 3px }
+.ct-page .btn .i { width: 15px; height: 15px }
+.ct-pacts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px }
+.ct-pacts .btn { min-height: 44px }
+.ct-pacts .btn { min-width: 0; padding-inline: 8px }
+.ct-pacts .btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+/* a narrow page (a phone, or the wide screen's 400 px page column): three tiles a row, the actions icon over word */
+@container (max-width: 520px) {
+  .ct-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+  .ct-tile { padding: 9px 10px } .ct-tv b { font-size: 15px }
+  .ct-pacts .btn { flex-direction: column; gap: 3px; min-height: 54px; padding: 6px 2px; font-size: 11.5px }
+}
+.ct-undo { display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 14px }
+.ct-undo button { min-height: 32px; padding: 0 12px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink); font: 650 12.5px var(--sans) }
+
+/* The legend's note while your catches shape the map (opens Learn) */
+.ct-badge { pointer-events: auto; display: flex; align-items: center; gap: 6px; width: 100%; margin-top: 8px; padding: 5px 8px; border-radius: var(--r-sm);
+  background: var(--raise); border: 1px solid var(--line); box-shadow: var(--edge); color: var(--ink); font: 600 11.5px var(--sans); text-align: left; cursor: pointer }
+.ct-badge:hover { background: var(--raise-2) }
+.ct-badge .i { color: var(--muted) }
+.ct-badge span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ct-badge small { margin-left: auto; color: var(--muted); font-weight: 500; white-space: nowrap }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) { /* the phone layout (core.js PHONE): labels above controls, 44 px targets */
+  .pn { gap: 16px; font-size: 13.5px }
+  .pn-head { padding-bottom: 12px }
+  .pn-head h2 { font-size: 19px }
+  .pn-row { grid-template-columns: minmax(0, 1fr); gap: 7px }
+  .pn-indent { padding-left: 0 }
+  .pn :is(select, input[type=number], input[type=text], input[type=datetime-local]), .pn textarea { min-height: 44px; font-size: 16px } /* 16 px: no zoom on focus */
+  .pn-row > select, .ct-filter { justify-self: stretch; align-self: stretch }
+  .pn .btn, .pn .seg button, .pn .chips button, .pn-tabs button { min-height: 44px }
+  .pn .btn.ib { width: 44px }
+  .pn .seg button { flex-direction: column; gap: 3px; padding: 5px 2px; font-size: 12px } /* three methods: icon over word, the Greek for spearfishing whole */
+  .pn .chips button { font-size: 13px }
+  .pn-tabs button { font-size: 13px }
+  .pn-check { min-height: 44px; align-items: center }
+  .pn-check input { width: 20px; height: 20px; margin: 0 }
+  .pn-line { min-height: 60px }
+  .ct-tools .btn.primary { flex: 1 1 100%; max-width: none }
+  .ct-tools .btn.ghost { flex: 1 1 0; padding-inline: 6px }
+  .ct-kpis { gap: 4px } .ct-kpis > div { padding: 9px 8px } .ct-kpis b { font-size: 21px }
+  .ct-works { grid-template-columns: minmax(0, 1fr) }
+  .ctf { padding: 0; background: var(--panel) } /* the logger: the whole screen, inside the safe areas */
+  .ctf-card { width: 100%; height: 100%; border-radius: 0; box-shadow: none; padding: var(--st) var(--sr) 0 var(--sl) }
+  .ctf-foot { padding-bottom: calc(10px + var(--sb)) }
+  .ct-tgrid { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+  .ct-badge { grid-column: 1 / -1; margin-top: 3px; padding: 3px 6px; font-size: 11px }
+  .ct-badge small { display: none }
+}
+/* round 17 G: "here, now" on Details when the phone knows both (js/catchlog.js hereNow): a tap opens Where and when */
+.ctf-here { width: 100%; text-align: left; cursor: pointer }
+.ctf-here > .i { flex: none; color: var(--muted) }
+.ctf-here .btn { flex: none; pointer-events: none }

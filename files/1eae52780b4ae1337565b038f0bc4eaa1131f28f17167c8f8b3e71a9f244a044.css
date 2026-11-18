@@ -1,0 +1,238 @@
+/* A spot: the short card, the details (desktop drawer; the phone sheet shows the same parts), the spot lists. Tokens: css/tokens.css. */
+/* Where to go (round 17 G: one list; no mini-maps or day lines): a leaderboard. Rank · place over depth and seabed over its best time and
+   distance · the score's dial; the dials form one column of colour. The first three are raised cards (the leader's rank white), the rest
+   plain rows under hairlines. */
+.top { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none }
+.top > li:nth-child(-n+3) { margin-bottom: 6px }
+.top > li:nth-child(n+5) { border-top: 1px solid var(--line) }
+.top .row { width: 100%; display: grid; grid-template: "rank main side" auto / 24px minmax(0, 1fr) auto; column-gap: 10px; align-items: center; padding: 8px 8px 8px 6px; border-radius: var(--r); text-align: left }
+.top > li:nth-child(-n+3) .row { padding: 10px 10px 10px 8px; background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.top > li:nth-child(-n+3) .row:hover { background: var(--raise-2) }
+.top > li:nth-child(-n+3) .row:active { background: var(--raise-3) }
+.top .rank { grid-area: rank; justify-self: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: var(--r-sm); background: var(--raise-2);
+  font: 700 11px/20px var(--sans); color: var(--ink); text-align: center; font-variant-numeric: tabular-nums }
+.top > li:first-child .rank { background: var(--accent); color: var(--accent-ink) }
+.top .sk-row .rank { background: var(--raise) }
+.top .ring { --sz: 32px } /* ring('sm') a little larger: its digits stay legible */
+.top > li:nth-child(-n+3) .ring { --sz: 36px }
+.top .row > span:not([class]), .t-main { grid-area: main; min-width: 0 } /* map.js drawTop's own rows */
+.t-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font-weight: 600; line-height: 1.3 } /* long names (and Greek) get a second line */
+.top > li:nth-child(-n+3) .t-name { font-size: 13.5px }
+.t-meta { display: block; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: var(--muted) }
+.t-when { display: flex; gap: 4px 10px; flex-wrap: wrap; margin-top: 3px; font-size: 11.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums }
+.t-when:empty { display: none }
+.t-when b { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--ink) }
+.t-when b .i { color: var(--dim) }
+.t-side { grid-area: side; display: flex; flex-direction: column; align-items: center }
+/* the list's head: its title, then Anywhere · 5 · 25 · 100 km on a row of their own; the areas fold and the fish's page button under it */
+.where > .sec-head { flex-wrap: wrap; row-gap: 8px }
+.where > .sec-head > .lbl { flex: 1 1 100% }
+.where #radius { flex: 1 1 100%; flex-wrap: nowrap }
+.where #radius button { flex: 1 1 0; min-height: 36px; padding: 0 6px } /* four on one row; on a touch screen a 36 px pill in a 40 px track */
+.where-fold { margin-top: 4px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line) }
+.where-fold > summary { min-height: 44px; font: 600 var(--fs) var(--sans); color: var(--ink) }
+.where-fold[open] { padding-bottom: 8px }
+.where-fish { justify-content: flex-start; gap: 8px; margin-top: 2px }
+.where-fish > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left }
+
+/* ---------- The score's place: rating over fish over place (card hero, details head, a named place) ---------- */
+.who { flex: 1; min-width: 0; display: flex; flex-direction: column }
+.who .rate { font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase }
+.who b { margin-top: 3px; font: 650 17px/1.2 var(--sans); letter-spacing: -.01em; overflow-wrap: anywhere }
+.who small { margin-top: 3px; font-size: 12px; line-height: 1.3; color: var(--muted) }
+
+/* ---------- Spot details: a hero (dial, rating, fish, place, conditions; the fish's cut-out behind), the tab strip (js/spot-sheet.js:
+   Overview · Conditions · Gear), then the tab's parts. The phone sheet shows the same parts; there the hero scrolls away and the tabs stick. ---------- */
+.drawer { position: absolute; z-index: 820; top: 58px; right: max(10px, env(safe-area-inset-right, 0px)); bottom: 10px; width: 360px; display: flex; flex-direction: column; overflow: hidden; animation: drawer-in .18s var(--ease) }
+@keyframes drawer-in { from { opacity: 0; transform: translateX(10px) } }
+.drawer-head { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "dial who x" "dial cond x" "jump jump jump";
+  align-items: center; gap: 6px 14px; padding: 16px 8px 14px 16px; background: linear-gradient(180deg, var(--raise), var(--panel)) }
+.drawer-head > .ring { grid-area: dial; --sz: 64px; --w: 5px }
+.drawer-head > .ring::after { content: ""; position: absolute; z-index: -1; inset: -56px; border-radius: 50%; background: radial-gradient(closest-side, var(--c), transparent); opacity: .16; pointer-events: none } /* the score's colour, a soft glow */
+.drawer-head::after { content: ""; position: absolute; z-index: -1; top: 10px; right: -24px; bottom: 10px; width: min(48%, 200px); background: var(--ss-fish, none) no-repeat right center / contain; opacity: .14;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 60%); mask-image: linear-gradient(90deg, transparent, #000 60%); pointer-events: none } /* the fish (js/spot-sheet.js sets --ss-fish) */
+.drawer-head > .who { grid-area: who; align-self: end }
+.drawer-head .who b { font-size: 18px }
+.drawer-head > .cond-num { grid-area: cond; align-self: start }
+.drawer-head > .icon-btn { grid-area: x; align-self: start; margin-top: -6px }
+.d-jump { grid-area: jump; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent) } /* one row; the fade says there is more */
+.d-jump::-webkit-scrollbar { display: none }
+.d-jump:empty, :has(> .ss-tabs) > .drawer-head > .d-jump { display: none } /* the tabs replace the jump chips */
+.d-jump button { flex: none; min-height: 26px; padding: 0 10px; border-radius: var(--r-sm); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); font: 550 11.5px var(--sans); color: var(--muted); white-space: nowrap; transition: background-color var(--dur), color var(--dur) }
+.d-jump button:hover { background: var(--raise-2); color: var(--ink) }
+/* the tabs: text, the chosen one white with a bar under it */
+.ss-tabs { display: flex; padding: 0 8px; border-bottom: 1px solid var(--line-2); background: var(--panel) }
+.ss-tabs button { position: relative; flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 6px; font: 600 13px var(--sans); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--dur) }
+.ss-tabs button:hover { color: var(--ink) }
+.ss-tabs button[aria-selected="true"] { color: var(--ink) }
+.ss-tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: -1px; height: 2px; border-radius: 1px; background: var(--ink) }
+.ss-tabs button[hidden] { display: none }
+/* each tab's parts (ui.js data-s): Overview = the why, the verdict and best time, under water, the actions, ships (with that layer on) and
+   More (round 17 G: position, 3D dive, data feeds, breakdown); Conditions = all of the conditions (instruments, best time, the go curve) and
+   the 9-day weather; Gear = baits, lures and the area's gear.
+   A protected zone's note shows on every tab. */
+[data-ss-tab="overview"] > .drawer-body > :is([data-s="baits"], [data-s="lures"], .wx-sec, .ag-fold) { display: none }
+[data-ss-tab="overview"] > .drawer-body > [data-s="go"] :is(.ig, .cg-card) { display: none }
+[data-ss-tab="cond"] > .drawer-body > :not([data-s="zone"], [data-s="go"], .wx-sec) { display: none }
+[data-ss-tab="gear"] > .drawer-body > :not([data-s="zone"], [data-s="baits"], [data-s="lures"], .ag-fold) { display: none }
+[data-ss-tab="gear"] > .drawer-body > .ag-fold { border-top: 0 }
+.drawer-body { flex: 1; display: flex; flex-direction: column; gap: 22px; padding: 16px 8px 18px 16px }
+.ds { display: contents } /* ui.js parts: wrappers only; an empty one takes no gap */
+/* section headings: short sentence-case titles, the section's icon before them */
+.drawer-body section > h4 { margin-bottom: 10px }
+.ds > section > h4 { display: flex; align-items: center; gap: 8px; font: 650 14.5px/1.25 var(--sans); color: var(--ink) }
+.ds > section > h4 .i { width: 15px; height: 15px; color: var(--muted) }
+.drawer-body .gear-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) } /* gear tiles two up */
+.drawer-body .gear { padding: 6px 6px 9px; background: var(--card); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.drawer-body .gear.best { box-shadow: inset 0 0 0 1.5px var(--ink) }
+.drawer-body .gear > b { margin-top: 4px; font-size: 13px }
+.reasons { display: flex; flex-direction: column; gap: 5px; margin: 0; padding: 0; list-style: none; font-size: var(--fs) }
+.reasons li { display: flex; gap: 8px; align-items: flex-start }
+.reasons li > :first-child { width: 10px; flex: none; text-align: center; font-weight: 700 }
+.reasons .plus { color: var(--good) } .reasons .minus { color: var(--warn) }
+.gps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px }
+.gps-row .gps { grid-column: 1 / -1; padding: 2px 0 4px; text-align: center; white-space: nowrap; font: var(--fs) var(--mono) }
+.gps-row .btn { background: var(--raise-2) }
+.acts, .spot-tools { display: flex; gap: 6px; flex-wrap: wrap }
+.spot-tools { margin-top: 8px }
+.spot-tools:empty { display: none }
+.spot-tools .btn { flex: 1 1 auto }
+.spot-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) } /* round 10d: two up (3D, log, save, share: two rows, not three and a lone Share) */
+/* folds: area gear, weather, ships, More (position, 3D dive, data feeds, breakdown) */
+.drawer-body > .fold { border-top: 1px solid var(--line) }
+.drawer-body > .fold + .fold { margin-top: -22px }
+.drawer-body > .fold > summary { min-height: 40px; font-size: 12.5px; color: var(--ink) }
+.drawer-body > .fold[open] { padding-bottom: 12px }
+.drawer-body > .fold[open] > summary { margin-bottom: 4px }
+/* the breakdown: each factor, its value and a thin bar (a weak one in the caution colour) */
+.factor-group + .factor-group { margin-top: 14px }
+.factor-group h4 { margin-bottom: 4px }
+.factors { width: 100%; border-collapse: collapse; font-size: var(--fs-sm) }
+.factors tr + tr td { border-top: 1px solid var(--line) }
+.factors td { padding: 5px 8px 5px 0; vertical-align: middle }
+.factors td:first-child { width: 34%; color: var(--muted) }
+.factors td:nth-child(2) { font-variant-numeric: tabular-nums }
+.factors td:last-child { width: 64px; padding-right: 0 }
+.bar { width: 64px; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .08); overflow: hidden }
+.bar i { display: block; height: 100%; border-radius: 2px; background: var(--ink) }
+.bar.lo i { background: var(--warn) }
+
+
+/* ---------- The short card (the peek): hero, three numbers, the conditions' verdict in one line, the best time, then Directions, Save and
+   the tools over View more. The fish's reasons wait in View more (its Overview). ---------- */
+.card-pop .leaflet-popup-content { width: 290px !important } /* Greek runs ~25% longer; ui.js sel.card sets the same */
+.sc { display: flex; flex-direction: column; gap: 10px; padding: 14px }
+.sc > [data-s="why"] > .reasons:not(.sc-why) { display: none } /* round 10d: the card shows the two strongest (ui.js topWhy) */
+.sc .likely { margin: 0 }
+.sc .zone-warn span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden } /* the zone and its kind; its rules in View more */
+.sc-top { display: flex; align-items: center; gap: 14px }
+.card-pop .sc-top { padding-right: 12px } /* the popup's close */
+/* depth · seabed · how far: three tiles, the value over its micro label */
+.sc-stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin: 0 }
+.sc-stats > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 3px; min-width: 0; padding: 7px 10px; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge) }
+.sc-stats dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 650 14px/1.2 var(--sans); font-variant-numeric: tabular-nums }
+.sc-stats dt { font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.sc .reasons { flex-flow: row wrap; gap: 3px 14px; font-size: 12.5px } /* compact: side by side */
+.sc .reasons li { gap: 5px }
+/* the best time to go: one row, a tap goes there (ui.js goRow) */
+.sc-best { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 7px 8px 7px 10px; border-radius: var(--r); background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line); text-align: left }
+.sc-best > .i:first-child { flex: none; width: 18px; height: 18px; color: var(--muted) }
+.sc-best > .i:last-child { flex: none; color: var(--dim) }
+.sc-best > span { flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.35; color: var(--muted) }
+.sc-best .lbl { display: block; margin-bottom: 1px }
+.sc-best b { margin-right: 4px; font: 650 14px var(--sans); color: var(--ink); font-variant-numeric: tabular-nums }
+/* Directions and Save with their names, half the row each; under them View more and the tools as square icons (named in their tooltips) */
+.sc .acts { gap: 6px }
+.sc .acts .btn { flex: none; width: var(--h); padding: 0 }
+.sc .acts .btn:has(> .ss-l) { flex: 1 1 calc(50% - 3px); width: auto; min-width: 0; gap: 6px; padding: 0 10px }
+.sc .acts .btn:not(.primary, :has(> .ss-l)) { order: 10 }
+.sc .acts .btn.primary { order: 9; flex: 1 1 auto; width: auto; gap: 4px; padding: 0 8px }
+.sc .acts .primary .i { margin-right: -4px }
+.ss-l { white-space: nowrap }
+
+/* Round 10 (js/ui.js, shown when js/feeds.js provides them): the model's confidence beside the rating, a quiet line with how old the
+   forecast and the satellite are (caution colour when a feed is stale), and the details' Data feeds (Conditions tab) */
+.conf-chip { display: inline-block; margin-left: 8px; padding: 1px 5px; border-radius: var(--r-sm); vertical-align: 1px; font-weight: 600; letter-spacing: .04em;
+  color: var(--muted); box-shadow: inset 0 0 0 1px var(--line-3) }
+.conf-chip.c-high { color: var(--ink); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .5) }
+.conf-chip.c-low { color: var(--dim); box-shadow: none; outline: 1px dashed var(--line-3); outline-offset: -1px }
+.feeds { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; font-size: 12.5px }
+.feeds li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line) }
+.feeds li:first-child { padding-top: 0 } .feeds li:last-child { border: 0; padding-bottom: 0 }
+.feeds li > span { display: flex; flex-direction: column; gap: 1px; min-width: 0 }
+.feeds b { font-weight: 600; color: var(--ink) }
+.feeds small { font-size: 11.5px; color: var(--dim) }
+.feeds em { flex: none; font: 600 12px var(--sans); font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap }
+.feeds li.stale em { color: var(--warn) } .feeds li.none em { color: var(--dim); font-weight: 500 }
+
+/* A named place (harbour, wreck, beach…): ui.js openSpot */
+.sp-top { display: flex; align-items: center; gap: 12px }
+.sp-top .ring { font-size: calc(var(--sz) * .37); color: var(--ink) } /* app.css .spot-pop span is for the plain lines */
+.sp-top .who { color: var(--ink) }
+.spot-pop .sp-src { font-size: 11.5px; color: var(--dim) }
+
+/* Phones (the query of css/mobile.css): a tapped spot, the short card, then the details in the same sheet */
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .m-spot { position: relative }
+  .m-spot .m-x { position: absolute; z-index: 3; top: -8px; right: -8px }
+  .m-spot .sc { padding: 0; gap: 10px }
+  .m-spot .sc-top, .m-spot .sp-top, .m-spot .spot-pop > b { padding-right: 40px }
+  .m-spot .who .rate { font-size: 11px }
+  .m-spot .who b { font-size: 19px }
+  .m-spot .who small { font-size: 13px }
+  .m-spot .sc-stats > div { padding-block: 7px }
+  .m-spot .sc-stats dd { font-size: 16px }
+  .m-spot .sc-stats dt { font-size: 10.5px }
+  .m-spot .sc .reasons { gap: 4px 16px; font-size: 13.5px }
+  .m-spot .sc-best { min-height: 48px; padding-block: 6px }
+  .m-spot .sc-best > span { font-size: 12.5px }
+  .m-spot .sc-best b { font-size: 15.5px }
+  .m-spot .sc .acts .btn { min-height: 44px; width: 44px; font-size: 14px }
+  .m-spot .sc .acts .btn:has(> .ss-l), .m-spot .sc .acts .btn.primary { width: auto }
+  /* round 10d: the actions in one row (the card gained the confidence, two reasons and the data line and keeps its old height): View more,
+     then Directions, Save, 3D and Log a catch as icons, named in their tooltips; their labelled copies and Share are in View more's Tools */
+  .m-spot .sc .acts { flex-wrap: nowrap }
+  .m-spot .sc .acts .btn.primary { order: -1 }
+  .m-spot .sc .acts .btn:has(> .ss-l) { flex: none; width: 44px; padding: 0 }
+  .m-spot .sc .acts .ss-l, .m-spot .sc .acts [data-ps-share] { display: none }
+  .m-spot .sc .acts { position: sticky; z-index: 2; bottom: calc(-12px - var(--sb)); margin-bottom: calc(-12px - var(--sb)); padding: 6px 0 calc(12px + var(--sb)); background: var(--panel) } /* the actions stay in view under a long card */
+  .m-spot .spot-pop { padding: 0 }
+  /* the hero bleeds to the sheet's edges and scrolls away; the tabs stick at the top */
+  .m-spot .drawer-head { margin: -10px calc(-14px - var(--sr)) 0 calc(-14px - var(--sl)); padding: 16px calc(var(--sr) + 6px) 14px calc(var(--sl) + 16px) }
+  .m-spot .drawer-head .who b { font-size: 20px }
+  .m-spot > .ss-tabs { position: sticky; top: -10px; z-index: 3; margin: 0 calc(-14px - var(--sr)) 0 calc(-14px - var(--sl)); padding: 0 calc(var(--sr) + 8px) 0 calc(var(--sl) + 8px) }
+  .ss-tabs button { min-height: 46px; font-size: 14px }
+  .d-jump { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-block: -5px; padding-block: 5px; /* one row that scrolls; room inside it for the touch targets */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent) }
+  .d-jump button { position: relative; min-height: 34px; padding: 0 12px; font-size: 13px }
+  .d-jump button::before { content: ""; position: absolute; inset: -5px 0 } /* a 44 px touch target, the head stays short */
+  .m-spot .drawer-body { overflow: visible; padding: 16px 0 0 }
+  .m-spot .ds > section > h4 { font-size: 15.5px }
+  .m-spot .ps-weather, .m-spot .ps-weather .ps-wx-chip, .m-spot .ps-weather .ps-wx-note { font-size: 12px }
+}
+
+/* round 13: how sure (js/sure.js): the card's one line and the details' list; a dot per point, white good, grey fair, hollow weak */
+.sure-line { margin: 0; font: 600 11.5px/1.3 var(--sans); color: var(--muted) }
+.sure-line::before, .sure li::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: var(--dim); vertical-align: 1px }
+.sure-line.s-weak::before, .sure li.s-weak::before { background: none; box-shadow: inset 0 0 0 1.5px var(--dim) }
+.sure li.s-good::before { background: var(--ink) }
+.sure ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; font: 500 13px/1.35 var(--sans); color: var(--ink) }
+.sure li.s-weak { color: var(--muted) }
+.sure .sure-lv { margin-left: auto; font: 600 11px/1 var(--sans); letter-spacing: .04em; color: var(--muted) }
+.sure-hatch { position: absolute; z-index: 2; pointer-events: none } /* round 15: js/sure.js draws it in map.js heatBox, over both heat layers */
+/* Round 14: How sure in the app's system: its points one card of rows under hairlines (as Position and tools' card), the level a badge
+   beside the heading (as .ui-badge), the note a hint under the card */
+.sure > h4 .sure-lv { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--r-sm); background: var(--raise-2); font: 650 var(--fs-xs)/1 var(--sans); letter-spacing: 0; color: var(--muted); white-space: nowrap }
+.sure ul { gap: 0; margin: 0; padding: 0 12px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); box-shadow: var(--edge) }
+.sure li { display: flex; align-items: center; min-height: 40px; padding: 8px 0 }
+.sure li + li { border-top: 1px solid var(--line) }
+.sure li::before { flex: none; margin-right: 10px; vertical-align: 0 }
+.sure > .hint { margin-top: 8px; font-size: 12px; line-height: 1.45; color: var(--dim) }
+/* round 17 G: the details' actions in one row (Directions, Log catch, Save, Share), and More's parts */
+.d-acts { display: flex; flex-wrap: wrap; gap: 8px }
+.drawer-body > .fold.more > [data-s] { display: flex; flex-direction: column; gap: 18px }
+/* round 17 G: Where to go with no good water at this hour: the next good time, the map's own line, as one button */
+.top > li.empty:has(.where-ng) { padding: 0; background: none }
+.where-ng { width: 100%; justify-content: flex-start; gap: 8px; min-height: 48px; text-align: left; white-space: normal }
+.where-ng > span { flex: 1; min-width: 0 }
+.where-ng > .i:first-child { color: var(--muted) }

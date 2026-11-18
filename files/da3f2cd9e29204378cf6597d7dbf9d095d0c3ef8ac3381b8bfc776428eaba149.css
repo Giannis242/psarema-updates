@@ -1,0 +1,155 @@
+/* Psarema: gear per area (js/area-gear.js). Uses css/tokens.css and app.css's .gear cards, .facts chips, .hint and the .fold text. */
+.ag { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; min-width: 0 }
+.ag h4 { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) } /* .lbl and a hairline to the edge, as the panels' sections */
+.ag h4::after { content: ""; flex: 1 1 12px; height: 1px; background: var(--line) }
+.ag p { margin: 0; max-width: none } /* the .fold paragraph style, without its spacing: the column's gap spaces them */
+.ag-char, .ag-tips { color: var(--muted); line-height: 1.5 }
+.ag .facts { margin: 0 }
+.facts .ag-fish { color: var(--muted) }
+.ag-fish b { font-weight: 600; color: var(--ink) }
+.ag-fish.now { box-shadow: inset 0 0 0 1px var(--accent) } /* in season now: white, the app's "on" */
+.ag-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px }
+.ag-item { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; align-items: start }
+.ag-item .gear { padding: 6px; border: 1px solid var(--line); box-shadow: var(--edge) }
+.ag-also .ag-item { grid-template-columns: 84px minmax(0, 1fr) }
+.ag-also .ag-item .gear b { font-size: 12px }
+.ag-why { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; line-height: 1.4 }
+/* a callout like .cond-why: the colour as a bar on the left, the text in ink */
+.ag-avoid { padding: 9px 12px; border-radius: var(--r); background: color-mix(in srgb, var(--warn) 7%, transparent); box-shadow: inset 2px 0 var(--warn); line-height: 1.45 }
+.ag-avoid b { color: var(--warn) }
+.ag-sources { line-height: 1.5 }
+.ag-sources a { color: var(--muted) }
+.ag-fold > .ag { margin-top: 6px }
+
+/* Best baits here now (round 10b, PsAreaGear.baitsHtml): a ranked list, one line a bait; a tap opens the reasons. Black and white: the only
+   colour is the score pill (core.js pill → the score ramp). */
+.ab { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 12.5px }
+.ab-head { display: flex; flex-direction: column; gap: 2px }
+.ab-head b { font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+[data-s="baits"] .ab-head b { display: none } /* the details' own section title says it */
+.ab-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px }
+.ab-row > details { border-radius: var(--r); background: var(--raise); box-shadow: var(--edge) }
+.ab > .ab-list > .ab-row:first-child > details { box-shadow: inset 2px 0 0 var(--accent) } /* the best one: the app's white "on" (round 14: an edge, the rows joined) */
+.ab-row summary { display: grid; grid-template-columns: 18px auto minmax(0, 1fr) auto; grid-template-areas: "n art name pill"; column-gap: 8px; align-items: center;
+  padding: 7px 9px; min-height: 44px; cursor: pointer; list-style: none }
+.ab-row summary::-webkit-details-marker { display: none }
+.ab-n { grid-area: n; font: 700 12px var(--sans); color: var(--dim); text-align: center; font-variant-numeric: tabular-nums }
+.ab-art { grid-area: art; width: 44px; aspect-ratio: 16 / 10; display: grid; place-items: center; overflow: hidden; border-radius: var(--r-sm); background: #242424 }
+.ab-art :is(svg, img) { width: 100%; height: 100%; display: block; object-fit: cover }
+.ab-name { grid-area: name; display: flex; flex-direction: column; min-width: 0 }
+.ab-name b { font-size: 13px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ab-name small { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ab-row summary :is(.pill, .ring) { grid-area: pill }
+/* Round 14: the baits and lures as one group of rows under hairlines, as Best now and Best spots above them (app.css .ui-list), the score
+   a dial (js/area-baits.js, js/lures.js chip); the best row keeps a white edge on the left (as the chosen fish), an open row a step lighter */
+.ab-list { gap: 0; overflow: hidden; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); box-shadow: var(--edge) }
+.ab-list > .ab-row + .ab-row { border-top: 1px solid var(--line) }
+.ab-list > .ab-row > details { border-radius: 0; background: none; box-shadow: none }
+.ab-list > .ab-row > details[open] { background: var(--card-2) }
+.ab-row summary { min-height: 52px; padding: 7px 12px 7px 9px }
+.ab-row summary .ring.sm { --sz: 30px } /* as .top .ring: the digits stay legible */
+.lu > .empty { font-size: 12.5px } /* "no lure for this fish here" (js/lures.js) */
+.ag-off { display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px; border-radius: var(--r); background: rgb(255 255 255 / .03); font-size: 12.5px; line-height: 1.45; color: var(--muted) }
+.ag-off .i { flex: none; width: 18px; height: 18px; color: var(--warn) }
+.ab-more { display: flex; flex-direction: column; gap: 6px; padding: 0 9px 9px 35px }
+.ab-more p, .ab > p { margin: 0; max-width: none; line-height: 1.45 }
+.ab-why { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.4 }
+.ab-why li { padding-left: 12px; position: relative; color: var(--ink) }
+.ab-why li::before { content: "·"; position: absolute; left: 2px; color: var(--dim) }
+.ab-why li.pos::before { content: "+" } .ab-why li.neg::before { content: "−" }
+.ab-why li.neg { color: var(--muted) }
+.ab-why i { font-style: normal; color: var(--dim) }
+.ab-note { color: var(--muted) }
+.ab-src a { color: var(--muted) }
+.ab-rest > summary { min-height: 40px; display: flex; align-items: center; padding: 0 2px; color: var(--muted); cursor: pointer; font-size: 12.5px } /* round 11: the rest, the rig and the why, folded */
+.ab-rest > :not(summary) + :not(summary) { margin-top: 6px }
+.ab-rest[open] > summary { margin-bottom: 4px }
+.ab-rig { display: flex; flex-wrap: wrap; align-items: center; gap: 6px }
+.ab-rig .lbl, .ab-rig > span:first-child { font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.ab-foot { line-height: 1.4 }
+.ab-skel { height: 96px; border-radius: var(--r); background: var(--raise) }
+.ag-fold > .ab { margin: 6px 0 10px }
+
+/* Lures (round 13, js/lures.js): the ranked artificial lures and the catalogue. Grey and white like the baits above; the only colour is the
+   lures' own (the drawings and the swatch dots) and the score pill. The drawings are SVG symbols painted by --b (body), --k (back), --h (head). */
+.lu { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 12.5px }
+.lu-head { display: flex; flex-direction: column; gap: 2px }
+.lu-head b { font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.lu-head small { font-size: 11px; color: var(--dim); line-height: 1.35 }
+.lu-seg { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+.lu-seg button { flex-direction: row; min-height: 36px; font-size: 12.5px }
+.lu > .ab-list > .ab-row:first-child > details { box-shadow: inset 2px 0 0 var(--accent) } /* the best one, as the baits (round 14: the white edge) */
+.lu .ab-row summary { min-height: 52px }
+.lu-art { width: 52px; aspect-ratio: 2 / 1 }
+.lu-svg, .lu-col svg { display: block; width: 100%; height: 100% }
+.lu-sw { display: flex; align-items: center; gap: 3px; margin-top: 3px; min-width: 0 }
+.lu-sw i { flex: none; width: 10px; height: 10px; border-radius: var(--r-full); background: linear-gradient(var(--k) 0 48%, var(--b) 48%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .2) }
+.lu-sw em { min-width: 0; margin-left: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11px/10px var(--sans); color: var(--muted) } /* the best colour here */
+.lu-more h5 { margin: 4px 0 0; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+.lu-r { font-style: normal; color: var(--dim) }
+.lu-cols { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px } /* phase 2: best here first, each with why */
+.lu-col { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 8px; align-items: start; padding: 6px; border-radius: var(--r-sm); background: #242424; box-shadow: var(--edge) }
+.lu-col svg { width: 60px; height: 30px }
+.lu-col.best { box-shadow: inset 0 0 0 1px var(--line-3) }
+.lu-cn { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 11.5px; line-height: 1.35 }
+.lu-cn b { font-size: 12.5px; font-weight: 600; color: var(--ink) }
+.lu-cn b small { font-size: 10.5px; font-weight: 500; color: var(--dim); text-transform: uppercase; letter-spacing: .06em }
+.lu-cw { color: var(--muted) }
+.lu-cw.neg { color: var(--dim) }
+.lu-cw i { font-style: normal; color: var(--dim) }
+.lu-env { line-height: 1.4 }
+.lu-fish { color: var(--muted); line-height: 1.4 }
+.lu-fish .lbl { color: var(--dim) }
+.lu-cat > summary, .lu-fam > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 9px; border-radius: var(--r); background: var(--raise);
+  box-shadow: var(--edge); cursor: pointer; list-style: none; font-size: 13px }
+.lu-cat > summary::-webkit-details-marker, .lu-fam > summary::-webkit-details-marker { display: none }
+.lu-cat > summary .i, .lu-fam > summary .i { margin-left: auto; color: var(--dim); transition: transform var(--dur) var(--ease) }
+.lu-cat[open] > summary .i, .lu-fam[open] > summary .i { transform: rotate(180deg) }
+.lu-catbody { display: flex; flex-direction: column; gap: 4px; margin-top: 6px }
+.lu-fam > summary { background: transparent; box-shadow: inset 0 -1px var(--line); border-radius: 0; padding: 0 2px }
+.lu-fam > summary b { font-weight: 600 }
+.lu-fam > summary small { color: var(--dim); font-variant-numeric: tabular-nums }
+.lu-fam[open] > :not(summary) { margin-top: 6px }
+.lu-fam .ab-row summary { grid-template-columns: 0 auto minmax(0, 1fr) auto; column-gap: 8px }
+.lu-wait .ab-skel { height: 160px }
+.ar-lures:not(:empty) { margin-top: 24px }
+/* Phase 3: the filter bar (native selects: the phone's own picker), View more, and the lure's detail sheet (a <dialog>: a bottom sheet on phones) */
+.lu-flt { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 6px }
+.lu-sel { display: block; min-width: 0 }
+.lu-sel > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap } /* the select shows its value; the name is for screen readers */
+.lu-sel select { width: 100%; min-height: 38px; padding: 4px 28px 4px 10px; border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--edge); color: var(--ink);
+  font: 550 12.5px var(--sans); text-overflow: ellipsis; -webkit-appearance: none; appearance: none; cursor: pointer;
+  background: var(--raise) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center / 14px }
+.lu-sel option { background: var(--panel); color: var(--ink) }
+.lu-flt .lu-seg { padding: 2px }
+.lu-flt .lu-seg button { min-height: 32px }
+.lu-view { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; margin-top: 2px }
+.lu-sheet { width: min(560px, calc(100% - 28px)); max-width: none; max-height: min(86dvh, 860px); margin: auto; padding: 0; border: 0; border-radius: var(--r-lg);
+  background: var(--panel); color: var(--ink); box-shadow: var(--shadow); overflow: hidden }
+.lu-sheet[open] { display: flex; flex-direction: column }
+.lu-sheet::backdrop { background: var(--scrim) }
+.lu-sh { display: flex; flex-direction: column; flex: 1; min-height: 0 }
+.lu-sh-head { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 12px 10px 10px 14px; border-bottom: 1px solid var(--line) }
+.lu-sh-art { width: 96px; aspect-ratio: 2 / 1; display: grid; place-items: center; border-radius: var(--r-sm); background: #242424; box-shadow: var(--edge) }
+.lu-sh-t { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.lu-sh-t b { font: 650 16px/1.25 var(--sans); letter-spacing: -.01em }
+.lu-sh-t small { font-size: 12px; color: var(--dim); line-height: 1.35 }
+.lu-x { width: 40px; height: 40px }
+.lu-sh-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 6px; padding: 10px 14px 18px; font-size: 13px }
+.lu-sh-body p { margin: 0; max-width: none; line-height: 1.45 }
+.lu-sh-body h5 { margin: 8px 0 0; font: 650 var(--fs-label)/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim) }
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .lu-sheet { width: 100%; max-height: 88dvh; margin: auto 0 0; border-radius: var(--r-lg) var(--r-lg) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px) }
+  .lu-sh::before { content: ""; display: block; flex: none; width: 36px; height: 4px; margin: 7px auto -3px; border-radius: 2px; background: rgb(255 255 255 / .22) } /* round 14: the grab handle every rising sheet has (css/sheets.css) */
+  .lu-sheet { border-top: 1px solid var(--line-2) }
+}
+
+/* Round 14 phase 3 polish: a finger gets the same pressed grey on these rows and folds as on every other list row (app.css .ui-row:active),
+   and "1 more · why" reads as a fold, with the chevron of the area page's "More" */
+.ab-row summary:active, .ap > summary:active, .lu-cat > summary:active, .lu-fam > summary:active, .ab-rest > summary:active { background: var(--card-2) }
+.ab-rest > summary { gap: 6px; font-weight: 600; list-style: none }
+.ab-rest > summary::-webkit-details-marker { display: none }
+.ab-rest > summary::after { content: ""; width: 6px; height: 6px; margin: -3px 0 0 2px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); transition: transform var(--dur) var(--ease) }
+.ab-rest[open] > summary::after { margin-top: 3px; transform: rotate(-135deg) }
+/* the lure drawings on a lit grey: a black or dark lure (the best colour on a dark night) vanished into the dark box */
+.lu-art, .lu-sh-art, .lu-col svg { background: radial-gradient(closest-side, #4c4c4c, #2a2a2a); border-radius: var(--r-sm) }

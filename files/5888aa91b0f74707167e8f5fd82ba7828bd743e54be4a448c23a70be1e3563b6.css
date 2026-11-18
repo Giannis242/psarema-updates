@@ -1,0 +1,70 @@
+/* Psarema round 13, street view in the 3D area (js/area3d-street.js): the panel's toggle and its status line, the card a tap opens.
+   The app's grey glass and white text; the markers themselves are drawn in the scene. */
+.a3-svt { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 4px 10px; border-radius: var(--r); color: var(--muted);
+  background: rgb(0 0 0 / .28); box-shadow: inset 0 0 0 1px var(--line); font: 600 12.5px var(--sans); text-align: left }
+.a3-svt[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink) }
+.a3-svt svg { flex: none; width: 18px; height: 18px }
+.a3-svs { color: var(--dim); font-size: 11px; line-height: 1.3 }
+.a3-svs:empty, .a3:not(.sv-on) .a3-svs { display: none }
+
+.sv-card { position: absolute; z-index: 2; top: calc(var(--st) + 66px); right: calc(var(--sr) + 10px); width: 320px; max-width: calc(100% - var(--sl) - var(--sr) - 20px);
+  display: grid; gap: 8px; padding: 10px 10px 10px 12px; border-radius: var(--r-lg); background: var(--glass); border: 1px solid var(--line-2); box-shadow: var(--shadow) }
+.sv-card[hidden] { display: none }
+.sv-hd { display: flex; align-items: center; gap: 10px; min-width: 0 }
+.sv-ic { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--raise-2); box-shadow: inset 0 0 0 1px var(--line-3) }
+.sv-ic svg { width: 20px; height: 20px }
+.sv-tt { flex: 1; display: grid; gap: 2px; min-width: 0 }
+.sv-tt b { font: 650 14px/1.25 var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.sv-tt small { color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.sv-x { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r); color: var(--ink) }
+.sv-x:hover, .sv-x:focus-visible { background: var(--raise-2) }
+.sv-x .i { width: 18px; height: 18px }
+.sv-meta { margin: 0; color: var(--muted); font-size: 11.5px; line-height: 1.35; overflow-wrap: anywhere }
+.sv-meta b { color: var(--ink); font-weight: 600 }
+.sv-acts { display: flex; flex-wrap: wrap; gap: 6px }
+.sv-btn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--h); padding: 5px 10px; border-radius: var(--r); color: var(--ink); text-decoration: none;
+  background: rgb(255 255 255 / .06); box-shadow: inset 0 0 0 1px var(--line); font: 600 12px var(--sans) }
+.sv-btn:active { background: var(--raise-2) }
+.sv-btn.main { background: var(--accent); color: var(--accent-ink); box-shadow: none }
+.sv-btn .i { width: 15px; height: 15px }
+
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .sv-card { left: calc(var(--sl) + 8px); right: calc(var(--sr) + 8px); top: calc(var(--st) + 62px); width: auto; max-width: none }
+}
+
+/* phase 2: the picture viewer over the 3D view (a 360° one on a sphere, a flat one fitted), its author and licence always at the foot */
+.sv-view { position: absolute; inset: 0; z-index: 5; background: #000 }
+.sv-stage { position: absolute; inset: 0 }
+.sv-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab }
+.sv-stage canvas:active { cursor: grabbing }
+.sv-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain }
+.sv-vtop, .sv-vfoot { position: absolute; left: calc(var(--sl) + 10px); right: calc(var(--sr) + 10px); background: var(--glass); border: 1px solid var(--line-2); box-shadow: var(--shadow); border-radius: var(--r-lg) }
+.sv-vtop { top: calc(var(--st) + 10px); display: flex; align-items: center; gap: 6px; padding: 4px 14px 4px 4px; max-width: 520px }
+.sv-vtop .sv-x { width: 44px; height: 44px }
+.sv-vtop .sv-x .i { width: 22px; height: 22px }
+.sv-vfoot { bottom: calc(var(--sb) + 10px); display: grid; gap: 6px; padding: 8px 10px 8px 12px; max-width: 520px }
+.sv-vhint { margin: 0; color: var(--ink); font-size: 12px }
+.sv-vhint[hidden] { display: none }
+.sv-btn svg { width: 15px; height: 15px; flex: none }
+.sv-msg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: min(360px, calc(100% - 40px)); display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--r-lg); background: var(--glass); border: 1px solid var(--line-2); box-shadow: var(--shadow); text-align: center }
+.sv-msg[hidden] { display: none }
+@media (max-width: 760px), (max-height: 500px) and (max-width: 960px) {
+  .sv-vtop, .sv-vfoot { left: calc(var(--sl) + 8px); right: calc(var(--sr) + 8px); max-width: none }
+  .sv-vtop { top: calc(var(--st) + 8px) } .sv-vfoot { bottom: calc(var(--sb) + 8px) }
+}
+
+/* phase 3: loading states, the zoomable photo */
+.a3-svt.is-busy svg { animation: a3-spin .9s linear infinite } /* the toggle's sphere turns while the area's places load */
+.sv-stage { touch-action: none }
+.sv-img { transform-origin: 50% 50%; will-change: transform; user-select: none; -webkit-user-drag: none }
+.sv-prev { filter: blur(14px) brightness(.7); transform: scale(1.08); object-fit: cover } /* a 360°'s front, flat, while the sphere loads */
+.sv-vtop .sv-sharp { flex: none; width: 16px; height: 16px; margin-left: auto }
+.sv-msg .a3-btn { flex: none }
+/* Round 14: the Street view toggle as the app's other on/off rows: a raised row, white text, the Layers switch at its end (white = on),
+   in place of a pressed white block that read as a second "Realistic" */
+.a3-svt { min-height: 40px; padding: 4px 10px 4px 12px; color: var(--ink); background: var(--raise); box-shadow: var(--edge), inset 0 0 0 1px var(--line) }
+.a3-svt::after { content: ""; flex: none; margin-left: auto; width: 30px; height: 18px; border-radius: var(--r-sm); background: rgb(255 255 255 / .1) linear-gradient(#9a9a9a, #9a9a9a) no-repeat 3px 50% / 12px 12px;
+  box-shadow: inset 0 0 0 1px var(--line-2); transition: background-color var(--dur), background-position var(--dur) var(--ease) }
+.a3-svt[aria-pressed="true"] { background: var(--raise); color: var(--ink) }
+.a3-svt[aria-pressed="true"]::after { background-color: var(--accent); background-image: linear-gradient(var(--accent-ink), var(--accent-ink)); background-position: calc(100% - 3px) 50%; box-shadow: none }
